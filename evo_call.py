@@ -84,7 +84,8 @@ if len(sys.argv) == 6 :
     v_dis_path = sys.argv[4]
     v_time = sys.argv[5]
     localtime = time.asctime(time.localtime(time.time()))
-    full_dis = mkdir_Os(v_dis_path, localtime)
+    localtime_str = str(localtime)+'_t='+str(v_time)
+    full_dis = mkdir_Os(v_dis_path, localtime_str)
     if full_dis=='null':
         print 'cant make dir '
         exit(1)
