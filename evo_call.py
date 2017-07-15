@@ -55,7 +55,7 @@ def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path):
 
     evo_string = "java -jar " + evo_path +evo_name
 
-
+    criterion = " -criterion EXCEPTION "
     parms1="-Dsearch_budget="+time
     parms2=" -Dglobal_timeout="+time
     parms3=" -Dreport_dir="+dis_path
@@ -67,9 +67,12 @@ def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path):
         cut_names = str(cut[1]).split('.')
         pre,suf = assemble_path_string2(cut[0])
         test = suf  + cut_names[0]
-        command = evo_string + " -class " +test+" -projectCP "+pre+" "+all_p
+        command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
         print command
         os.system(command)
+        text_file = open(dis_path+"command.txt", "w")
+        text_file.write("command: %s" % command)
+        text_file.close()
 
 
 
