@@ -73,7 +73,7 @@ def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path):
 
 
 
-#str_commands = "evo_call.py /home/eran/thesis/Tutorial/Tutorial_Experiments/target/classes/tutorial/ evosuite-master-1.0.6-SNAPSHOT.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/evo_result/ 10"
+#str_commands = "evo_call.py /home/eran/thesis/projects-ex/commons-math3-3.6.1-src/target/classes/org/ evosuite-master-1.0.6-SNAPSHOT.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/evo_result/ 10"
 #str_arry = str_commands.split(" ")
 #sys.argv = str_arry
 
@@ -84,16 +84,19 @@ if len(sys.argv) == 6 :
     v_dis_path = sys.argv[4]
     v_time = sys.argv[5]
     localtime = time.asctime(time.localtime(time.time()))
-    full_dis = mkdir_Os(v_dis_path, localtime)
+    localtime_str = str(localtime)+'_t='+str(v_time)
+    full_dis = mkdir_Os(v_dis_path, localtime_str)
     if full_dis=='null':
         print 'cant make dir '
         exit(1)
     target_list = get_all_class(v_path)
     single_call_EvoSuite(v_evo_name,v_evo_path,target_list,v_time,full_dis)
+    print ("done !")
+else:
+    print "miss argv (-Path -EvoName -EvoPath -DistPath -Time)"
 
 
 
-print "miss argv (-Path -EvoName -EvoPath -DistPath -Time)"
 
 path_1 = "/home/eran/thesis/Tutorial/Tutorial_Experiments/target/classes/tutorial/"
 
