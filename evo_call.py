@@ -141,11 +141,11 @@ def regression_test(evo_name, evo_path, classes_list_new,classes_list_original,t
 
 #str_regg = "evo_call.py /home/eran/thesis/common_math/commons-math3-3.5-src/target/classes/org/ /home/eran/thesis/common_math/commons-math3-3.6.1-src/target/classes/org/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/evo_result/ 30"
 
-#str_commands_common_math = "evo_call.py /home/eran/thesis/projects-ex/commons-math3-3.6.1-src/target/classes/org/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/evo_result/ 60"
+#str_commands_common_math = "evo_call.py /home/eran/thesis/common_math/commons-math3-3.6.1-src/target/classes/org/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/evo_result/ 60"
 
 #str_command_tut = "evo_call.py /home/eran/thesis/Tutorial_Experiments/target/classes/tutorial/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/out_exp/ 10"
 
-#str_arry = str_regg.split(" ")
+#str_arry = str_commands_common_math.split(" ")
 #sys.argv = str_arry
 
 if len(sys.argv) == 6 :
@@ -162,7 +162,7 @@ if len(sys.argv) == 6 :
         exit(1)
     target_list = get_all_class(v_path)
     single_call_EvoSuite(v_evo_name,v_evo_path,target_list,v_time,full_dis)
-    print ("done !")
+    print "done !"
 else:
     if len(sys.argv) == 7 :
         v_path_org = sys.argv[1]
