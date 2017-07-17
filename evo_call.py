@@ -83,7 +83,7 @@ def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path):
 
     criterion = " "
 
-    depand = ":/home/eran/thesis/Tutorial_Experiments/target/dependency/commons-collections-3.2.2.jar"
+
     parms1="-Dsearch_budget="+time
    # parms2=" -Dglobal_timeout="+time
     parms3=" -Dreport_dir="+dis_path
@@ -97,7 +97,7 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Tota
         cut_names = str(cut[1]).split('.')
         pre,suf = assemble_path_string2(cut[0])
         test = suf  + cut_names[0]
-        command = evo_string + " -class " +test+" -projectCP "+pre+depand+criterion+all_p
+        command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
         print command
         all_command = all_command +'\n'*2 + command
         os.system(command)
