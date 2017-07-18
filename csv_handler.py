@@ -6,8 +6,8 @@ import os
 import csv
 
 import pandas as pd
+import sys
 
-str_path = "/home/eran/Desktop/evo_result/"
 
 def get_all_csv(path):
     list_csv_path = []
@@ -48,8 +48,36 @@ def join_data_frame(list):
                 data_res = item.merge(data_res, how='left', on=' TARGET_CLASS')
     return data_res
 
+def remove_dot_csv(path):
+    list_csv_path = []
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(".csv"):
+                if str(file).__contains__("statistics") is False:
+                    continue
+                list_csv_path.append(str(os.path.join(root, file)))
+    for file_csv in list_csv_path :
+        with open(file_csv, 'r') as myfile:
+            data = myfile.read().replace(';','_')
+            text_file = open(file_csv, "w")
+            text_file.write(" %s" % data)
+            text_file.close()
+    return "done"
 
+
+
+if len(sys.argv) == 3 :
+    if str(sys.argv[1]) == '-p' :
+        v_path = sys.argv[2]
+        print(remove_dot_csv(v_path))
+else:
+    print 'Usage :\n-p [path] '
+
+
+
+'''''''''''
 list = get_all_csv(str_path)
 list.sort(key=lambda x: x.size, reverse=True)
 res=join_data_frame(list)
 res.to_csv("/home/eran/Desktop/evo_result/res.csv", sep='\t', encoding='utf-8')
+'''''
