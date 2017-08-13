@@ -154,17 +154,19 @@ if len(sys.argv) == 6 :
     v_evo_path = sys.argv[3]
     v_dis_path = sys.argv[4]
     v_time = sys.argv[5]
-    localtime = time.asctime(time.localtime(time.time()))
-    localtime_str = str(localtime)+'_t='+str(v_time)
-    full_dis = mkdir_Os(v_dis_path, localtime_str)
-    if full_dis=='null':
-        print 'cant make dir '
-        exit(1)
-    target_list = get_all_class(v_path)
-    single_call_EvoSuite(v_evo_name,v_evo_path,target_list,v_time,full_dis)
+    for i in range(5):
+        localtime = time.asctime(time.localtime(time.time()))
+        localtime_str = str(localtime)+'_t='+str(v_time)
+        full_dis = mkdir_Os(v_dis_path, localtime_str)
+        if full_dis=='null':
+            print 'cant make dir '
+            exit(1)
+        target_list = get_all_class(v_path)
+        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,v_time,full_dis)
     print "done !"
-else:
-    if len(sys.argv) == 7 :
+
+'''''
+    #if len(sys.argv) == 7 :
         v_path_org = sys.argv[1]
         v_path_new = sys.argv[2]
         v_evo_name = sys.argv[3]
@@ -179,10 +181,10 @@ else:
             exit(1)
         list_org = get_all_class(v_path_org)
         list_new = get_all_class(v_path_new)
-        regression_test(v_evo_name, v_evo_path, list_new, list_org, v_time, full_dis)
+        #regression_test(v_evo_name, v_evo_path, list_new, list_org, v_time, full_dis)
         print 'Done !'
 
-
+'''''
 
 print "miss argv (-Path -EvoName -EvoPath -DistPath -Time)"
 
