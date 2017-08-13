@@ -89,7 +89,7 @@ def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path):
     parms3=" -Dreport_dir="+dis_path
     parms4=" -Dtest_dir="+dis_path
     parms5=" -Doutput_variables=TARGET_CLASS,criterion,Lines,Covered_Lines,Total_Methods,Covered_Methods,\
-Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Total_Time,Covered_Goals,Total_Goals,Coverage"
+Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Mutants,Total_Time,Covered_Goals,Total_Goals,Coverage"
 
     all_p = parms1+parms3+parms4+parms5
     all_command=''

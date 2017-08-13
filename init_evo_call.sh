@@ -2,7 +2,7 @@
 
 read -p "Version Enter: " VAR
 
-read -p "dir in out" dir
+read -p "dir in out: " dir
 
 read -p "Time Enter: " Time
 
