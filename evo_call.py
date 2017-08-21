@@ -149,7 +149,7 @@ def regression_test(evo_name, evo_path, classes_list_new,classes_list_original,t
 #sys.argv = str_arry
 
 if len(sys.argv) == 6 :
-    v_path = sys.argv[1]
+    sys.argv
     v_evo_name = sys.argv[2]
     v_evo_path = sys.argv[3]
     v_dis_path = sys.argv[4]
