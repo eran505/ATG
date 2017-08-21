@@ -348,6 +348,13 @@
 
   <dependencies>
     <dependency>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-parent</artifactId>
+        <version>1.2.2</version>
+        <type>pom</type>
+    </dependency>
+
+    <dependency>
   <groupId>org.evosuite</groupId>
   <artifactId>evosuite-standalone-runtime</artifactId>
   <version>1.0.5</version>
@@ -415,6 +422,25 @@
   <build>
       <plugins>
 
+                <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>1.2.2</version>
+                    <configuration>
+                      <outputFormats>
+                        <param>CSV</param>
+                        <param>HTML</param>
+                        <paeam>XML</paeam>
+                      </outputFormats>
+                      <!-- <verbose>true</verbose> -->
+                        <targetClasses>
+                       </targetClasses>
+                        <targetTests>
+                       </targetTests>
+                      <excludedMethods>
+                      </excludedMethods>
+                     </configuration>
+                </plugin>
 
             <plugin>
     <groupId>org.evosuite.plugins</groupId>
