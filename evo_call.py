@@ -149,7 +149,7 @@ def regression_test(evo_name, evo_path, classes_list_new,classes_list_original,t
 #sys.argv = str_arry
 
 if len(sys.argv) == 6 :
-    sys.argv
+    v_path = sys.argv[1]
     v_evo_name = sys.argv[2]
     v_evo_path = sys.argv[3]
     v_dis_path = sys.argv[4]
@@ -183,9 +183,6 @@ if len(sys.argv) == 6 :
         list_new = get_all_class(v_path_new)
         #regression_test(v_evo_name, v_evo_path, list_new, list_org, v_time, full_dis)
         print 'Done !'
-
 '''''
 
 print "miss argv (-Path -EvoName -EvoPath -DistPath -Time)"
-
-
