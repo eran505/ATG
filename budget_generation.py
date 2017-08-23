@@ -1,10 +1,14 @@
 import sys, os ,time
-import  pandas as pd
+import pandas as pd
 
 def get_time_dico(path_csv):
     df = pd.read_csv(path_csv)
     df.set_index("class", drop=True, inplace=True)
     dictionary = df.to_dict(orient="index")
+
+    def reading(self):
+        s = open('deed.txt', 'r').read()
+        self.whip = eval(s)
     return dictionary
 
 
@@ -132,7 +136,7 @@ def __init_main__():
 #    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
 #             "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'budget.csv']
     if len(sys.argv) < 3 :
-        print "miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )"
+        print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
     v_path = sys.argv[1]  # target = /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org
     v_evo_name = sys.argv[2]  #evo_version = evosuite-1.0.5.jar
@@ -147,7 +151,7 @@ def __init_main__():
         localtime_str = str(localtime)+'it='+str(i)
         full_dis = mkdir_Os(v_dis_path, localtime_str)
         if full_dis=='null':
-            print 'cant make dir'
+            print('cant make dir')
             exit(1)
         target_list = get_all_class(v_path)
         single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis)
