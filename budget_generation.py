@@ -80,7 +80,6 @@ def get_all_class(root) :
             if name.__contains__("$") is False:
                 size+=1
                 class_list.append([str(path),str(name)])
-    print "size=",size
     return class_list
 
 
