@@ -116,11 +116,11 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
 #        print command
         all_command = all_command +'\n'*2 + command
         os.system(command)
-    #text_file = open(dis_path + "command.txt", "w")
-    #text_file.write("command: \n  %s" % all_command)
-    #text_file.close()
-    #remove_dot_csv(dis_path+'statistics.csv')
-    print '\n\n\n\%%%%%%%%%%%%%%%5n\n'
+    text_file = open(dis_path + "command.txt", "w")
+    text_file.write("command: \n  %s" % all_command)
+    text_file.close()
+    remove_dot_csv(dis_path+'statistics.csv')
+
 
 
 
