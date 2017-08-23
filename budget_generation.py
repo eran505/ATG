@@ -117,7 +117,7 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
         command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
         print (command)
         all_command = all_command +'\n'*2 + command
-    #    os.system(command)
+        os.system(command)
     text_file = open(dis_path + "command.txt", "w")
     text_file.write("command: \n  %s" % all_command)
     text_file.close()
