@@ -114,9 +114,9 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
         time_command = "-Dsearch_budget=" + time_budget
         all_p=time_command + all_p
         command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
-        print command
+#        print command
         all_command = all_command +'\n'*2 + command
-        #os.system(command)
+        os.system(command)
     #text_file = open(dis_path + "command.txt", "w")
     #text_file.write("command: \n  %s" % all_command)
     #text_file.close()
@@ -131,7 +131,7 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
 def __init_main__():
 
 #    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
-#             "/home/eran/programs/EVOSUITE/jar","/home/eran/Desktop/",'/home/eran/Desktop/budget.csv']
+#             "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'budget.csv']
     if len(sys.argv) < 3 :
         print "miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )"
         exit(1)
