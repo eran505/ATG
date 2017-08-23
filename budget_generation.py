@@ -1,16 +1,14 @@
-import sys, os ,time
-import pandas as pd
+import sys, os ,time,csv
 
-def get_time_dico(path_csv):
-    df = pd.read_csv(path_csv)
-    df.set_index("class", drop=True, inplace=True)
-    dictionary = df.to_dict(orient="index")
-
-    def reading(self):
-        s = open('deed.txt', 'r').read()
-        self.whip = eval(s)
-    return dictionary
-
+def csv_to_dict(path):
+    dico = {}
+    with open(path) as csvfile:
+        reader1 = csv.DictReader(csvfile)
+        for row in reader1:
+            val_i = row['mean time- totalEffortInSeconds']
+            key_i = row['class']
+            dico[key_i] = val_i
+    return dico
 
 
 
@@ -109,17 +107,17 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
         test = suf  + cut_names[0]
         list_class = time.keys()
         if test in list_class:
-            value_time =  time[test]['mean time- totalEffortInSeconds']
-            value_time = int(value_time)
-            time_budget = str(value_time)
+            value_time =  time[test]
+            value_time = float(value_time)
+            time_budget = str(int(round(value_time)))
         else:
             time_budget='120'
         time_command = "-Dsearch_budget=" + time_budget
         all_p=time_command + all_p
         command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
-#        print command
+        print (command)
         all_command = all_command +'\n'*2 + command
-        os.system(command)
+    #    os.system(command)
     text_file = open(dis_path + "command.txt", "w")
     text_file.write("command: \n  %s" % all_command)
     text_file.close()
@@ -131,10 +129,10 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
 
 
 
-def __init_main__():
+def init_main():
 
-#    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
-#             "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'budget.csv']
+   # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
+   #          "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'budget.csv']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -144,7 +142,7 @@ def __init_main__():
     v_dis_path = sys.argv[4] #out_path = /home/eran/Desktop/
     v_time = sys.argv[5]  #csv file = /home/eran/Desktop/budget.csv
 
-    budget_dico = get_time_dico(v_time)
+    budget_dico = csv_to_dict(v_time)
 
     for i in range(5):
         localtime = time.asctime(time.localtime(time.time()))
@@ -156,4 +154,7 @@ def __init_main__():
         target_list = get_all_class(v_path)
         single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis)
 
-__init_main__()
+init_main()
+
+
+#get_time_dico1("budget.csv")
