@@ -134,10 +134,8 @@ def main_func(args):
         print "miss argv (path-pom  , path-classes , path tests)"
 
 
-
-proj_path= '/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/'
-
-args=["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/"]
-
+args = sys.argv
+#proj_path= '/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/'
+#args=["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/"]
 main_func(args)
 
