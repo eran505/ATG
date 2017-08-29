@@ -197,8 +197,8 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
 
 def init_main():
 
-   # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
-   #          "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'csv/budget.csv']
+#    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
+#             "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -206,9 +206,12 @@ def init_main():
     v_evo_name = sys.argv[2]  #evo_version = evosuite-1.0.5.jar
     v_evo_path = sys.argv[3] #evo_path  = /home/eran/programs/EVOSUITE/jar
     v_dis_path = sys.argv[4] #out_path = /home/eran/Desktop/
-    v_time = sys.argv[5]  #csv file = /home/eran/Desktop/budget.csv
+    mode = sys.argv[5]  #csv file = /home/eran/Desktop/budget.csv
+    if mode == 'FP':
+        budget_dico = get_time_fault_prediction('csv/Most_out_files.csv', 'FileName', 'prediction', v_path)
+    else:
+        budget_dico = csv_to_dict('csv/budget.csv','class','mean time- totalEffortInSeconds')
 
-    budget_dico = get_time_fault_prediction('csv/Most_out_files.csv','FileName','prediction',v_path)
     for i in range(5):
         localtime = time.asctime(time.localtime(time.time()))
         localtime_str = str(localtime)+'it='+str(i)
