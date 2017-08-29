@@ -1,14 +1,57 @@
 import sys, os ,time,csv
 
-def csv_to_dict(path):
+def csv_to_dict(path,key_name,val_name ):
     dico = {}
     with open(path) as csvfile:
         reader1 = csv.DictReader(csvfile)
         for row in reader1:
-            val_i = row['mean time- totalEffortInSeconds']
-            key_i = row['class']
+            val_i = row[val_name]
+            key_i = row[key_name]
             dico[key_i] = val_i
     return dico
+
+def clean_dict(dic,prefix,start,end):
+    dico_result={}
+    for key in dic.keys():
+        if str(key).__contains__(prefix) is False:
+            del dic[key]
+        else:
+            org_key = key
+            val = float(dic[org_key])
+            key = key[start:-end]
+            key = key.replace('\\','.')
+            dico_result[key]=val
+    return dico_result
+
+def match_dic(class_list,dico):
+    list_key = dico.keys()
+    for k in list_key:
+        if k in class_list is False:
+            del dico[k]
+    return dico
+
+def time_pred(time_per_class,dico,prefix):
+    for k in dico.keys():
+        if str(k).__contains__(prefix):
+            del dico[k]
+    size = len(dico.keys())
+    fac = size*time_per_class
+    for k in dico.keys():
+        dico[k]=dico[k]*fac
+    return dico
+
+def get_time_fault_prediction(path,key,value,root):
+    dico= csv_to_dict(path,key,value)
+    dico = clean_dict(dico,'src\main',14,5)
+    total_sum_predection = float(0)
+    class_list = get_all_class(root,66,5)
+    dico = match_dic(class_list,dico)
+    total_sum_predection= sum(dico.values())
+    for k in dico.keys() :
+        dico[k]=dico[k]/total_sum_predection
+    time_pred(120,dico,'age-in')
+    return dico
+
 
 
 
@@ -73,7 +116,24 @@ def remove_dot_csv(path):
         text_file.close()
     return "done"
 
-def get_all_class(root) :
+def get_all_class(root,start,end) :
+    size=0
+    class_list = []
+    for path, subdirs, files in os.walk(root):
+        for name in files:
+            #print os.path.join(path, name)
+            if name.__contains__("$") is False:
+                size+=1
+                val = str(path)+'/'+str(name)
+                val = val[start:-end]
+                val = val.replace('/','.')
+                class_list.append([str(path)+'/'+str(name)])
+    print (len(class_list))
+    return class_list
+
+
+
+def get_all_class_v1(root) :
     size=0
     class_list = []
     for path, subdirs, files in os.walk(root):
@@ -83,7 +143,6 @@ def get_all_class(root) :
                 size+=1
                 class_list.append([str(path),str(name)])
     return class_list
-
 
 def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path):
 
@@ -109,8 +168,15 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
         if test in list_class:
             value_time =  time[test]
             value_time = float(value_time)
-            time_budget = str(int(round(value_time)))
+            if value_time > 10 :
+                value_time = int(10)
+            elif value_time < 1 :
+                continue
+            else :
+                value_time = int(round(value_time))
+            time_budget = str(value_time)
         else:
+            print('----o0ops-------')
             time_budget='120'
         time_command = "-Dsearch_budget=" + time_budget
         all_p=time_command + all_p
@@ -132,7 +198,7 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
 def init_main():
 
    # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
-   #          "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'budget.csv']
+   #          "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'csv/budget.csv']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -142,8 +208,7 @@ def init_main():
     v_dis_path = sys.argv[4] #out_path = /home/eran/Desktop/
     v_time = sys.argv[5]  #csv file = /home/eran/Desktop/budget.csv
 
-    budget_dico = csv_to_dict(v_time)
-
+    budget_dico = get_time_fault_prediction('csv/Most_out_files.csv','FileName','prediction',v_path)
     for i in range(5):
         localtime = time.asctime(time.localtime(time.time()))
         localtime_str = str(localtime)+'it='+str(i)
@@ -151,10 +216,13 @@ def init_main():
         if full_dis=='null':
             print('cant make dir')
             exit(1)
-        target_list = get_all_class(v_path)
+        target_list = get_all_class_v1(v_path)
         single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis)
 
 init_main()
+
+
+
 
 
 #get_time_dico1("budget.csv")
