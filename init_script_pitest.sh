@@ -9,22 +9,19 @@ fi
 
 string_dir="V_"${RANDOM}
 
-mkdir $string_dir
-tar -xzvf /home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz -C /home/ise/eran/exp/${$string_dir}
-relativ_path=/home/ise/eran/exp/${$string_dir}/commons-math3-3.5-src
-rm -r /home/ise/eran/exp/${$string_dir}/commons-math3-3.5-src/src/test/java/org
-cp -avr ${path_arg} ${relativ_path}/src/test/java/
-cd ${relativ_path}
+mkdir ${string_dir}
+tar -xzvf /home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz -C /home/ise/eran/exp/${string_dir}
+relative_path=/home/ise/eran/exp/${string_dir}/commons-math3-3.5-src
+rm -r /home/ise/eran/exp/${string_dir}/commons-math3-3.5-src/src/test/java/org
+cp -avr ${path_arg} ${relative_path}/src/test/java/
+cd ${relative_path}
 mvn install 
 mvn org.pitest:pitest-maven:mutationCoverage
-DIRECTORY_path="/home/ise/eran/exp/output/${string_dir}
-if [ ! -d "$DIRECTORY_path" ]; then
-	mkdir "$DIRECTORY_path"
+DIRECTORY_path=/home/ise/eran/exp/output/${string_dir}
+if [ ! -d "${DIRECTORY_path}" ]; then
+	mkdir  ${DIRECTORY_path}
 fi
 
-mv ${relativ_path}/target/pit-reports/* "$DIRECTORY_path"
+mv ${relative_path}/target/pit-reports/* "$DIRECTORY_path"
 
-
-echo "Done !! "
-
-exit
+echo "done"
