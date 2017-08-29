@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 curdir=$(pwd)
 echo "curdir="$curdir
 newdir=$curdir/apache_test

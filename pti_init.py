@@ -68,12 +68,19 @@ def mod_test(root):
         text_file.close()
 
 
-def pair_test_class(list_tests,list_class):
+
+
+def pair_test_class11(list_tests,list_class):
     dict = {}
-    for node_class in list_class :
-        for node_test in list_tests:
-            if (equal_strings(node_class[1],node_test[1])) is True :
-                dict[node_class[1][:-6]] = [str(node_class[0])+'/'+str(node_class[1]),str(node_test[0])+'/'+str(node_test[1]) ]
+    for node_test in list_tests :
+        for node_class in list_class:
+            str_class = str(node_class[0]+'/'+node_class[1])
+            str_class = str_class.split('/org/')[1][:-5]
+            str_test = str(node_test[0]+'/'+node_test[1])
+            str_test = str_test.split('/org/')[1][:-12]
+            if str_class == str_test :
+                dict[ str(node_class[0])+'/'+str(node_class[1]),str(node_test[0])+'/'+str(node_test[1]) ] = [str(node_class[0])+'/'+str(node_class[1]),str(node_test[0])+'/'+str(node_test[1]) ]
+                break
     return dict
 
 def make_pom_data(dico):
@@ -106,37 +113,31 @@ def modf_pom(path,tag_c,tag_t):
 def pit_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
     list_test = walk(test_path)
-    dico = pair_test_class(list_test,list_calss)
+    dico = pair_test_class11(list_test,list_calss)
     tag_c,tag_t = make_pom_data(dico)
     modf_pom(pom_path,tag_c,tag_t)
-    os.chdir(pom_path[:-7])
-    command =" mvn org.pitest:pitest-maven:mutationCoverage"
+ #   os.chdir(pom_path[:-7])
+  #  command =" mvn org.pitest:pitest-maven:mutationCoverage"
     #os.system(command)
 
 
 
 def main_func(args):
     # ( path-pom  , path-class , path test )
-    if len(args) == 5 :
-        pom_path = args[1]
-        classes_pth = args[2]
-        tests_path = args[3]
-        test_java = args[4]
-        #mod_test(test_java)
+    if len(args) == 2 :
+        proj_path = args[1]
+        pom_path = proj_path+'pom.xml'
+        classes_pth=proj_path+'src/main/java/org/'
+        tests_path=proj_path+'src/test/java/org/'
         pit_test(pom_path,classes_pth,tests_path)
     else:
         print "miss argv (path-pom  , path-classes , path tests)"
 
-relativ = sys.args[1]
 
-class_p = '/target/classes/org/apache/commons/math3/fraction'
-test_p = '/target/test-classes/org/apache/commons/math3/fraction'
-pom_p = '/pom.xml'
-test_java = '/src/test/java/org/apache/commons/math3'
 
-ppp = '/home/eran/thesis/test_gen/poc/'
+proj_path= '/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/'
 
-args = ["",relativ+pom_p,relativ+class_p,relativ+test_p,relativ+ppp]
+args=["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/"]
+
 main_func(args)
-
 
