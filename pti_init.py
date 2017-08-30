@@ -111,14 +111,22 @@ def modf_pom(path,tag_c,tag_t):
     with open(path, 'r') as myfile:
         data = myfile.read()
         data = re.sub('\n','<nlt>',data)
-        data = re.sub('<targetClasses>(.*?)</targetClasses>',tag_c,data)
+        #data = re.sub('<targetClasses>(.*?)</targetClasses>',tag_c,data)
         data = re.sub('<targetTests>(.*?)</targetTests>',tag_t,data)
         data = re.sub('<nlt>', '\n', data)
     text_file = open(path, "w")
     text_file.write(data)
     text_file.close()
 
-
+def modf_only_one(dico):
+    target_str_data = "<targetClasses>"+'\n'
+    test_str_data = "<targetTests>"+'\n'
+    for key, value in dico.iteritems():
+        pac_test =  path_to_package(value[1],'org')
+        test_str_data = test_str_data  + pac_test  + '\n'
+    target_str_data+='</targetClasses> '
+    test_str_data+='</targetTests> '
+    return target_str_data,test_str_data
 
 def pit_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
@@ -142,8 +150,25 @@ def main_one_by_one(pom_path,class_path,test_path):
     print('done !')
 
 
+def main_one_vs_all(pom_path,class_path,test_path):
+    list_calss=walk(class_path)
+    list_test = walk(test_path)
+    dico = pair_test_class11(list_test,list_calss)
+    for key,val in dico.iteritems():
+        tag_c, tag_t=modf_only_one({key:val})
+        modf_pom(pom_path, tag_c, tag_t)
+        c_command = "mvn org.pitest:pitest-maven:mutationCoverage"
+        os.system(c_command)
+    print('done !')
 
 
+def main_all():
+    proj_path= os.getcwd()+'/'
+    print 'path: ',proj_path
+    pom_path = proj_path + 'pom.xml'
+    classes_pth = proj_path + 'src/main/java/org/'
+    tests_path = proj_path + 'src/test/java/org/'
+    main_one_vs_all(pom_path,classes_pth,tests_path)
 
 def main_in():
     proj_path= os.getcwd()+'/'
@@ -168,4 +193,4 @@ def main_func(args):
 #args=["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/"]
 #main_func()
 
-main_in()
+main_all()
