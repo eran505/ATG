@@ -5,7 +5,7 @@ import time
 
 
 def path_to_package(path,begin):
-    path1 = path[:-6]
+    path1 = path[:-5]
     res =''
     split_me = path1.split('/')
     gen = [i for i, x in enumerate(split_me) if x == begin]
@@ -68,7 +68,17 @@ def mod_test(root):
         text_file.close()
 
 
-
+def path_to_package_v11(first,path):
+    arr=[]
+    dim=0
+    while(path.find(first,dim) != -1):
+        arr.append(path.find(first,dim))
+        dim = path.find(first,dim) + len(first)
+    if len(arr) != 1 :
+        raise Exception('confilcet in path to package :' ,path, "with the key:",first  )
+    packa = path[arr[0]:]
+    packa =str(packa).replace("/",'.')
+    return  packa[:-5]
 
 def pair_test_class11(list_tests,list_class):
     dict = {}
@@ -79,7 +89,7 @@ def pair_test_class11(list_tests,list_class):
             str_test = str(node_test[0]+'/'+node_test[1])
             str_test = str_test.split('/org/')[1][:-12]
             if str_class == str_test :
-                dict[ str(node_class[0])+'/'+str(node_class[1]),str(node_test[0])+'/'+str(node_test[1]) ] = [str(node_class[0])+'/'+str(node_class[1]),str(node_test[0])+'/'+str(node_test[1]) ]
+                dict[path_to_package(str(node_class[0])+'/'+str(node_class[1]),'org')] = [str(node_class[0])+'/'+str(node_class[1]),str(node_test[0])+'/'+str(node_test[1]) ]
                 break
     return dict
 
@@ -120,10 +130,31 @@ def pit_test(pom_path,class_path,test_path):
   #  command =" mvn org.pitest:pitest-maven:mutationCoverage"
     #os.system(command)
 
+def main_one_by_one(pom_path,class_path,test_path):
+    list_calss=walk(class_path)
+    list_test = walk(test_path)
+    dico = pair_test_class11(list_test,list_calss)
+    for key,val in dico.iteritems():
+        tag_c, tag_t=make_pom_data({key:val})
+        modf_pom(pom_path, tag_c, tag_t)
+        c_command = "mvn org.pitest:pitest-maven:mutationCoverage"
+        os.system(c_command)
+    print('done !')
 
+
+
+
+
+def main_in():
+    proj_path= os.getcwd()+'/'
+    print 'path: ',proj_path
+    pom_path = proj_path + 'pom.xml'
+    classes_pth = proj_path + 'src/main/java/org/'
+    tests_path = proj_path + 'src/test/java/org/'
+    main_one_by_one(pom_path,classes_pth,tests_path)
 
 def main_func(args):
-    # ( path-pom  , path-class , path test )
+    # ( path-pom  , path-class , path test )==
     if len(args) == 2 :
         proj_path = args[1]
         pom_path = proj_path+'pom.xml'
@@ -134,8 +165,7 @@ def main_func(args):
         print "miss argv (path-pom  , path-classes , path tests)"
 
 
-args = sys.argv
-#proj_path= '/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/'
 #args=["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/"]
-main_func(args)
+#main_func()
 
+main_in()
