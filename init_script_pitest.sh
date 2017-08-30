@@ -18,12 +18,12 @@ cp -avr ${path_arg} ${relative_path}/src/test/java/
 cp -avr /home/ise/eran/repo/ATG/pom.xml /home/ise/eran/exp/${string_dir}/commons-math3-3.5-src/
 cd ${relative_path}
 mvn install
-mvn org.pitest:pitest-maven:mutationCoverage
-DIRECTORY_path=/home/ise/eran/exp/output/${string_dir}
+python pti_init.py
+DIRECTORY_path=${path_arg}/${string_dir}
 if [ ! -d "${DIRECTORY_path}" ]; then
 	mkdir  ${DIRECTORY_path}
 fi
 
-mv ${relative_path}/target/pit-reports/* "$DIRECTORY_path"
+cp -avr ${relative_path}/target/pit-reports/*  ${DIRECTORY_path}
 
 echo "done"
