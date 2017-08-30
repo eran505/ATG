@@ -144,7 +144,7 @@ def get_all_class_v1(root) :
                 class_list.append([str(path),str(name)])
     return class_list
 
-def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path):
+def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path,upper_bound):
 
     evo_string = "java -jar " + evo_path +evo_name
 
@@ -167,9 +167,11 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
         list_class = time.keys()
         if test in list_class:
             value_time =  time[test]
+            if value_time > 0 :
+                print("val-time=", value_time)
             value_time = float(value_time)
-            if value_time > 10 :
-                value_time = int(10)
+            if value_time > upper_bound :
+                value_time = int(upper_bound)
             elif value_time < 1 :
                 continue
             else :
@@ -177,7 +179,8 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
             time_budget = str(value_time)
         else:
             print('----o0ops-------')
-            time_budget='120'
+            time_budget= str(upper_bound)
+        print("time_budget=", time_budget)
         time_command = "-Dsearch_budget=" + time_budget
         all_p=time_command + all_p
         command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
@@ -191,14 +194,10 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
 
 
 
-
-
-
-
 def init_main():
 
-#    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
-#             "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP']
+    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
+             "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','10']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -207,11 +206,18 @@ def init_main():
     v_evo_path = sys.argv[3] #evo_path  = /home/eran/programs/EVOSUITE/jar
     v_dis_path = sys.argv[4] #out_path = /home/eran/Desktop/
     mode = sys.argv[5]  #csv file = /home/eran/Desktop/budget.csv
+    upper = sys.argv[6]
+    upper = int(upper)
     if mode == 'FP':
         budget_dico = get_time_fault_prediction('csv/Most_out_files.csv', 'FileName', 'prediction', v_path)
     else:
         budget_dico = csv_to_dict('csv/budget.csv','class','mean time- totalEffortInSeconds')
-
+    ctr=0
+    print "all=",len(budget_dico.keys())
+    for k in budget_dico.keys():
+        if budget_dico[k] >= 1:
+            ctr+=1
+    print "ctr=",ctr
     for i in range(5):
         localtime = time.asctime(time.localtime(time.time()))
         localtime_str = str(localtime)+'it='+str(i)
@@ -220,7 +226,7 @@ def init_main():
             print('cant make dir')
             exit(1)
         target_list = get_all_class_v1(v_path)
-        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis)
+        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,upper)
 
 init_main()
 
