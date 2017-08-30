@@ -7,7 +7,7 @@ echo "missing path value "
 exit
 fi
 
-string_dir="V_"${RANDOM}
+string_dir="ALL_"${RANDOM}
 
 mkdir ${string_dir}
 tar -xzvf /home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz -C /home/ise/eran/exp/${string_dir}
