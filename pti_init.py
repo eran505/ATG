@@ -4,6 +4,38 @@ import glob, os ,sys ,re
 import time
 
 
+def walking(root, rec="", file_t=True, lv=-1, full=True):
+    size = 0
+    ctr = 0
+    class_list = []
+    if lv == -1:
+        lv = float('inf')
+    for path, subdirs, files in os.walk(root):
+        if lv < ctr:
+            break
+        ctr += 1
+        if file_t:
+            for name in files:
+                tmp = re.compile(rec).search(name)
+                if tmp == None:
+                    continue
+                size += 1
+                if full:
+                    class_list.append(os.path.join(path, name))
+                else:
+                    class_list.append(str(name))
+        else:
+            for name in subdirs:
+                tmp = re.compile(rec).search(name)
+                if tmp == None:
+                    continue
+                size += 1
+                if full:
+                    class_list.append(os.path.join(path, name))
+                else:
+                    class_list.append(str(name))
+    return class_list
+
 def path_to_package(path,begin):
     path1 = path[:-5]
     res =''
@@ -135,6 +167,7 @@ def pit_test(pom_path,class_path,test_path):
     tag_c,tag_t = make_pom_data(dico)
     modf_pom(pom_path,tag_c,tag_t)
  #   os.chdir(pom_path[:-7])
+    arr = walking()
   #  command =" mvn org.pitest:pitest-maven:mutationCoverage"
     #os.system(command)
 
@@ -159,6 +192,12 @@ def main_one_vs_all(pom_path,class_path,test_path):
         modf_pom(pom_path, tag_c, tag_t)
         c_command = "mvn org.pitest:pitest-maven:mutationCoverage"
         os.system(c_command)
+        proj_path1 = os.getcwd()
+        arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
+        if len(arr) >0:
+            str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
+            os.system(str2)
+
     print('done !')
 
 

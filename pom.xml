@@ -429,8 +429,6 @@
                     <configuration>
                       <outputFormats>
                         <param>CSV</param>
-                        <param>HTML</param>
-                        <paeam>XML</paeam>
                       </outputFormats>
                       <!-- <verbose>true</verbose> -->
                         <targetClasses>

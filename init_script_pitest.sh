@@ -2,12 +2,18 @@
 
 
 path_arg=${1}
+name_arg=${2}
 if [ -z "$path_arg" ]; then
 echo "missing path value "
 exit
 fi
 
-string_dir="ALL_"${RANDOM}
+if [ -z "$name_arg" ]; then
+echo "missing path value name  "
+exit
+fi
+
+string_dir="ALL_"${name_arg}
 
 mkdir ${string_dir}
 tar -xzvf /home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz -C /home/ise/eran/exp_all/${string_dir}
@@ -20,11 +26,6 @@ cp -avr /home/ise/eran/repo/ATG/pti_init.py /home/ise/eran/exp_all/${string_dir}
 cd ${relative_path}
 mvn install
 python pti_init.py
-DIRECTORY_path=${path_arg}/${string_dir}
-if [ ! -d "${DIRECTORY_path}" ]; then
-	mkdir  ${DIRECTORY_path}
-fi
 
-cp -avr ${relative_path}/target/pit-reports/*  ${DIRECTORY_path}
 
 echo "done"
