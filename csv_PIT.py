@@ -93,13 +93,14 @@ def merge_df(list_df):
         if ctr == 0 :
             ctr += 1
             continue
+        ctr += 1
         print ctr,'-size: ',len(list_df[ctr])
         if list_df[ctr].empty :
             emp+=1
             continue;
         df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","method","line"])
         print '============================================='
-        ctr+=1
+
     print 'emp: ',emp
     return df_all
 
