@@ -71,6 +71,7 @@ def make_dcit(all_dir):
 
 def _data_df(list_data):
     df_list=[]
+    error_dir=0
     names_list=["class","method","line"]
     for item in list_data:
         csvs = item['csv']
@@ -81,27 +82,23 @@ def _data_df(list_data):
             df.drop(df.columns[[0, 2 ,len(list(df))-1]], axis=1, inplace=True)
             #df.set_index(["class","method","line"], inplace=True)
             df.reset_index(level=['class','method','line'],inplace=True)
-            df_list.append(df)
+            if len(df) == 47163 :
+                df_list.append(df)
+            else:
+                error_dir+=1
+    print 'error_dir=',error_dir
     result = merge_df(df_list)
     return result
 
 def merge_df(list_df):
     df_all = list_df[0]
     ctr = 0
-    emp=0
     while ctr<len(list_df):
         if ctr == 0 :
             ctr += 1
             continue
-        ctr += 1
-        print ctr,'-size: ',len(list_df[ctr])
-        if list_df[ctr].empty :
-            emp+=1
-            continue;
         df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","method","line"])
-        print '============================================='
-
-    print 'emp: ',emp
+        ctr += 1
     return df_all
 
 
