@@ -186,8 +186,11 @@ def main_one_by_one(pom_path,class_path,test_path):
 def main_one_vs_all(pom_path,class_path,test_path):
     list_calss=walk(class_path)
     list_test = walk(test_path)
+    dico_done = get_class_done(pom_path[:-7]+'target/pit-reports/')
     dico = pair_test_class11(list_test,list_calss)
     for key,val in dico.iteritems():
+        if key in dico_done:
+            continue
         tag_c, tag_t=modf_only_one({key:val})
         modf_pom(pom_path, tag_c, tag_t)
         c_command = "mvn org.pitest:pitest-maven:mutationCoverage"
@@ -197,9 +200,18 @@ def main_one_vs_all(pom_path,class_path,test_path):
         if len(arr) >0:
             str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
             os.system(str2)
-
     print('done !')
 
+def get_class_done(root_path):
+    ctr = 0
+    done_dict={}
+    if os.path.isdir(root_path):
+        results=walking(root_path,"org",False,0,False)
+        for test in results:
+            ctr+=1
+            done_dict[test]=True
+    print ctr
+    return done_dict
 
 def main_all():
     proj_path= os.getcwd()+'/'
@@ -229,7 +241,11 @@ def main_func(args):
         print "miss argv (path-pom  , path-classes , path tests)"
 
 
+
+
+
+
 #args=["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/"]
 #main_func()
-
 main_all()
+
