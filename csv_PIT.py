@@ -17,7 +17,7 @@ def get_csv_summary(root_p):
 
 def get_all_dir(root_p):
     walker=pit_render_test.walker(root_p)
-    classes_list = walker.walk("",False,0)
+    classes_list = walker.walk("org",False,0)
     return classes_list
 
 def get_name_CUT(root_p):
@@ -123,7 +123,8 @@ def delet_csv(root_p):
     walker=pit_render_test.walker(root_p)
     list_p = walker.walk("mutations.csv")
     for csv_f in list_p:
-        os.system("rm "+csv_f)
+        if str(csv_f).__contains__('org.apache.commons') is True :
+            os.system("rm "+csv_f)
 
 def init_clac(arr_path,out):
     ctr=0
@@ -163,6 +164,7 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
+    #arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
     arr_p=[arr[1]]
     out = arr[1]
     dico = init_clac(arr_p,out)
