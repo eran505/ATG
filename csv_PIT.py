@@ -162,9 +162,7 @@ if __name__ == "__main__":
     #path = '/home/eran/thesis/test_gen/experiment/all_pit/'
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
-    arr = sys.argv
     arr=sys.argv
-    arr=['','/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
     arr_p=[arr[1]]
     out = arr[1]
     dico = init_clac(arr_p,out)
