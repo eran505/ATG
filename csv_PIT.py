@@ -88,15 +88,15 @@ def _data_df(list_data):
 def merge_df(list_df):
     df_all = list_df[0]
     ctr = 0
-    print 'list_len=',len(list_df)
     while ctr<len(list_df):
         if ctr == 0 :
             ctr += 1
             continue
+        print list_df[ctr][4:5]
         df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","method","line"])
-        print df_all[2:3]
         print '============================================='
-        print 'ctr=',ctr
+        if ctr == 3 :
+            break
         ctr+=1
     return df_all
 
