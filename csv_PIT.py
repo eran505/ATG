@@ -118,6 +118,13 @@ def mean_all(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERROR
         df[it[:-3]+"mean"] = (df[it].astype(float))/df['total']
         df[it[:-3] + "mean_norm"] = (df[it].astype(float)) / df['total']
 
+
+def delet_csv(root_p):
+    walker=pit_render_test.walker(root_p)
+    list_p = walker.walk("mutations.csv")
+    for csv_f in list_p:
+        os.system("rm "+csv_f)
+
 def init_clac(arr_path,out):
     ctr=0
     arr_dfs = []
@@ -125,10 +132,11 @@ def init_clac(arr_path,out):
         ctr += 1
         dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
         print dfs.shape
-        print list(dfs)
-        mean_all(dfs)
+        size =  len(list(dfs))
+        #mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
-        write_to_csv(out+'all_t'+str(ctr)+'.csv', dfs)
+        write_to_csv(path+'commons-math3-3.5-src/target/pit-reports/'+'all_t'+str(size)+'.csv', dfs)
+        delet_csv(path)
     return arr_dfs
 
 
@@ -148,15 +156,20 @@ def fin_sum(dict_df_list):
 
 
 if __name__ == "__main__":
-    dir_names= ['ALL_t=1' ,'ALL_t=3' ]#, 'ALL_t=4']
-    dir_names_tmp = ['pit_tmp','pit_tmp_2']
-    out = '/home/eran/thesis/test_gen/experiment/'
-    path = '/home/eran/thesis/test_gen/experiment/all_pit/'
-    #path = '/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp/'
-    arr_p = [ path+x+'/' for x in dir_names_tmp]
+    #dir_names= ['ALL_t=1' ,'ALL_t=3' ]#, 'ALL_t=4']
+    #dir_names_tmp = ['pit_tmp','pit_tmp_2']
+    #out = '/home/eran/thesis/test_gen/experiment/'
+    #path = '/home/eran/thesis/test_gen/experiment/all_pit/'
+    #arr_p = [ path+x+'/' for x in dir_names_tmp]
+
+    arr = sys.argv
+    arr=sys.argv
+    arr=['','/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
+    arr_p=[arr[1]]
+    out = arr[1]
     dico = init_clac(arr_p,out)
-    df = fin_sum(dico)
-    write_to_csv(out+'fin_df.csv',df)
+    #df = fin_sum(dico)
+    #write_to_csv(out+'fin_df.csv',df)
 
 
 
