@@ -94,6 +94,8 @@ def merge_df(list_df):
             ctr += 1
             continue
         df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","method","line"])
+        print df_all[2:3]
+        print '============================================='
         print 'ctr=',ctr
         ctr+=1
     return df_all
