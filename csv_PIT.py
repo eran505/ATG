@@ -81,7 +81,6 @@ def _data_df(list_data):
             df.drop(df.columns[[0, 2 ,len(list(df))-1]], axis=1, inplace=True)
             #df.set_index(["class","method","line"], inplace=True)
             df.reset_index(level=['class','method','line'],inplace=True)
-            print df[0:1]
             df_list.append(df)
     result = merge_df(df_list)
     return result
@@ -89,11 +88,13 @@ def _data_df(list_data):
 def merge_df(list_df):
     df_all = list_df[0]
     ctr = 0
+    print 'list_len=',len(list_df)
     while ctr<len(list_df):
         if ctr == 0 :
             ctr += 1
             continue
         df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","method","line"])
+        print 'ctr=',ctr
         ctr+=1
     return df_all
 
