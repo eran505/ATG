@@ -108,8 +108,9 @@ def merge_df(list_df):
     return df_all
 
 
-def merge_all_mutation_df(root):
-    all_dir= get_all_dir(root)
+def merge_all_mutation_df(root_p):
+    print 'root=',root_p
+    all_dir= get_all_dir(root_p)
     dict_mut=make_dcit(all_dir)
     dfs = _data_df(dict_mut)
     return  dfs
