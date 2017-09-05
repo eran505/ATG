@@ -17,7 +17,7 @@ def get_csv_summary(root_p):
 
 def get_all_dir(root_p):
     walker=pit_render_test.walker(root_p)
-    classes_list = walker.walk("org",False,0)
+    classes_list = walker.walk("",False,0)
     return classes_list
 
 def get_name_CUT(root_p):
@@ -54,6 +54,7 @@ def get_name(path):
                 name = row[6]
                 break
     return name[:len(name)/2]
+
 def make_dcit(all_dir):
     all_data=[]
     for dir in all_dir:
@@ -148,7 +149,7 @@ def init_clac(arr_path,out):
         size =  len(list(dfs))
         mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
-        write_to_csv(path+'commons-math3-3.5-src/target/pit-reports/'+'all_t'+str(size)+'.csv', dfs)
+        write_to_csv(path+'all_t'+str(size)+'.csv', dfs)
         #delet_csv(path)
     return arr_dfs
 
