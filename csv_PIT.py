@@ -176,7 +176,7 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
-    arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/ALL_t=1/']
+    #arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/ALL_t=1/']
     arr_p=[arr[1]]
     out = arr[1]
     split_arr = str(arr[1]).split('/')
