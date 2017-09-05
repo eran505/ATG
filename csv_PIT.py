@@ -66,6 +66,7 @@ def make_dcit(all_dir):
         csv = get_csv_summary(dir)
         d={'name':name_class , 'csv':csv , 'dir':dir }
         all_data.append(d)
+    print 'data_size=',len(all_data)
     return all_data
 
 
