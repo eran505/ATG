@@ -188,6 +188,7 @@ def main_one_vs_all(pom_path,class_path,test_path):
     list_test = walk(test_path)
     dico_done = get_class_done(pom_path[:-7]+'target/pit-reports/')
     dico = pair_test_class11(list_test,list_calss)
+    print 'size=', len(dico.keys()) - len(dico_done.keys())
     for key,val in dico.iteritems():
         if key in dico_done:
             continue

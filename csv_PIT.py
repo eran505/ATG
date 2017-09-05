@@ -150,7 +150,7 @@ def init_clac(arr_path,out):
         mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
         write_to_csv(path+'all_t'+str(size)+'.csv', dfs)
-        #delet_csv(path)
+        delet_csv(path)
     return arr_dfs
 
 
