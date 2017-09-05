@@ -86,9 +86,14 @@ def _data_df(list_data):
                 df_list.append(df)
             else:
                 error_dir+=1
+                print item['name']
+                del_error_files(item['dir'])
     print 'error_dir=',error_dir
     result = merge_df(df_list)
     return result
+
+def del_error_files(path_err):
+    os.system('rm -r '+path_err)
 
 def merge_df(list_df):
     df_all = list_df[0]
@@ -139,7 +144,7 @@ def init_clac(arr_path,out):
         dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
         print dfs.shape
         size =  len(list(dfs))
-        #mean_all(dfs)
+        mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
         write_to_csv(path+'commons-math3-3.5-src/target/pit-reports/'+'all_t'+str(size)+'.csv', dfs)
         #delet_csv(path)
@@ -169,12 +174,14 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
-    #arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
+    arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/ALL_t=1/']
     arr_p=[arr[1]]
     out = arr[1]
+    split_arr = str(arr[1]).split('/')
+    last_name_dir = split_arr[-2]
     dico = init_clac(arr_p,out)
-    #df = fin_sum(dico)
-    #write_to_csv(out+'fin_df.csv',df)
+  #  df = fin_sum(dico)
+  #  write_to_csv(out+last_name_dir+'_fin.csv',df)
 
 
 
