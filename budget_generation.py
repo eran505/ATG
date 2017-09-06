@@ -1,6 +1,5 @@
 import sys, os ,time,csv
 
-import pandas as pd
 
 def csv_to_dict(path,key_name,val_name ):
     dico = {}
