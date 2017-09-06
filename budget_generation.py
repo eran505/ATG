@@ -1,5 +1,7 @@
 import sys, os ,time,csv
 
+import pandas as pd
+
 def csv_to_dict(path,key_name,val_name ):
     dico = {}
     with open(path) as csvfile:
@@ -40,7 +42,7 @@ def time_pred(time_per_class,dico,prefix):
         dico[k]=dico[k]*fac
     return dico
 
-def get_time_fault_prediction(path,key,value,root):
+def get_time_fault_prediction(path,key,value,root,upper):
     dico= csv_to_dict(path,key,value)
     dico = clean_dict(dico,'src\main',14,5)
     total_sum_predection = float(0)
@@ -49,7 +51,7 @@ def get_time_fault_prediction(path,key,value,root):
     total_sum_predection= sum(dico.values())
     for k in dico.keys() :
         dico[k]=dico[k]/total_sum_predection
-    time_pred(120,dico,'age-in')
+    time_pred(upper,dico,'age-in')
     return dico
 
 
@@ -164,7 +166,10 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
         cut_names = str(cut[1]).split('.')
         pre,suf = assemble_path_string2(cut[0])
         test = suf  + cut_names[0]
-        list_class = time.keys()
+        if len(time)>0:
+            list_class = time.keys()
+        else :
+            list_class = []
         if test in list_class:
             value_time =  time[test]
             if value_time > 0 :
@@ -178,7 +183,6 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
                 value_time = int(round(value_time))
             time_budget = str(value_time)
         else:
-            print('----o0ops-------')
             time_budget= str(upper_bound)
         print("time_budget=", time_budget)
         time_command = "-Dsearch_budget=" + time_budget
@@ -192,12 +196,16 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
     text_file.close()
     remove_dot_csv(dis_path+'statistics.csv')
 
-
+def dict_to_csv(mydict,path):
+    with open(path+'FP_budget_time.csv', 'wb') as csv_file:
+        writer = csv.writer(csv_file)
+        for key, value in mydict.items():
+            writer.writerow([key, value])
 
 def init_main():
 
-   # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
-   #         "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','10']
+    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
+            "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','10']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -209,24 +217,25 @@ def init_main():
     upper = sys.argv[6]
     upper = int(upper)
     if mode == 'FP':
-        budget_dico = get_time_fault_prediction('csv/Most_out_files.csv', 'FileName', 'prediction', v_path)
+        budget_dico = get_time_fault_prediction('csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper)
     else:
-        budget_dico = csv_to_dict('csv/budget.csv','class','mean time- totalEffortInSeconds')
+        budget_dico = {}
     ctr=0
     print "all=",len(budget_dico.keys())
-    for k in budget_dico.keys():
-        if budget_dico[k] >= 1:
-            ctr+=1
-    print "ctr=",ctr
     for i in range(5):
         localtime = time.asctime(time.localtime(time.time()))
-        localtime_str = str(localtime)+'it='+str(i)
+        if mode == 'FP':
+            localtime_str ='FP_'+ str(localtime)+'_t='+str(upper)+'_it='+str(i)
+        else:
+            localtime_str ='U_'+ str(localtime)+'_t='+str(upper)+'_it='+str(i)
         full_dis = mkdir_Os(v_dis_path, localtime_str)
         if full_dis=='null':
             print('cant make dir')
             exit(1)
         target_list = get_all_class_v1(v_path)
         single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,upper)
+        if mode == 'FP':
+            dict_to_csv(budget_dico,full_dis)
 
 init_main()
 

@@ -168,6 +168,52 @@ def fin_sum(dict_df_list):
 
 
 
+def tmp_csv_fin(path_p):
+
+    walker=pit_render_test.walker(path_p)
+    list_p = walker.walk(".csv")
+    df_reg=[]
+    df_FP=[]
+    for p in list_p:
+        if str(p).__contains__('FP.csv') is True:
+            df_FP.append(pd.read_csv(p))
+        else :
+            df_reg.append(pd.read_csv(p))
+    new_df = df_FP[0][['index',"class","method","line"]].copy()
+    counter = 0
+    for df in df_FP:
+        if counter == 0 :
+            new_df['kill_R_FP'] = np.where(df['KILLED_sum'] > 0, 1, 0)
+            new_df['total_FP'] = df['total']
+        else:
+            new_df['total_FP']+=df['total']
+            new_df['kill_R_FP'] += np.where(df['KILLED_sum'] > 0 , 1 , 0)
+        for leb in arr_sign:
+            if counter == 0:
+                new_df[leb + '_FP'] = df[leb + '_sum']
+            else:
+                new_df[leb+'_FP']+=df[leb+'_sum']
+        counter+=1
+        counter=0
+        for df in df_reg:
+            if counter == 0:
+                new_df['kill_R_uni'] = np.where(df['KILLED_sum'] > 0, 1, 0)
+                new_df['total_uni'] = df['total']
+            else:
+                new_df['total_uni'] += df['total']
+                new_df['kill_R_uni'] += np.where(df['KILLED_sum'] > 0, 1, 0)
+            for leb in arr_sign:
+                if counter == 0:
+                    new_df[leb + '_uni'] = df[leb + '_sum']
+                else:
+                    new_df[leb + '_FP'] += df[leb + '_sum']
+            counter += 1
+    write_to_csv('/home/eran/Desktop/fin.csv',new_df)
+    return  new_df
+
+
+
+
 
 if __name__ == "__main__":
     #dir_names= ['ALL_t=1' ,'ALL_t=3' ]#, 'ALL_t=4']
@@ -177,16 +223,14 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
-    #arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/ALL_t=1/']
+    arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/ALL_t=1/']
     arr_p=[arr[1]]
     out = arr[1]
     split_arr = str(arr[1]).split('/')
     last_name_dir = split_arr[-2]
-    dico = init_clac(arr_p,out)
+  #  dico = init_clac(arr_p,out)
   #  df = fin_sum(dico)
   #  write_to_csv(out+last_name_dir+'_fin.csv',df)
-
-
 
 
 
