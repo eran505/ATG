@@ -175,7 +175,7 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
                 print("val-time=", value_time)
             value_time = float(value_time)
             if value_time > upper_bound :
-                value_time = int(upper_bound)
+                value_time = int(10)
             elif value_time < 1 :
                 continue
             else :
