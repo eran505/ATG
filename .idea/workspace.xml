@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f1a7b73c-86a7-4c1e-be59-956eb450e362" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/budget_generation.py" afterPath="$PROJECT_DIR$/budget_generation.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/init_FP.sh" afterPath="$PROJECT_DIR$/init_FP.sh" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,24 +29,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="budget_generation.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="budget_generation.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/budget_generation.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="149">
               <caret line="206" column="4" lean-forward="false" selection-start-line="206" selection-start-column="4" selection-end-line="206" selection-end-column="4" />
-              <folding>
-                <marker date="1504940792740" expanded="true" signature="6077:7682" ph="..." />
-                <marker date="1504940792740" expanded="true" signature="6094:6275" ph="..." />
-              </folding>
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="init_FP.sh" pinned="false" current-in-tab="false">
+      <file leaf-file-name="init_FP.sh" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/init_FP.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="75">
-              <caret line="5" column="0" lean-forward="false" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
+            <state relative-caret-position="60">
+              <caret line="4" column="174" lean-forward="false" selection-start-line="4" selection-start-column="174" selection-end-line="4" selection-end-column="174" />
               <folding />
             </state>
           </provider>
@@ -118,7 +115,6 @@
         <option value="$PROJECT_DIR$/init_exp_pit.sh" />
         <option value="$PROJECT_DIR$/start_pit.sh" />
         <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/init_FP.sh" />
         <option value="$PROJECT_DIR$/../../test_gen/poc/commons-math3-3.5-src/pti_init.py" />
         <option value="$PROJECT_DIR$/init_script_pitest.sh" />
         <option value="$PROJECT_DIR$/pit_render_test.py" />
@@ -128,6 +124,7 @@
         <option value="$PROJECT_DIR$/csv_PIT.py" />
         <option value="$PROJECT_DIR$/init_uni.sh" />
         <option value="$PROJECT_DIR$/budget_generation.py" />
+        <option value="$PROJECT_DIR$/init_FP.sh" />
       </list>
     </option>
   </component>
@@ -814,14 +811,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/init_FP.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="0" lean-forward="false" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/init_script_pitest.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="16">
@@ -842,10 +831,15 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="149">
           <caret line="206" column="4" lean-forward="false" selection-start-line="206" selection-start-column="4" selection-end-line="206" selection-end-column="4" />
-          <folding>
-            <marker date="1504940792740" expanded="true" signature="6077:7682" ph="..." />
-            <marker date="1504940792740" expanded="true" signature="6094:6275" ph="..." />
-          </folding>
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/init_FP.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="174" lean-forward="false" selection-start-line="4" selection-start-column="174" selection-end-line="4" selection-end-column="174" />
+          <folding />
         </state>
       </provider>
     </entry>
