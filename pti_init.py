@@ -166,10 +166,8 @@ def pit_test(pom_path,class_path,test_path):
     dico = pair_test_class11(list_test,list_calss)
     tag_c,tag_t = make_pom_data(dico)
     modf_pom(pom_path,tag_c,tag_t)
- #   os.chdir(pom_path[:-7])
-    arr = walking()
-  #  command =" mvn org.pitest:pitest-maven:mutationCoverage"
-    #os.system(command)
+    command =" mvn org.pitest:pitest-maven:mutationCoverage"
+    os.system(command)
 
 def main_one_by_one(pom_path,class_path,test_path):
     list_calss=walk(class_path)
@@ -230,23 +228,19 @@ def main_in():
     tests_path = proj_path + 'src/test/java/org/'
     main_one_by_one(pom_path,classes_pth,tests_path)
 
-def main_func(args):
-    # ( path-pom  , path-class , path test )==
-    if len(args) == 2 :
-        proj_path = args[1]
-        pom_path = proj_path+'pom.xml'
-        classes_pth=proj_path+'src/main/java/org/'
-        tests_path=proj_path+'src/test/java/org/'
-        pit_test(pom_path,classes_pth,tests_path)
-    else:
-        print "miss argv (path-pom  , path-classes , path tests)"
+def main_func():
+    proj_path= os.getcwd()+'/'
+    pom_path = proj_path+'pom.xml'
+    classes_pth=proj_path+'src/main/java/org/'
+    tests_path=proj_path+'src/test/java/org/'
+    pit_test(pom_path,classes_pth,tests_path)
 
 
 
 
 
 
-#args=["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/"]
-#main_func()
-main_all()
+
+main_func()
+#main_all()
 
