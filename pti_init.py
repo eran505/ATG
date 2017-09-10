@@ -99,6 +99,25 @@ def mod_test(root):
         text_file.write(data)
         text_file.close()
 
+def make_package(list_item):
+    dict={}
+    for item_i in list_item:
+        item = path_to_package(item_i[0]+'/'+item_i[1],'org')
+        item_arr = str(item).split('.')
+        package_it = ""
+        for str_i in item_arr[:-1]:
+            package_it=package_it+"."+str_i
+        package_it=package_it[1:]
+        if package_it in dict:
+            val_tmp = dict[package_it]
+            #val_tmp.append(item)
+            val_tmp[item[:-7]] = item
+            dict[package_it] = val_tmp
+        else :
+            d ={}
+            d[item[:-7]]=item
+            dict[package_it] = d
+    return dict
 
 def path_to_package_v11(first,path):
     arr=[]
@@ -124,6 +143,21 @@ def pair_test_class11(list_tests,list_class):
                 dict[path_to_package(str(node_class[0])+'/'+str(node_class[1]),'org')] = [str(node_class[0])+'/'+str(node_class[1]),str(node_test[0])+'/'+str(node_test[1]) ]
                 break
     return dict
+
+def make_pom_package(dico):
+    target_str_data = "<targetClasses>"+'\n'
+    test_str_data = "<targetTests>"+'\n'
+    p_s = "<param>"
+    p_e = "</param>"
+    for key, value in dico.iteritems():
+        pac_class = key
+        pac_test =  value
+        target_str_data = target_str_data + p_s + pac_class + p_e + '\n'
+        test_str_data = test_str_data + p_s + pac_test + p_e + '\n'
+    target_str_data+='</targetClasses> '
+    test_str_data+='</targetTests> '
+    return target_str_data,test_str_data
+
 
 def make_pom_data(dico):
     target_str_data = "<targetClasses>"+'\n'
@@ -160,10 +194,32 @@ def modf_only_one(dico):
     test_str_data+='</targetTests> '
     return target_str_data,test_str_data
 
+def package_test(pom_path,class_path,test_path):
+    list_calss=walk(class_path)
+    list_test = walk(test_path)
+    print 'class=',len(list_calss)
+    print 'test=',len(list_test)
+    dico = pair_test_class11(list_test,list_calss)
+    print 'dico=',len(dico)
+    package_d = make_package(list_test)
+    for key,value in package_d.iteritems():
+        tag_c,tag_t = make_pom_package(value)
+        modf_pom(pom_path,tag_c,tag_t)
+        command =" mvn org.pitest:pitest-maven:mutationCoverage"
+        os.system(command)
+        proj_path1 = os.getcwd()
+        arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
+        if len(arr) >0:
+            str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
+            os.system(str2)
+
 def pit_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
     list_test = walk(test_path)
+    print 'class=',len(list_calss)
+    print 'test=',len(list_test)
     dico = pair_test_class11(list_test,list_calss)
+    print 'dico=',len(dico)
     tag_c,tag_t = make_pom_data(dico)
     modf_pom(pom_path,tag_c,tag_t)
     command =" mvn org.pitest:pitest-maven:mutationCoverage"
@@ -233,7 +289,7 @@ def main_func():
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
     tests_path=proj_path+'src/test/java/org/'
-    pit_test(pom_path,classes_pth,tests_path)
+    package_test(pom_path,classes_pth,tests_path)
 
 
 
