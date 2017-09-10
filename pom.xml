@@ -432,10 +432,10 @@
                       </outputFormats>
                       <!-- <verbose>true</verbose> -->
                         <targetClasses>
-                          org.apache.commons.math3.*
+
                        </targetClasses>
                         <targetTests>
-                          org.apache.commons.math3.*
+
                        </targetTests>
                       <excludedMethods>
                       </excludedMethods>
