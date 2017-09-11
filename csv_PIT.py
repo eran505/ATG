@@ -62,7 +62,7 @@ def make_dcit(all_dir):
         if len(str(arr[len(arr)-1])) < 20 :
             name_class = get_name(dir)
         else :
-            name_class = arr[len(arr)-1]+"_ESTest"
+            name_class = arr[len(arr)-1]
        # name_class = get_name_CUT(dir)
         csv = get_csv_summary(dir)
         d={'name':name_class , 'csv':csv , 'dir':dir }
