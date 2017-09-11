@@ -131,6 +131,12 @@ def mean_all(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERROR
         df[it[:-3]+"mean"] = (df[it].astype(float))/df['total']
         df[it[:-3] + "mean_norm"] = (df[it].astype(float)) / df['total']
 
+def name_ext(p):
+    arr = str(p).split('/')
+    if len(arr[-1])>2:
+        return  arr[-1]
+    else :
+        return arr[-2]
 
 def delet_csv(root_p):
     walker=pit_render_test.walker(root_p)
@@ -143,13 +149,14 @@ def init_clac(arr_path):
     ctr=0
     arr_dfs = []
     for path in arr_path :
+        name_dir = name_ext(path)
         ctr += 1
         dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
         print dfs.shape
         size =  len(list(dfs))
         mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
-        write_to_csv(path+'all_t'+str(size)+'.csv', dfs)
+        write_to_csv(path+'PIT_'+str(name_dir)+str(size)+'.csv', dfs)
         #delet_csv(path)
     return arr_dfs
 
