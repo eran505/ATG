@@ -39,9 +39,11 @@ def time_pred(time_per_class,dico,prefix):
             del dico[k]
     size = len(dico.keys())
     fac = size*time_per_class
+    d= dico.copy()
     for k in dico.keys():
         dico[k]=dico[k]*fac
-    return dico
+        d[k]=[d[k],d[k]*fac]
+    return dico,d
 
 def get_time_fault_prediction(path,key,value,root,upper):
     dico= csv_to_dict(path,key,value)
@@ -52,8 +54,8 @@ def get_time_fault_prediction(path,key,value,root,upper):
     total_sum_predection= sum(dico.values())
     for k in dico.keys() :
         dico[k]=dico[k]/total_sum_predection
-    time_pred(upper,dico,'age-in')
-    return dico
+    dico,d=time_pred(upper,dico,'age-in')
+    return dico,d
 
 
 
@@ -214,7 +216,7 @@ def dict_to_csv(mydict,path):
     with open(path+'FP_budget_time.csv', 'wb') as csv_file:
         writer = csv.writer(csv_file)
         for key, value in mydict.items():
-            writer.writerow([key, value])
+            writer.writerow([key, value[0],value[1]])
 
 def init_main():
 
@@ -231,7 +233,7 @@ def init_main():
     upper = sys.argv[6]
     upper = int(upper)
     if mode == 'FP':
-        budget_dico = get_time_fault_prediction('csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper)
+        budget_dico,d = get_time_fault_prediction('csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper)
     else:
         budget_dico = {}
     ctr=0
@@ -248,7 +250,7 @@ def init_main():
             exit(1)
         target_list = get_all_class_v1(v_path)
         if mode == 'FP':
-            dict_to_csv(budget_dico,full_dis)
+            dict_to_csv(d,full_dis)
         single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,upper)
 
 

@@ -238,6 +238,7 @@ def clac_by_package(dir_path,path_fp_budget,uni_time):
     new_df = pd.merge(new_df, budget_df, how='left', on=["class"])
     new_df['uni_budget'] = uni_time
     new_df['FP_budget'] = np.where(new_df['time'] > 10, 10, new_df['time'])
+    new_df['pred_bug'] = new_df['time'] / float(uni_time)
     del new_df['time']
     list_name = list(arr_uni[0])
     res = [k for k in list_name if 'org' in k]
@@ -266,13 +267,13 @@ def clac_by_package(dir_path,path_fp_budget,uni_time):
             dict_list.append({"package":k ,"FP":new_df['FP'].sum() ,"UNI":new_df['UNI'].sum()  })
             all_df['FP']+=new_df['FP']
             all_df['UNI'] += new_df['UNI']
-            new_df.to_csv('~/Desktop/pck/'+k+'.csv', encoding='utf-8', index=False)
+            new_df.to_csv('~/Desktop/package_MATH_t=20/'+k+'.csv', encoding='utf-8', index=False)
     if len(dict_list)>0 :
         df = pd.DataFrame(dict_list, columns=dict_list[0].keys())
-        df.to_csv('~/Desktop/pck/fin.csv', encoding='utf-8', index=False)
-    all_df.to_csv('~/Desktop/pck/all.csv', encoding='utf-8', index=False)
+        df.to_csv('~/Desktop/package_MATH_t=20/fin.csv', encoding='utf-8', index=False)
+    all_df.to_csv('~/Desktop/package_MATH_t=20/all.csv', encoding='utf-8', index=False)
 
-
+p
 if __name__ == "__main__":
     #dir_names= ['ALL_t=1' ,'ALL_t=3' ]#, 'ALL_t=4']
     #dir_names_tmp = ['pit_tmp','pit_tmp_2']
