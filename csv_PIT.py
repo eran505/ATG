@@ -223,11 +223,11 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
-  #  arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/ALL_t=1/']
-    arr_p=arr[1:-1]
-    out = arr[-1]
-    split_arr = str(arr[1]).split('/')
-    last_name_dir = split_arr[-2]
+    arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
+    arr_p=arr[1:]
+    out = arr[1]
+    #split_arr = str(arr[1]).split('/')
+    #last_name_dir = split_arr[-2]
     dico = init_clac(arr_p,out)
   #  df = fin_sum(dico)
   #  write_to_csv(out+last_name_dir+'_fin.csv',df)
