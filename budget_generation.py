@@ -27,7 +27,9 @@ def clean_dict(dic,prefix,start,end):
 def match_dic(class_list,dico):
     list_key = dico.keys()
     for k in list_key:
-        if k in class_list is False:
+        if k in class_list:
+            continue
+        else:
             del dico[k]
     return dico
 
@@ -45,7 +47,7 @@ def get_time_fault_prediction(path,key,value,root,upper):
     dico= csv_to_dict(path,key,value)
     dico = clean_dict(dico,'src\main',14,5)
     total_sum_predection = float(0)
-    class_list = get_all_class(root,66,5)
+    class_list = get_all_class(root,6)
     dico = match_dic(class_list,dico)
     total_sum_predection= sum(dico.values())
     for k in dico.keys() :
@@ -117,7 +119,18 @@ def remove_dot_csv(path):
         text_file.close()
     return "done"
 
-def get_all_class(root,start,end) :
+
+def clean_path_MATH(p):
+    p_str = str(p)
+    if len(p)<1:
+        return 'null-str'
+    val = p_str.find('/org/')
+    if val == -1 :
+        return 'null-org'
+    ans = p_str[val+1:]
+    return  ans
+
+def get_all_class(root,end) :
     size=0
     class_list = []
     for path, subdirs, files in os.walk(root):
@@ -126,9 +139,11 @@ def get_all_class(root,start,end) :
             if name.__contains__("$") is False:
                 size+=1
                 val = str(path)+'/'+str(name)
-                val = val[start:-end]
+                val = clean_path_MATH(val)
+                val = val[:-end]
                 val = val.replace('/','.')
-                class_list.append([str(path)+'/'+str(name)])
+                class_list.append(val)
+                #class_list.append([str(path)+'/'+str(name)])
     print (len(class_list))
     return class_list
 
@@ -203,8 +218,8 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org","evosuite-1.0.5.jar",
-            "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'uni','10']
+    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution","evosuite-1.0.5.jar",
+            "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','10']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -221,7 +236,7 @@ def init_main():
         budget_dico = {}
     ctr=0
     print "all=",len(budget_dico.keys())
-    for i in range(5):
+    for i in range(4):
         localtime = time.asctime(time.localtime(time.time()))
         if mode == 'FP':
             localtime_str ='FP_'+ str(localtime)+'_t='+str(upper)+'_it='+str(i)
@@ -232,9 +247,10 @@ def init_main():
             print('cant make dir')
             exit(1)
         target_list = get_all_class_v1(v_path)
-        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,upper)
         if mode == 'FP':
             dict_to_csv(budget_dico,full_dis)
+        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,upper)
+
 
 init_main()
 

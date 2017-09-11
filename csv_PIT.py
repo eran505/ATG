@@ -81,9 +81,9 @@ def _data_df(list_data):
         names_list.append(item['name'])
         if len(csvs) > 0 :
             df = pd.read_csv(csvs[0],names = ["class-suffix", "class", "mutation-type", "method","line",item['name'],"test"])
-            df.drop(df.columns[[0, 2 ,len(list(df))-1]], axis=1, inplace=True)
+            df.drop(df.columns[[0,len(list(df))-1]], axis=1, inplace=True)
             #df.set_index(["class","method","line"], inplace=True)
-            df.reset_index(level=['class','method','line'],inplace=True)
+            df.reset_index(level=['class','mutation-type','method','line'],inplace=True)
             if len(df) == 47163 :
                 df_list.append(df)
             else:
@@ -104,7 +104,7 @@ def merge_df(list_df):
         if ctr == 0 :
             ctr += 1
             continue
-        df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","method","line"])
+        df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","mutation-type","method","line"])
         ctr += 1
     return df_all
 
