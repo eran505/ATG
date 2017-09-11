@@ -231,7 +231,7 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
-    arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
+ #   arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
     arr_p=arr[1:]
     #split_arr = str(arr[1]).split('/')
     #last_name_dir = split_arr[-2]
