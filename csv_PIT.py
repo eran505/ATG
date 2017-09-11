@@ -222,6 +222,56 @@ def tmp_csv_fin(path_p):
 
 
 
+def clac_by_package(dir_path,path_fp_budget,uni_time):
+    walker=pit_render_test.walker(dir_path)
+    list_p = walker.walk(".csv")
+    arr_uni = []
+    arr_fp = []
+    for p in list_p:
+        if str(p).__contains__('_U_'):
+            arr_uni.append(pd.read_csv(p))
+        elif str(p).__contains__('_FP_'):
+            arr_fp.append(pd.read_csv(p))
+    new_df = arr_uni[0][['index',"class","mutation-type","method", "line"]].copy()
+    all_df = arr_uni[0][['index', "class", "mutation-type", "method", "line"]].copy()
+    budget_df = pd.read_csv(path_fp_budget,names = ["class", "time"])
+    new_df = pd.merge(new_df, budget_df, how='left', on=["class"])
+    new_df['uni_budget'] = uni_time
+    new_df['FP_budget'] = np.where(new_df['time'] > 10, 10, new_df['time'])
+    del new_df['time']
+    list_name = list(arr_uni[0])
+    res = [k for k in list_name if 'org' in k]
+    dict_list=[]
+    all_df['UNI'] = 0
+    all_df['FP'] = 0
+    for k in res:
+        flag = 0
+        new_df['UNI'] = 0
+        new_df['FP'] = 0
+        for df_uni in arr_uni:
+            if k in df_uni.columns:
+                continue
+            else:
+                flag = 1
+        for df_fp in arr_fp:
+            if k in df_fp.columns:
+                continue
+            else:
+                flag = 1
+        if flag == 0 :
+            for df_fp in arr_fp:
+                new_df['FP'] += np.where(df_fp[k] == 'KILLED', 1 , 0)
+            for df_uni in arr_uni:
+                new_df['UNI'] += np.where(df_uni[k] == 'KILLED', 1 , 0)
+            dict_list.append({"package":k ,"FP":new_df['FP'].sum() ,"UNI":new_df['UNI'].sum()  })
+            all_df['FP']+=new_df['FP']
+            all_df['UNI'] += new_df['UNI']
+            new_df.to_csv('~/Desktop/pck/'+k+'.csv', encoding='utf-8', index=False)
+    if len(dict_list)>0 :
+        df = pd.DataFrame(dict_list, columns=dict_list[0].keys())
+        df.to_csv('~/Desktop/pck/fin.csv', encoding='utf-8', index=False)
+    all_df.to_csv('~/Desktop/pck/all.csv', encoding='utf-8', index=False)
+
 
 if __name__ == "__main__":
     #dir_names= ['ALL_t=1' ,'ALL_t=3' ]#, 'ALL_t=4']
@@ -235,14 +285,15 @@ if __name__ == "__main__":
     arr_p=arr[1:]
     #split_arr = str(arr[1]).split('/')
     #last_name_dir = split_arr[-2]
-    print arr_p
-    dico = init_clac(arr_p)
+   # print arr_p
+  #  dico = init_clac(arr_p)
   #  df = fin_sum(dico)
   #  write_to_csv(out+last_name_dir+'_fin.csv',df)
 
-
-
-
+    die_p = '/home/eran/thesis/test_gen/experiment/t20/'
+    fpcsv = '/home/eran/thesis/test_gen/experiment/t20/FP_budget_time.csv'
+    uni = '20'
+    clac_by_package(die_p,fpcsv,uni)
 
 
 
