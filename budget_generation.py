@@ -151,9 +151,9 @@ def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path,upper_boun
 
     criterion = " "
 
-
+   # [Dglobal_timeout ,Dsearch_budget ]
     #parms1="-Dsearch_budget="+time
-    parms3=" -Dreport_dir="+dis_path
+    parms3="  -Dreport_dir="+dis_path
     parms4=" -Dtest_dir="+dis_path
     parms5=" -Doutput_variables=TARGET_CLASS,criterion,Lines,Covered_Lines,Total_Methods,Covered_Methods,\
 Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Mutants,Total_Time,Covered_Goals,Total_Goals,Coverage"
@@ -184,7 +184,7 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
         else:
             time_budget= str(upper_bound)
         print("time_budget=", time_budget)
-        time_command = "-Dsearch_budget=" + time_budget
+        time_command = "-Dglobal_timeout=" + time_budget + " -Dsearch_budget="+time_budget
         all_p=time_command + all_p
         command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
         print (command)

@@ -17,7 +17,7 @@ def get_csv_summary(root_p):
 
 def get_all_dir(root_p):
     walker=pit_render_test.walker(root_p)
-    classes_list = walker.walk("",False,0)
+    classes_list = walker.walk("org",False,0)
     return classes_list
 
 def get_name_CUT(root_p):
@@ -149,8 +149,8 @@ def init_clac(arr_path,out):
         size =  len(list(dfs))
         mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
-        write_to_csv(path+'all_t'+str(size)+'.csv', dfs)
-        delet_csv(path)
+        write_to_csv(out+'all_t'+str(size)+'.csv', dfs)
+        #delet_csv(path)
     return arr_dfs
 
 
@@ -223,12 +223,12 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
-    arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/ALL_t=1/']
-    arr_p=[arr[1]]
-    out = arr[1]
+  #  arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/ALL_t=1/']
+    arr_p=arr[1:-1]
+    out = arr[-1]
     split_arr = str(arr[1]).split('/')
     last_name_dir = split_arr[-2]
-  #  dico = init_clac(arr_p,out)
+    dico = init_clac(arr_p,out)
   #  df = fin_sum(dico)
   #  write_to_csv(out+last_name_dir+'_fin.csv',df)
 

@@ -202,6 +202,7 @@ def package_test(pom_path,class_path,test_path):
     dico = pair_test_class11(list_test,list_calss)
     print 'dico=',len(dico)
     package_d = make_package(list_test)
+    print 'package: ',len(package_d)
     for key,value in package_d.iteritems():
         tag_c,tag_t = make_pom_package(value)
         modf_pom(pom_path,tag_c,tag_t)
@@ -286,6 +287,8 @@ def main_in():
 
 def main_func():
     proj_path= os.getcwd()+'/'
+    proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src/'
+
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
     tests_path=proj_path+'src/test/java/org/'
@@ -295,7 +298,7 @@ def main_func():
 
 
 
-
+#proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
 
 main_func()
 #main_all()
