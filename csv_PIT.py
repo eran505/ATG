@@ -114,6 +114,7 @@ def merge_all_mutation_df(root_p):
     all_dir= get_all_dir(root_p)
     dict_mut=make_dcit(all_dir)
     dfs = _data_df(dict_mut)
+    print list(dfs)
     return  dfs
 
 
@@ -121,7 +122,7 @@ def write_to_csv(dest_path ,df):
     df.to_csv(dest_path, encoding='utf-8')
 
 def mean_all(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERROR
-    list_name = list(df)[4:]
+    list_name = list(df)[5:]
     for name  in arr_sign:
         df[name+'_sum'] = (df[list_name] == name).sum(axis=1)
     string = '_sum'
@@ -230,7 +231,7 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
-   # arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
+    arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
     arr_p=arr[1:]
     #split_arr = str(arr[1]).split('/')
     #last_name_dir = split_arr[-2]
