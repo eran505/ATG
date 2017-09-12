@@ -8,22 +8,31 @@ from scipy.io.matlab.miobase import arr_dtype_number
 import pit_render_test
 
 class bugger:
-    def __init__(self, result_path , pred_path):
+    def __init__(self, result_path , pred_path,path_out):
         self.dcit = None
         self.seq = None
+        self.out = path_out
         self.result_path = result_path
         self.pred_path = pred_path
-        print list(self.df)
         self.sort_list()
         self.seed = rand.randint(1, 99)
         self.random_object = rand.seed(self.seed)
         self.init_rand()
         self.data_freq = self.group_class()
+        self.result_data = []
 
     def group_class(self):  #TODO: Make ID:class  -> [bugID,FP,UNI]
         csv_file = csv.reader(open(self.result_path, "rb"), delimiter=",")
+        ctr =0
+        d={}
         for row in csv_file:
-            print 'TOd|o|'
+            if row[1] in d :
+                arr = d[row[1]]
+                arr.append({'fp':row[6],'ID':row[0],'uni':row[5]  })
+            else:
+                d[row[1]] = [{'fp':row[6],'ID':row[0] , 'uni':row[5] }]
+        return d
+
 
 
     def init_rand(self):
@@ -40,7 +49,7 @@ class bugger:
             acc+=float(row[2])
             if float(row[1]) < 1 :
                 continue
-            list_d[acc]=[{"class":row[0] , "time":row[1],"pred":row[2] }]
+            list_d[acc]=[{"class":row[0] , "time":row[1],"pred":row[2]  }]
         self.dcit=list_d
         self.seq = sorted(self.dcit.keys())
 
@@ -71,7 +80,6 @@ class bugger:
     def get_bUG(self):
         val = self.random_object.random()
         val = val * self.seq[-1]
-        print val
         if val in self.seq :
             tmp=self.dcit[val]
         else:
@@ -79,15 +87,30 @@ class bugger:
             tmp = self.dcit[x]
         bug = tmp[0]['class']
         pred = tmp[0]['pred']
-        print bug,' p=',pred
+        if bug in self.data_freq is False :
+            return
+        fin_bug_arr = self.data_freq[bug]
+        size = len(fin_bug_arr)
+        res_num = self.random_object.randint(0, size-1)
+        bugg = fin_bug_arr[res_num]
+        bugg['pred_bug'] = pred
+        self.result_data.append(bugg)
+
+    def make_bugs(self,rounds=100):
+        for i in range(rounds):
+            self.get_bUG()
+        df = pd.DataFrame(self.result_data)
+        df['win'] = np.where(df['uni'] > df[], 1, 0)
+        df.reindex(columns=["ID","pred_bug","fp","uni"])
+        df.to_csv(self.out+'bug_seed_'+str(self.seed)+'.csv',encoding='utf-8', index=False)
+
+
 
 
 def init_main():
     print "starting.."
-    bugger_obj = bugger('/home/eran/Desktop/package_MATH_t=20/all.csv','/home/eran/thesis/test_gen/experiment/t20/FP_budget_time.csv')
-    print bugger_obj.data_freq
-    for i in range(1):
-        bugger_obj.get_bUG()
+    bugger_obj = bugger('/home/eran/Desktop/package_MATH_t=20/all.csv','/home/eran/thesis/test_gen/experiment/t20/FP_budget_time.csv','/home/eran/Desktop/bug/')
+    bugger_obj.make_bugs()
 
 if __name__ == "__main__":
     init_main()
