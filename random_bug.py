@@ -78,30 +78,54 @@ class bugger:
         return ans
 
     def get_bUG(self):
-        val = self.random_object.random()
-        val = val * self.seq[-1]
-        if val in self.seq :
-            tmp=self.dcit[val]
-        else:
-            x = self.n_search(self.seq,val)
-            tmp = self.dcit[x]
-        bug = tmp[0]['class']
-        pred = tmp[0]['pred']
-        if bug in self.data_freq is False :
-            return
-        fin_bug_arr = self.data_freq[bug]
-        size = len(fin_bug_arr)
-        res_num = self.random_object.randint(0, size-1)
-        bugg = fin_bug_arr[res_num]
-        bugg['pred_bug'] = pred
-        self.result_data.append(bugg)
+        ctr = 0
+        while True:
+            ctr=+1
+            val = self.random_object.random()
+            val = val * self.seq[-1]
+            if val in self.seq :
+                tmp=self.dcit[val]
+            else:
+                x = self.n_search(self.seq,val)
+                tmp = self.dcit[x]
+            bug = tmp[0]['class']
+            pred = tmp[0]['pred']
+            if bug in self.data_freq :
+                fin_bug_arr = self.data_freq[bug]
+                size = len(fin_bug_arr)
+                res_num = self.random_object.randint(0, size-1)
+                bugg = fin_bug_arr[res_num]
+                bugg['pred_bug'] = pred
+                self.result_data.append(bugg)
+                return
+            if ctr > 100 :
+                print "bug in get_bUG"
+                exit(1)
+                return
 
-    def make_bugs(self,rounds=100):
+
+    def make_bugs(self,rounds=10):
         for i in range(rounds):
             self.get_bUG()
-        df = pd.DataFrame(self.result_data)
-        df['win'] = np.where(df['uni'] > df[], 1, 0)
-        df.reindex(columns=["ID","pred_bug","fp","uni"])
+        df = pd.DataFrame(self.result_data,columns=["ID", "pred_bug", "fp", "uni"])
+        df['kill_fp'] = np.where(df['fp'].astype(float) > 0, "1", "0")
+        df['kill_uni'] = np.where(df['uni'].astype(float) > 0, '1', '0')
+        df['only_uni'] = np.where(( df['kill_uni'].astype(float) == 1) & (df['kill_fp'].astype(float)==0) , '1', '0')
+        df['only_fp'] = np.where((df['kill_uni'].astype(float) == 0) & (df['kill_fp'].astype(float) == 1), '1', '0')
+        df['both'] = np.where((df['kill_uni'].astype(float) == 1 )& (df['kill_fp'].astype(float) == 1), '1', '0')
+        df['none'] = np.where((df['kill_uni'].astype(float) == 0) & (df['kill_fp'].astype(float) == 0), '1', '0')
+        sum_none = df['none'].astype(int).sum()
+        sum_both = df['both'].astype(int).sum()
+        sum_only_fp =  df['only_fp'].astype(int).sum()
+        sum_only_uni = df['only_uni'].astype(int).sum()
+        sum_fp = df['kill_fp'].astype(int).sum()
+        sum_uni = df['kill_uni'].astype(int).sum()
+
+
+
+        d={ 'none':sum_none , 'both':sum_both , 'only_fp':sum_only_fp , 'only_uni':sum_only_uni , 'fp':sum_fp , 'uni':sum_uni}
+        df_sum = pd.DataFrame([d])
+        df_sum.to_csv(self.out+'sum_seed_'+str(self.seed)+'.csv',encoding='utf-8', index=False)
         df.to_csv(self.out+'bug_seed_'+str(self.seed)+'.csv',encoding='utf-8', index=False)
 
 
@@ -110,7 +134,7 @@ class bugger:
 def init_main():
     print "starting.."
     bugger_obj = bugger('/home/eran/Desktop/package_MATH_t=20/all.csv','/home/eran/thesis/test_gen/experiment/t20/FP_budget_time.csv','/home/eran/Desktop/bug/')
-    bugger_obj.make_bugs()
+    bugger_obj.make_bugs(10000)
 
 if __name__ == "__main__":
     init_main()
