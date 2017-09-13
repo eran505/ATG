@@ -145,8 +145,11 @@ def get_all_class(root,end) :
                 size+=1
                 val = str(path)+'/'+str(name)
                 val = clean_path_MATH(val)
+                print 'before= ',val
                 val = val[:-end]
+                print 'after: ',val
                 val = val.replace('/','.')
+                print 'replace dot: ', val
                 class_list.append(val)
                 #class_list.append([str(path)+'/'+str(name)])
     print (len(class_list))
