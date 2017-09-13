@@ -273,7 +273,7 @@ def clac_by_package(dir_path,path_fp_budget,uni_time):
         df.to_csv('~/Desktop/package_MATH_t=20/fin.csv', encoding='utf-8', index=False)
     all_df.to_csv('~/Desktop/package_MATH_t=20/all.csv', encoding='utf-8', index=False)
 
-p
+
 if __name__ == "__main__":
     #dir_names= ['ALL_t=1' ,'ALL_t=3' ]#, 'ALL_t=4']
     #dir_names_tmp = ['pit_tmp','pit_tmp_2']
