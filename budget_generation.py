@@ -25,6 +25,9 @@ def clean_dict(dic,prefix,start,end):
     return dico_result
 
 def match_dic(class_list,dico):
+    print class_list
+    print "\n\n\n\n\n"
+    print dico.keys()
     list_key = dico.keys()
     for k in list_key:
         if k in class_list:
@@ -50,8 +53,6 @@ def get_time_fault_prediction(path,key,value,root,upper):
     dico = clean_dict(dico,'src\main',14,5)
     total_sum_predection = float(0)
     class_list = get_all_class(root,6)
-    print 'class-zie = ',len(class_list)
-    print class_list
     dico = match_dic(class_list,dico)
     total_sum_predection= sum(dico.values())
     for k in dico.keys() :
