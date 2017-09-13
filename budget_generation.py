@@ -49,6 +49,7 @@ def time_pred(time_per_class,dico,prefix):
 def get_time_fault_prediction(path,key,value,root,upper):
     dico= csv_to_dict(path,key,value)
     dico = clean_dict(dico,'src\main',14,5)
+    print dico.keys()[:2]
     total_sum_predection = float(0)
     class_list = get_all_class(root,6)
     dico = match_dic(class_list,dico)
@@ -239,6 +240,7 @@ def init_main():
         budget_dico = {}
     ctr=0
     print "all=",len(budget_dico.keys())
+    exit(1)
     for i in range(4):
         localtime = time.asctime(time.localtime(time.time()))
         if mode == 'FP':
