@@ -267,11 +267,11 @@ def clac_by_package(dir_path,path_fp_budget,uni_time):
             dict_list.append({"package":k ,"FP":new_df['FP'].sum() ,"UNI":new_df['UNI'].sum()  })
             all_df['FP']+=new_df['FP']
             all_df['UNI'] += new_df['UNI']
-            new_df.to_csv('~/Desktop/package_MATH_t=20/'+k+'.csv', encoding='utf-8', index=False)
+            new_df.to_csv(dir_path+str(k)+'.csv', encoding='utf-8', index=False)
     if len(dict_list)>0 :
         df = pd.DataFrame(dict_list, columns=dict_list[0].keys())
-        df.to_csv('~/Desktop/package_MATH_t=20/fin.csv', encoding='utf-8', index=False)
-    all_df.to_csv('~/Desktop/package_MATH_t=20/all.csv', encoding='utf-8', index=False)
+        df.to_csv(dir_path+'fin.csv', encoding='utf-8', index=False)
+    all_df.to_csv(dir_path+'all.csv', encoding='utf-8', index=False)
 
 
 if __name__ == "__main__":
@@ -283,18 +283,18 @@ if __name__ == "__main__":
 
     arr=sys.argv
  #   arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
-    arr_p=arr[1:]
+    #arr_p=arr[1:]
     #split_arr = str(arr[1]).split('/')
     #last_name_dir = split_arr[-2]
    # print arr_p
-    dico = init_clac(arr_p)
+   # dico = init_clac(arr_p)
   #  df = fin_sum(dico)
   #  write_to_csv(out+last_name_dir+'_fin.csv',df)
 
-    #die_p = '/home/eran/thesis/test_gen/experiment/t20/'
-    #fpcsv = '/home/eran/thesis/test_gen/experiment/t20/FP_budget_time.csv'
-    #uni = '20'
-    #clac_by_package(die_p,fpcsv,uni)
+    die_p = '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
+    fpcsv = '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
+    uni = '30'
+    clac_by_package(die_p,fpcsv,uni)
 
 
 

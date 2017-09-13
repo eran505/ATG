@@ -50,6 +50,8 @@ def get_time_fault_prediction(path,key,value,root,upper):
     dico = clean_dict(dico,'src\main',14,5)
     total_sum_predection = float(0)
     class_list = get_all_class(root,6)
+    print 'class-zie = ',len(class_list)
+    print class_list
     dico = match_dic(class_list,dico)
     total_sum_predection= sum(dico.values())
     for k in dico.keys() :
@@ -221,7 +223,7 @@ def dict_to_csv(mydict,path):
 def init_main():
 
    # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution","evosuite-1.0.5.jar",
-   #         "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','10']
+    #        "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
