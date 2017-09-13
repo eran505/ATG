@@ -151,6 +151,7 @@ def get_all_class(root,end) :
                 val = str(path)+str(name)
                 val = clean_path_MATH(val)
                 val = val.replace('/','.')
+                print val
                 class_list.append(val)
     print (len(class_list))
     return class_list
