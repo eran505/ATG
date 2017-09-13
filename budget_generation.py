@@ -133,6 +133,11 @@ def clean_path_MATH(p):
     if val == -1 :
         return 'null-org'
     ans = p_str[val+1:]
+
+    val1 = p_str.find('.class')
+    if val1 == -1:
+        return 'null-org'
+    ans = p_str[:val1]
     return  ans
 
 def get_all_class(root,end) :
@@ -144,12 +149,11 @@ def get_all_class(root,end) :
             if name.__contains__("$") is False:
                 size+=1
                 val = str(path)+'/'+str(name)
+                print 'before= ', val
                 val = clean_path_MATH(val)
-                print 'before= ',val
-                val = val[:-end]
-                print 'after: ',val
+                print 'after= ',val
                 val = val.replace('/','.')
-                print 'replace dot: ', val
+                print 'replace dot= ', val
                 class_list.append(val)
                 #class_list.append([str(path)+'/'+str(name)])
     print (len(class_list))
