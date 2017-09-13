@@ -240,6 +240,7 @@ def init_main():
         budget_dico = {}
     ctr=0
     print "all=",len(budget_dico.keys())
+    exit(-1)
     for i in range(4):
         localtime = time.asctime(time.localtime(time.time()))
         if mode == 'FP':
