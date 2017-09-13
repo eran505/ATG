@@ -25,9 +25,6 @@ def clean_dict(dic,prefix,start,end):
     return dico_result
 
 def match_dic(class_list,dico):
-    print class_list
-    print "\n\n\n\n\n"
-    print dico.keys()
     list_key = dico.keys()
     for k in list_key:
         if k in class_list:
