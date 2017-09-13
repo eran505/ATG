@@ -26,6 +26,9 @@ def clean_dict(dic,prefix,start,end):
     return dico_result
 
 def match_dic(class_list,dico):
+    print dico.keys()[:10]
+    print "---------*********hhhhhhh********----------"
+    print class_list[:10]
     list_key = dico.keys()
     for k in list_key:
         if k in class_list:
@@ -49,7 +52,7 @@ def time_pred(time_per_class,dico,prefix):
 def get_time_fault_prediction(path,key,value,root,upper):
     dico= csv_to_dict(path,key,value)
     dico = clean_dict(dico,'src\main',14,5)
-    print dico.keys()[:2]
+
     total_sum_predection = float(0)
     class_list = get_all_class(root,6)
     dico = match_dic(class_list,dico)
