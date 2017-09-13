@@ -1,4 +1,5 @@
 import sys, os ,time,csv
+import pit_render_test
 
 
 def csv_to_dict(path,key_name,val_name ):
@@ -135,19 +136,19 @@ def clean_path_MATH(p):
 
 def get_all_class(root,end) :
     size=0
+    root =root +'/'
     class_list = []
-    for path, subdirs, files in os.walk(root):
-        for name in files:
-            #print os.path.join(path, name)
-            if name.__contains__("$") is False:
-                size+=1
-                val = str(path)+str(name)
-                val = clean_path_MATH(val)
-                val = val.replace('/','.')
-                print val
-                class_list.append(val)
+    walker=pit_render_test.walker(root)
+    classes_list = walker.walk(".class")
+    for item in classes_list:
+        if str(item).__contains__("$"):
+            continue
+        val = clean_path_MATH(item)
+        val = val.replace('/', '.')
+        class_list.append(val)
     print (len(class_list))
     return class_list
+
 
 
 
@@ -220,8 +221,8 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-    #sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution","evosuite-1.0.5.jar",
-    #        "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30']
+    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution","evosuite-1.0.5.jar",
+            "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -238,7 +239,6 @@ def init_main():
         budget_dico = {}
     ctr=0
     print "all=",len(budget_dico.keys())
-    exit(-1)
     for i in range(4):
         localtime = time.asctime(time.localtime(time.time()))
         if mode == 'FP':
