@@ -26,9 +26,6 @@ def clean_dict(dic,prefix,start,end):
     return dico_result
 
 def match_dic(class_list,dico):
-    print dico.keys()[:10]
-    print "---------*********hhhhhhh********----------"
-    print class_list[:10]
     list_key = dico.keys()
     for k in list_key:
         if k in class_list:
@@ -140,7 +137,7 @@ def clean_path_MATH(p):
 
 def get_all_class(root,end) :
     size=0
-    root =root +'/'
+    root =root
     class_list = []
     walker=pit_render_test.walker(root)
     classes_list = walker.walk(".class")
@@ -225,7 +222,7 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-   # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution","evosuite-1.0.5.jar",
+   # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution/","evosuite-1.0.5.jar",
    #         "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
