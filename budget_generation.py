@@ -127,14 +127,10 @@ def clean_path_MATH(p):
     if len(p)<1:
         return 'null-str'
     val = p_str.find('/org/')
+    val_end = p_str.find('.class')
     if val == -1 :
         return 'null-org'
-    ans = p_str[val+1:]
-
-    val1 = p_str.find('.class')
-    if val1 == -1:
-        return 'null-org'
-    ans = p_str[:val1]
+    ans = p_str[val+1:val_end]
     return  ans
 
 def get_all_class(root,end) :
