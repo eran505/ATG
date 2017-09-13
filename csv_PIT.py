@@ -287,14 +287,14 @@ if __name__ == "__main__":
     #split_arr = str(arr[1]).split('/')
     #last_name_dir = split_arr[-2]
    # print arr_p
-  #  dico = init_clac(arr_p)
+    dico = init_clac(arr_p)
   #  df = fin_sum(dico)
   #  write_to_csv(out+last_name_dir+'_fin.csv',df)
 
-    die_p = '/home/eran/thesis/test_gen/experiment/t20/'
-    fpcsv = '/home/eran/thesis/test_gen/experiment/t20/FP_budget_time.csv'
-    uni = '20'
-    clac_by_package(die_p,fpcsv,uni)
+    #die_p = '/home/eran/thesis/test_gen/experiment/t20/'
+    #fpcsv = '/home/eran/thesis/test_gen/experiment/t20/FP_budget_time.csv'
+    #uni = '20'
+    #clac_by_package(die_p,fpcsv,uni)
 
 
 
