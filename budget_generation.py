@@ -148,14 +148,10 @@ def get_all_class(root,end) :
             #print os.path.join(path, name)
             if name.__contains__("$") is False:
                 size+=1
-                val = str(path)+'/'+str(name)
-                print 'before= ', val
+                val = str(path)+str(name)
                 val = clean_path_MATH(val)
-                print 'after= ',val
                 val = val.replace('/','.')
-                print 'replace dot= ', val
                 class_list.append(val)
-                #class_list.append([str(path)+'/'+str(name)])
     print (len(class_list))
     return class_list
 
@@ -230,7 +226,7 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-   # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution","evosuite-1.0.5.jar",
+    #sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution","evosuite-1.0.5.jar",
     #        "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
