@@ -190,11 +190,12 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,MutationScore,Muta
             list_class = []
         if test in list_class:
             value_time =  time[test]
+            value_time = float(value_time)
+            value_time = int(round(value_time))
             if value_time > 0 :
                 print("val-time=", value_time)
-            value_time = float(value_time)
             if value_time > upper_bound :
-                value_time = int(10)
+                value_time = int(10.0)
             elif value_time < 1 :
                 continue
             else :
@@ -223,7 +224,7 @@ def dict_to_csv(mydict,path):
 def init_main():
 
    # sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution/","evosuite-1.0.5.jar",
-   #         "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30']
+    #        "/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -240,7 +241,7 @@ def init_main():
         budget_dico = {}
     ctr=0
     print "all=",len(budget_dico.keys())
-    exit(1)
+    print"time=",upper
     for i in range(4):
         localtime = time.asctime(time.localtime(time.time()))
         if mode == 'FP':
