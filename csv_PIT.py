@@ -284,19 +284,19 @@ if __name__ == "__main__":
 
     arr=sys.argv
  #   arr = ["",'/home/eran/thesis/test_gen/experiment/all_pit/pit_tmp_2/']
-    arr_p=arr[2:]
-    dir_out =arr[1]
+    #arr_p=arr[2:]
+    #dir_out =arr[1]
     #split_arr = str(arr[1]).split('/')
     #last_name_dir = split_arr[-2]
    # print arr_p
-    dico = init_clac(arr_p,dir_out)
+  #  dico = init_clac(arr_p,dir_out)
   #  df = fin_sum(dico)
   #  write_to_csv(out+last_name_dir+'_fin.csv',df)
 
-    #die_p = '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
-    #fpcsv = '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
-    #uni = '30'
-    #clac_by_package(die_p,fpcsv,uni)
+    die_p = '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
+    fpcsv = '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
+    uni = '30'
+    clac_by_package(die_p,fpcsv,uni)
 
 
 

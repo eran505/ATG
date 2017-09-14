@@ -46,10 +46,10 @@ class bugger:
         ctr=0
         for row in csv_file:
             ctr+=1
-            acc+=float(row[2])
-            if float(row[1]) < 1 :
+            acc+=float(row[1])
+            if float(row[2]) < 1 :
                 continue
-            list_d[acc]=[{"class":row[0] , "time":row[1],"pred":row[2]  }]
+            list_d[acc]=[{"class":row[0] , "time":row[2],"pred":row[1]  }]
         self.dcit=list_d
         self.seq = sorted(self.dcit.keys())
 
@@ -133,7 +133,7 @@ class bugger:
 
 def init_main():
     print "starting.."
-    bugger_obj = bugger('/home/eran/Desktop/package_MATH_t=20/all.csv','/home/eran/thesis/test_gen/experiment/t20/FP_budget_time.csv','/home/eran/Desktop/bug/')
+    bugger_obj = bugger('/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/all.csv','/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/time.csv','/home/eran/Desktop/bug30/')
     bugger_obj.make_bugs(10000)
 
 if __name__ == "__main__":
