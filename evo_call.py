@@ -84,8 +84,7 @@ def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path):
     criterion = " "
 
 
-    parms1="-Dsearch_budget="+time
-   # parms2=" -Dglobal_timeout="+time
+    parms1="-Dsearch_budget="+time+ " -Dglobal_timeout="+time
     parms3=" -Dreport_dir="+dis_path
     parms4=" -Dtest_dir="+dis_path
     parms5=" -Doutput_variables=TARGET_CLASS,criterion,Lines,Covered_Lines,Total_Methods,Covered_Methods,\
@@ -139,14 +138,13 @@ def regression_test(evo_name, evo_path, classes_list_new,classes_list_original,t
 
 
 
-#str_regg = "evo_call.py /home/eran/thesis/common_math/commons-math3-3.5-src/target/classes/org/ /home/eran/thesis/common_math/commons-math3-3.6.1-src/target/classes/org/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/evo_result/ 30"
 
-#str_commands_common_math = "evo_call.py /home/eran/thesis/common_math/commons-math3-3.6.1-src/target/classes/org/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/evo_result/ 60"
+str_commands_common_math = "evo_call.py /home/eran/thesis/common_math/commons-math3-3.6.1-src/target/classes/org/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/evo_result/ 60"
 
-#str_command_tut = "evo_call.py /home/eran/thesis/Tutorial_Experiments/target/classes/tutorial/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/out_exp/ 10"
+str_command_tut = "evo_call.py /home/eran/thesis/Tutorial_Experiments/target/classes/tutorial/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ /home/eran/Desktop/out_exp/ 10"
 
-#str_arry = str_commands_common_math.split(" ")
-#sys.argv = str_arry
+str_arry = str_commands_common_math.split(" ")
+sys.argv = str_arry
 
 if len(sys.argv) == 6 :
     v_path = sys.argv[1]
@@ -165,24 +163,4 @@ if len(sys.argv) == 6 :
         single_call_EvoSuite(v_evo_name,v_evo_path,target_list,v_time,full_dis)
     print "done !"
 
-'''''
-    #if len(sys.argv) == 7 :
-        v_path_org = sys.argv[1]
-        v_path_new = sys.argv[2]
-        v_evo_name = sys.argv[3]
-        v_evo_path = sys.argv[4]
-        v_dis_path = sys.argv[5]
-        v_time =     sys.argv[6]
-        localtime = time.asctime(time.localtime(time.time()))
-        localtime_str = str(localtime) + '_t=' + str(v_time)
-        full_dis = mkdir_Os(v_dis_path, localtime_str)
-        if full_dis == 'null':
-            print 'cant make dir '
-            exit(1)
-        list_org = get_all_class(v_path_org)
-        list_new = get_all_class(v_path_new)
-        #regression_test(v_evo_name, v_evo_path, list_new, list_org, v_time, full_dis)
-        print 'Done !'
-'''''
 
-print "miss argv (-Path -EvoName -EvoPath -DistPath -Time)"
