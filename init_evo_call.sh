@@ -2,4 +2,11 @@
 
 
 
-python budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/eran/out/ csv/budget.csv
+bash init_exp_pit.sh ~/eran/repo/ATG/ 30
+bash init_exp_pit.sh ~/eran/repo/ATG/ 90
+bash init_exp_pit.sh ~/eran/repo/ATG/ 150
+bash init_exp_pit.sh ~/eran/repo/ATG/ 180
+bash init_exp_pit.sh ~/eran/repo/ATG/ 210
+bash init_exp_pit.sh ~/eran/repo/ATG/ 240
+bash init_exp_pit.sh ~/eran/repo/ATG/ 270
+bash init_exp_pit.sh ~/eran/repo/ATG/ 300
