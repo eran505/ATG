@@ -293,9 +293,10 @@ if __name__ == "__main__":
   #  df = fin_sum(dico)
   #  write_to_csv(out+last_name_dir+'_fin.csv',df)
 
-    die_p = '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
-    fpcsv = '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
-    uni = '30'
+    die_p = arr[1]#'/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
+    fpcsv = arr[2]#'/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
+    uni = arr[3] #'30'
+
     clac_by_package(die_p,fpcsv,uni)
 
 
