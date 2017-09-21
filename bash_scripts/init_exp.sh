@@ -28,9 +28,9 @@ cd "$newdir"
 mkdir csv
 cp -avr ${ATG}csv/Most_out_files.csv ./csv/
 if [[ ${curdir} == *"ise"* ]]; then
-	python ${ATG}budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} exp 30 180 ${t}
+	python ${ATG}budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} FP 30 180 ${t}
 else
-	python  ${ATG}budget_generation.py  /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ ${newdir} exp 30 180 ${t}
+	python  ${ATG}budget_generation.py  /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ ${newdir} FP 30 180 ${t}
 fi
 python ${ATG}pit_render_test.py ${newdir}
 mkdir "pit_test"
