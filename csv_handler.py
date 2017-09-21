@@ -1,78 +1,23 @@
 
 
-import pandas as pd
-import numpy as np
-import os
-import csv
-
-import pandas as pd
-import sys
 
 
-def get_all_csv(path):
-    list_csv_path = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(".csv"):
-                if str(file).__contains__("statistics") is False:
-                    continue
-                name = str(file)
-                size =len(root)
-                time=''
-                for w in range(size-1,0,-1):
-                    if root[w] == '_':
-                        list_csv_path.append([time,str(os.path.join(root, file))])
-                        break
-                    time=root[w]+time
-    list_pd = []
-    for path in list_csv_path:
-        pd_tmp = pd.read_csv(path[1])
-        index_time = str(path[0])
-        list_name = list(pd_tmp)
-        size = len(list_name)
-        for i in range(1,size,1):
-            pd_tmp[str(list_name[i]+'_'+index_time)]=pd_tmp[str(list_name[i])].copy()
-            pd_tmp.drop(str(list_name[i]), axis=1, inplace=True)
-        #print list(pd_tmp)
-        list_pd.append(pd_tmp)
-        pd_tmp=None
-    return list_pd
+import  pit_render_test
 
-def join_data_frame(list):
-    if len(list)>1 :
-        data_res=list[0]
-        for item in list :
-            if data_res.size > item.size :
-                data_res = data_res.merge(item, how='left', on=' TARGET_CLASS')
-            else:
-                data_res = item.merge(data_res, how='left', on=' TARGET_CLASS')
-    return data_res
-
-def remove_dot_csv(path):
-    list_csv_path = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(".csv"):
-                if str(file).__contains__("statistics") is False:
-                    continue
-                list_csv_path.append(str(os.path.join(root, file)))
-    for file_csv in list_csv_path :
-        with open(file_csv, 'r') as myfile:
-            data = myfile.read().replace(';','_')
-            text_file = open(file_csv, "w")
-            text_file.write(" %s" % data)
-            text_file.close()
-    return "done"
+def main_csv(path_csv) :
+    print "strating .."
+    walker=pit_render_test.walker(path_csv)
+    list_mut = walker.walk("mutations.csv")
+    list_fp = walker.walk("FP_budget_time.csv")
 
 
-
-if len(sys.argv) == 3 :
-    if str(sys.argv[1]) == '-p' :
-        v_path = sys.argv[2]
-        print(remove_dot_csv(v_path))
+if len(sys.argv) == 2 :
+    path_csv = sys.argv[1]
+    main_csv(path_csv)
 else:
     print 'Usage :\n-p [path] '
     print pd
+
 
 
 

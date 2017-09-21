@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
 
-if [ -z "${1}" ]; then
-echo "full"
+bash init_exp.sh ~/eran/repo/ATG/ 40
 
-{1} ~/eran/repo/ATG/csv_handler.py
-exit
-fi
+bash init_exp.sh ~/eran/repo/ATG/ 60
 
+bash init_exp.sh ~/eran/repo/ATG/ 80
 
-python ~/eran/repo/ATG/csv_handler.py
+bash init_exp.sh ~/eran/repo/ATG/ 100
+
+bash init_exp.sh ~/eran/repo/ATG/ 120
+
+bash init_exp.sh ~/eran/repo/ATG/ 140
+
+bash init_exp.sh ~/eran/repo/ATG/ 160
