@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-path=${1}
-if [ -z "$path" ]; then
+
+if [ -z "${1}" ]; then
 echo "full"
-cd ..
-path csv_handler.py
+
+{1} ~/eran/repo/ATG/csv_handler.py
 exit
 fi
 
 
-python csv_handler.py
+python ~/eran/repo/ATG/csv_handler.py
