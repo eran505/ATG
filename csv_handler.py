@@ -1,22 +1,56 @@
 
 
 
-
+import sys,os
 import  pit_render_test
 
+def copy_pacakge(dir,out):
+    walker=pit_render_test.walker(dir)
+    list_dir = walker.walk("org.",False)
+    for dir in list_dir :
+        name_dir = str(dir).split("/")[-1]
+        if os.path.exists(out+name_dir):
+            os.system("rm -r " +out+name_dir)
+        os.system("cp -r "+dir+" "+out+name_dir)
+
+def copy_mutation(dir,out):
+    walker=pit_render_test.walker(dir)
+    list_dir = walker.walk("ALL",False,-1,False)
+    for dir in list_dir :
+        name_dir = str(dir).split("/")[-1]
+        if os.path.exists(out+name_dir):
+            os.system("rm -r " +out+name_dir)
+        os.makedirs(out+name_dir)
+        copy_pacakge(dir,out+name_dir+"/")
+
+
 def main_csv(path_csv) :
-    print "strating .."
+    if os.path.exists(path_csv+"data_mutation"):
+        os.system("rm -r "+path_csv+"data_mutation")
+    os.makedirs(path_csv+"data_mutation")
     walker=pit_render_test.walker(path_csv)
-    list_mut = walker.walk("mutations.csv")
-    list_fp = walker.walk("FP_budget_time.csv")
+    list_dir = walker.walk("09",False,0)
+    out = path_csv +"data_mutation/"
+    for dir in list_dir :
+        name_dir = str(dir).split("/")[-1]
+        if os.path.exists(out+name_dir):
+            os.system("rm -r " +out+name_dir)
+        os.makedirs(out+name_dir)
+        copy_mutation(dir,out+name_dir+"/")
 
+    print "done !"
 
-if len(sys.argv) == 2 :
-    path_csv = sys.argv[1]
-    main_csv(path_csv)
-else:
-    print 'Usage :\n-p [path] '
-    print pd
+def init_script():
+    sys.argv = ["","/home/eran/Desktop/testing/"]
+    if len(sys.argv) == 2 :
+        path_csv = sys.argv[1]
+        main_csv(path_csv)
+    else:
+        print 'Usage :\n-p [path] '
+
+if __name__ == "__main__":
+    init_script()
+
 
 
 
