@@ -77,6 +77,20 @@ class bugger:
                 break;
         return ans
 
+    def uniform_bugs(self):
+        val = self.random_object.random()
+        val = val * len(self.data_freq)
+        val = int(val)
+        list_keys = self.data_freq.keys()
+        bug = list_keys[val]
+        fin_bug_arr = self.data_freq[bug]
+        size = len(fin_bug_arr)
+        res_num = self.random_object.randint(0, size - 1)
+        bugg = fin_bug_arr[res_num]
+        bugg['pred_bug'] = 1/len(self.data_freq.values())
+        self.result_data.append(bugg)
+        return
+
     def get_bUG(self):
         ctr = 0
         while True:
@@ -99,14 +113,18 @@ class bugger:
                 self.result_data.append(bugg)
                 return
             if ctr > 100 :
-                print "bug in get_bUG"
+                print "error: in get_bUG"
                 exit(1)
                 return
 
 
-    def make_bugs(self,rounds=10):
-        for i in range(rounds):
-            self.get_bUG()
+    def make_bugs(self,rounds=10,mod="fp"):
+        if mod == "fp":
+            for i in range(rounds):
+                self.get_bUG()
+        else :
+            for i in range(rounds):
+               self.uniform_bugs()
         df = pd.DataFrame(self.result_data,columns=["ID", "pred_bug", "fp", "uni"])
         df['kill_fp'] = np.where(df['fp'].astype(float) > 0, "1", "0")
         df['kill_uni'] = np.where(df['uni'].astype(float) > 0, '1', '0')
@@ -134,7 +152,7 @@ class bugger:
 def init_main():
     print "starting.."
     bugger_obj = bugger('/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/all.csv','/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/time.csv','/home/eran/Desktop/bug30/')
-    bugger_obj.make_bugs(10000)
+    bugger_obj.make_bugs(1000,"")
 
 if __name__ == "__main__":
     init_main()

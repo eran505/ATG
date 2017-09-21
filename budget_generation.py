@@ -34,10 +34,15 @@ def match_dic(class_list,dico):
             del dico[k]
     return dico
 
+# TODO: old version delete it after checking the new version is working
+'''''
 def time_pred(time_per_class,dico,prefix):
     for k in dico.keys():
         if str(k).__contains__(prefix):
             del dico[k]
+    total_sum_predection= sum(dico.values())
+    for k in dico.keys() :
+        dico[k]=dico[k]/total_sum_predection
     size = len(dico.keys())
     fac = size*time_per_class
     d= dico.copy()
@@ -45,22 +50,37 @@ def time_pred(time_per_class,dico,prefix):
         dico[k]=dico[k]*fac
         d[k]=[d[k],d[k]*fac]
     return dico,d
+'''''
 
-def get_time_fault_prediction(path,key,value,root,upper):
+def get_time_fault_prediction(path,key,value,root,upper_b,lower_b,per_class_b):
     dico= csv_to_dict(path,key,value)
     dico = clean_dict(dico,'src\main',14,5)
-
-    total_sum_predection = float(0)
     class_list = get_all_class(root,6)
     dico = match_dic(class_list,dico)
-    total_sum_predection= sum(dico.values())
-    for k in dico.keys() :
-        dico[k]=dico[k]/total_sum_predection
-    dico,d=time_pred(upper,dico,'age-in')
+    dico,d=boundary_budget_allocation(dico,per_class_b,upper_b,lower_b,'age-in')
     return dico,d
 
 
-
+def boundary_budget_allocation(dico,time_per_k,upper,lower,filtering):
+    for k in dico.keys():
+        if str(k).__contains__(filtering):
+            del dico[k]
+    total_sum_predection= sum(dico.values())
+    for k in dico.keys() :
+        dico[k]=dico[k]/total_sum_predection
+    size_set_classes=len(dico.keys())
+    Total = size_set_classes*time_per_k
+    LB = size_set_classes*lower
+    budget_time = Total - LB
+    d = dico.copy()
+    for entry in dico.keys() :
+        time_b = ( dico[entry] * budget_time ) + lower
+        if float(time_b) > float(upper):
+            time_b = upper
+            print "in"
+        d[entry] = [ d[entry] , time_b]
+        dico[entry] = time_b
+    return dico, d
 
 def mkdir_Os(path,name):
     name_r = str(name).replace(' ','_')
@@ -199,7 +219,7 @@ def get_all_class_v1(root) :
                 class_list.append([str(path),str(name)])
     return class_list
 
-def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path,upper_bound,seed):
+def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path,lower_b,seed,b_class):
 
     evo_string = "java -jar " + evo_path +evo_name
 
@@ -213,41 +233,37 @@ Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,Total_Time,Covered
 
     all_p = parms3+parms4+parms5
     all_command=''
+    if len(time) > 0:
+        list_class = time.keys()
+    else:
+        list_class = []
+    size_list_class = len(list_class)
     for cut in classes_list :
         all_p = parms3 + parms4 + parms5
         cut_names = str(cut[1]).split('.')
         pre,suf = assemble_path_string2(cut[0])
         test = suf  + cut_names[0]
-        if len(time)>0:
-            list_class = time.keys()
+        if size_list_class == 0 :
+            time_budget = b_class
         else :
-            list_class = []
-        if test in list_class:
-            value_time =  time[test]
-            value_time = float(value_time)
-            value_time = int(round(value_time))
-            if value_time > 0 :
-                print("val-time=", value_time)
-            if value_time > upper_bound :
-                value_time = upper_bound
-            elif value_time < 1 :
-                continue
-            else :
-                value_time = int(round(value_time))
-            time_budget = str(value_time)
-        else:
-            time_budget= str(upper_bound)
-
+            if test in list_class:
+                value_time =  time[test]
+                value_time = float(value_time)
+                time_budget = int(round(value_time))
+            else:
+                time_budget= lower_b
         all_time = get_all_command(time_budget,seed)
         all_p=all_time +" "+ all_p
         command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
         print (command)
         all_command = all_command +'\n'*2 + command
         os.system(command)
+    if os.path.exists(dis_path + 'statistics.csv'):
+        remove_dot_csv(dis_path + 'statistics.csv')
     text_file = open(dis_path + "command.txt", "w")
     text_file.write("command: \n  %s" % all_command)
     text_file.close()
-    remove_dot_csv(dis_path+'statistics.csv')
+
 
 def dict_to_csv(mydict,path):
     with open(path+'FP_budget_time.csv', 'wb') as csv_file:
@@ -257,8 +273,8 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-    #sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/distribution/"
-    #    ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'exp','90']
+  #  sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
+  #      ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30','180','90']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -270,22 +286,24 @@ def init_main():
     v_evo_name = sys.argv[2]  #evo_version = evosuite-1.0.5.jar
     v_evo_path = sys.argv[3] #evo_path  = /home/eran/programs/EVOSUITE/jar
     v_dis_path = sys.argv[4] #out_path = /home/eran/Desktop/
-    upper = sys.argv[6]
-    upper = int(upper)
+    lower_b = int(sys.argv[6])
+    upper_b = int(sys.argv[7])
+    b_klass = int(sys.argv[8])
     rel_path = os.getcwd()+'/'
     if mode == 'FP':
-        budget_dico,d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper)
+        budget_dico,d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
     else:
         budget_dico = {}
     ctr=0
     print "all=",len(budget_dico.keys())
-    print"time=",upper
+    print"time=",b_klass
     for i in range(4):
+        seed = time.strftime('%s')[-5:]
         localtime = time.asctime(time.localtime(time.time()))
         if mode == 'FP':
-            localtime_str ='FP_'+ str(localtime)+'_t='+str(upper)+'_it='+str(i)
+            localtime_str ='FP_'+ str(localtime)+'_t='+str(b_klass)+'_it='+str(i)
         else:
-            localtime_str ='U_'+ str(localtime)+'_t='+str(upper)+'_it='+str(i)
+            localtime_str ='U_'+ str(localtime)+'_t='+str(b_klass)+'_it='+str(i)
         full_dis = mkdir_Os(v_dis_path, localtime_str)
         if full_dis=='null':
             print('cant make dir')
@@ -293,7 +311,7 @@ def init_main():
         target_list = get_all_class_v1(v_path)
         if mode == 'FP':
             dict_to_csv(d,full_dis)
-        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,upper)
+        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,lower_b,seed,b_klass)
 
 
 
@@ -303,10 +321,11 @@ def int_exp(args):
     v_evo_name = sys.argv[2]  #evo_version = evosuite-1.0.5.jar
     v_evo_path = sys.argv[3] #evo_path  = /home/eran/programs/EVOSUITE/jar
     v_dis_path = sys.argv[4] #out_path = /home/eran/Desktop/
-    upper = sys.argv[6]
-    upper = int(upper)
+    upper_b = int(sys.argv[7])
+    lower_b = int(sys.argv[6])
+    b_klass = int(sys.argv[8])
     rel_path = os.getcwd() + '/'
-    fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path, upper)
+    fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
     uni_budget = {}
     comp = ["FP","U"]
     target_list = get_all_class_v1(v_path)
@@ -315,15 +334,15 @@ def int_exp(args):
         seed = time.strftime('%s')[-5:]
         for parm in comp:
             localtime = time.asctime(time.localtime(time.time()))
-            dir_name = str(parm)+'_exp_t'+ str(localtime) + '_t=' + str(upper) + '_it=' + str(i)
+            dir_name = str(parm)+'_exp_t'+ str(localtime) + '_t=' + str(b_klass) + '_it=' + str(i)
             full_dis = mkdir_Os(v_dis_path, dir_name )
             if full_dis == 'null':
                 print('cant make dir')
                 exit(1)
             if str(parm)== 'FP':
-                single_call_EvoSuite(v_evo_name, v_evo_path, target_list, fp_budget, full_dis, upper,seed)
+                single_call_EvoSuite(v_evo_name, v_evo_path, target_list, fp_budget, full_dis,lower_b,seed,b_klass)
             else :
-                single_call_EvoSuite(v_evo_name, v_evo_path, target_list, uni_budget, full_dis, upper,seed)
+                single_call_EvoSuite(v_evo_name, v_evo_path, target_list, uni_budget, full_dis,lower_b,seed,b_klass)
 
 
 init_main()

@@ -197,6 +197,9 @@ def modf_only_one(dico):
 def package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
     list_test = walk(test_path)
+    if len(list_test) == 0:
+        print "no tests founds"
+        exit(0)
     print 'class=',len(list_calss)
     print 'test=',len(list_test)
     dico = pair_test_class11(list_test,list_calss)

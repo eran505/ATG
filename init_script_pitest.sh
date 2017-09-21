@@ -26,11 +26,15 @@ echo ${string_dir}
 cur_dir=${PWD}/
 #string_dir="ALL_"${name_arg}
 
-ATG="/home/ise/eran/repo/ATG/"
-Mathjar="/home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz"
+ATG="/home/eran/thesis/repo/ATG/"
+Mathjar="/home/eran/thesis/zips/commons-math3-3.5-src.tar.gz"
 
-#ATG="/home/eran/thesis/repo/ATG/"
-#Mathjar="/home/eran/thesis/zips/commons-math3-3.5-src.tar.gz"
+if [[ $cur_dir == *"ise"* ]]; then
+    ATG="/home/ise/eran/repo/ATG/"
+    Mathjar="/home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz"
+fi
+
+
 
 mkdir ${cur_dir}${string_dir}
 tar -xzf ${Mathjar} -C ${cur_dir}${string_dir}
@@ -41,7 +45,7 @@ cp -ar ${path_arg} ${relative_path}src/test/java/
 cp -ar ${ATG}pom.xml ${relative_path}
 cp -ar ${ATG}pti_init.py ${relative_path}
 cd ${relative_path}
-mvn install
+mvn -fn install
 python pti_init.py
 
 echo "done"
