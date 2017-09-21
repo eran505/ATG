@@ -41,7 +41,7 @@ def main_csv(path_csv) :
     print "done !"
 
 def init_script():
-    sys.argv = ["","/home/eran/Desktop/testing/"]
+    #sys.argv = ["","/home/eran/Desktop/testing/"]
     if len(sys.argv) == 2 :
         path_csv = sys.argv[1]
         main_csv(path_csv)
