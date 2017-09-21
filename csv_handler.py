@@ -72,6 +72,7 @@ if len(sys.argv) == 3 :
         print(remove_dot_csv(v_path))
 else:
     print 'Usage :\n-p [path] '
+    print pd
 
 
 
