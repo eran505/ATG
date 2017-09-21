@@ -8,12 +8,13 @@ def copy_pacakge(dir,out):
     print dir+"/commons-math3-3.5-src/target/pit-reports/"
     if os.path.exists(dir+"/commons-math3-3.5-src/target/pit-reports/"):
         os.system("cp -r "+dir+"/commons-math3-3.5-src/target/pit-reports/"+" "+out)
-        print "copying.."
+        print "copyingd.."
         print "cp -r "+dir+"/commons-math3-3.5-src/target/pit-reports/"+" "+out
 
 def copy_mutation(dir,out):
     walker=pit_render_test.walker(dir)
     list_dir = walker.walk("ALL",False,-1)
+    os.system("cp "+dir+"FP_budget_time.csv "+out)
     for dir in list_dir :
         name_dir = str(dir).split("/")[-1]
         if os.path.exists(out+name_dir):

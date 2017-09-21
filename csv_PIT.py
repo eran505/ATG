@@ -153,7 +153,8 @@ def init_clac(arr_path,out):
     for path in arr_path :
         name_dir = name_ext(path)
         ctr += 1
-        dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
+        dfs = merge_all_mutation_df(path+'pit-reports/')
+        #dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
         print dfs.shape
         size =  len(list(dfs))
         mean_all(dfs)
