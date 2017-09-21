@@ -5,17 +5,12 @@ import sys,os
 import  pit_render_test
 
 def copy_pacakge(dir,out):
-    walker=pit_render_test.walker(dir)
-    list_dir = walker.walk("org.",False)
-    for dir in list_dir :
-        name_dir = str(dir).split("/")[-1]
-        if os.path.exists(out+name_dir):
-            os.system("rm -r " +out+name_dir)
-        os.system("cp -r "+dir+" "+out+name_dir)
+    if os.path.exists(dir+"commons-math3-3.5-src/target/pit-reports/"):
+        os.system("cp -r "+dir+"commons-math3-3.5-src/target/pit-reports/"+" "+out)
 
 def copy_mutation(dir,out):
     walker=pit_render_test.walker(dir)
-    list_dir = walker.walk("ALL",False,-1,False)
+    list_dir = walker.walk("ALL",False,-1)
     for dir in list_dir :
         name_dir = str(dir).split("/")[-1]
         if os.path.exists(out+name_dir):
