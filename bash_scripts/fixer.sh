@@ -26,7 +26,7 @@ for ((i=0;i<cnt;i++)); do
     echo ${path_dir}
     pitest=${path_dir}pit_test/
     if [ ! -d "$pitest" ]; then
-    	#mkdir ${path_dir}pit_test/
+    	mkdir ${path_dir}pit_test/
 	echo "dir made"
     fi
    #mv ${path_dir}FP_budget_time.csv ${path_dir}pit_test/
@@ -38,8 +38,8 @@ for ((i=0;i<cnt;i++)); do
     for D in `find ${path_dir}  -maxdepth 1  -type d  `
 	do
 		string=${D}
-		if [[ ${string} == *"exp"* ]]; then
-			#bash ${path_dir}pit_test/init_script_pitest.sh ${D}/org/
+		if [[ ${string} == *"FP"* ]]; then
+			bash ${path_dir}pit_test/init_script_pitest.sh ${D}/org/
 			echo "piting..."
                         str_time=${string}
 

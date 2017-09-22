@@ -12,7 +12,6 @@ def copy_mutation(dir,out):
     walker=pit_render_test.walker(dir)
     list_dir = walker.walk("ALL",False,-1)
     os.system("cp "+dir+"/FP_budget_time.csv "+out)
-    print "cp "+dir+"/FP_budget_time.csv "+out
     for dir in list_dir :
         name_dir = str(dir).split("/")[-1]
         if os.path.exists(out+name_dir):

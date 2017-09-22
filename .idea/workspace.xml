@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f1a7b73c-86a7-4c1e-be59-956eb450e362" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bash_scripts/fixer.sh" afterPath="$PROJECT_DIR$/bash_scripts/fixer.sh" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bash_scripts/init_exp.sh" afterPath="$PROJECT_DIR$/bash_scripts/init_exp.sh" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/csv_handler.py" afterPath="$PROJECT_DIR$/csv_handler.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,8 +22,8 @@
       <file leaf-file-name="csv_PIT.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/csv_PIT.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="155" column="42" lean-forward="false" selection-start-line="155" selection-start-column="42" selection-end-line="155" selection-end-column="42" />
+            <state relative-caret-position="165">
+              <caret line="111" column="4" lean-forward="false" selection-start-line="111" selection-start-column="4" selection-end-line="111" selection-end-column="4" />
               <folding>
                 <element signature="e#0#17#0" expanded="true" />
               </folding>
@@ -29,11 +31,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="csv_handler.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="fixer.sh" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/bash_scripts/fixer.sh">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="106">
+              <caret line="38" column="6" lean-forward="true" selection-start-line="38" selection-start-column="6" selection-end-line="38" selection-end-column="6" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="csv_handler.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/csv_handler.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="120">
-              <caret line="14" column="22" lean-forward="false" selection-start-line="14" selection-start-column="22" selection-end-line="14" selection-end-column="22" />
+              <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
               <folding>
                 <element signature="e#3#16#0" expanded="true" />
               </folding>
@@ -54,8 +66,8 @@
       <file leaf-file-name="budget_generation.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/budget_generation.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="207">
-              <caret line="260" column="9" lean-forward="false" selection-start-line="260" selection-start-column="0" selection-end-line="261" selection-end-column="0" />
+            <state relative-caret-position="167">
+              <caret line="275" column="4" lean-forward="false" selection-start-line="275" selection-start-column="4" selection-end-line="275" selection-end-column="4" />
               <folding>
                 <element signature="e#0#24#0" expanded="true" />
               </folding>
@@ -66,8 +78,8 @@
       <file leaf-file-name="init_exp.sh" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/bash_scripts/init_exp.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="435">
-              <caret line="32" column="208" lean-forward="false" selection-start-line="32" selection-start-column="208" selection-end-line="32" selection-end-column="208" />
+            <state relative-caret-position="120">
+              <caret line="32" column="209" lean-forward="false" selection-start-line="32" selection-start-column="209" selection-end-line="32" selection-end-column="209" />
               <folding />
             </state>
           </provider>
@@ -110,6 +122,7 @@
       <find>print</find>
       <find>row</find>
       <find>data_freq</find>
+      <find>FP</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -133,11 +146,11 @@
         <option value="$PROJECT_DIR$/random_bug.py" />
         <option value="$PROJECT_DIR$/pti_init.py" />
         <option value="$PROJECT_DIR$/budget_generation.py" />
-        <option value="$PROJECT_DIR$/bash_scripts/fixer.sh" />
         <option value="$PROJECT_DIR$/bash_scripts/vtest.sh" />
-        <option value="$PROJECT_DIR$/bash_scripts/init_exp.sh" />
         <option value="$PROJECT_DIR$/csv_PIT.py" />
         <option value="$PROJECT_DIR$/csv_handler.py" />
+        <option value="$PROJECT_DIR$/bash_scripts/init_exp.sh" />
+        <option value="$PROJECT_DIR$/bash_scripts/fixer.sh" />
       </list>
     </option>
   </component>
@@ -857,11 +870,33 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/bash_scripts/fixer.sh">
+    <entry file="file://$PROJECT_DIR$/csv_handler.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="21" column="0" lean-forward="true" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
-          <folding />
+        <state relative-caret-position="120">
+          <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <folding>
+            <element signature="e#3#16#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/csv_PIT.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="111" column="4" lean-forward="false" selection-start-line="111" selection-start-column="4" selection-end-line="111" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/budget_generation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="167">
+          <caret line="275" column="4" lean-forward="false" selection-start-line="275" selection-start-column="4" selection-end-line="275" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -875,39 +910,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/bash_scripts/init_exp.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="435">
-          <caret line="32" column="208" lean-forward="false" selection-start-line="32" selection-start-column="208" selection-end-line="32" selection-end-column="208" />
+        <state relative-caret-position="120">
+          <caret line="32" column="209" lean-forward="false" selection-start-line="32" selection-start-column="209" selection-end-line="32" selection-end-column="209" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/budget_generation.py">
+    <entry file="file://$PROJECT_DIR$/bash_scripts/fixer.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="207">
-          <caret line="260" column="9" lean-forward="false" selection-start-line="260" selection-start-column="0" selection-end-line="261" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#24#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/csv_PIT.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="155" column="42" lean-forward="false" selection-start-line="155" selection-start-column="42" selection-end-line="155" selection-end-column="42" />
-          <folding>
-            <element signature="e#0#17#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/csv_handler.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="14" column="22" lean-forward="false" selection-start-line="14" selection-start-column="22" selection-end-line="14" selection-end-column="22" />
-          <folding>
-            <element signature="e#3#16#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="106">
+          <caret line="38" column="6" lean-forward="true" selection-start-line="38" selection-start-column="6" selection-end-line="38" selection-end-column="6" />
+          <folding />
         </state>
       </provider>
     </entry>
