@@ -153,8 +153,8 @@ def init_clac(arr_path,out):
     for path in arr_path :
         name_dir = name_ext(path)
         ctr += 1
-        dfs = merge_all_mutation_df(path+'pit-reports/')
-        #dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
+        #dfs = merge_all_mutation_df(path+'pit-reports/')
+        dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
         print dfs.shape
         size =  len(list(dfs))
         mean_all(dfs)
@@ -235,16 +235,22 @@ def clac_by_package(dir_path,path_fp_budget,uni_time):
             arr_uni.append(pd.read_csv(p))
         elif str(p).__contains__('_FP_'):
             arr_fp.append(pd.read_csv(p))
-    print list(arr_uni[0])
-    new_df = arr_uni[0][['index',"class","mutation-type","method", "line"]].copy()
-    all_df = arr_uni[0][['index', "class", "mutation-type", "method", "line"]].copy()
+    if len(arr_uni)>0:
+        tmper = arr_uni[0]
+    elif len(arr_fp)>0 :
+        tmper= arr_fp[0]
+    else:
+        print ("BAD_Args: no FP or UNI is found")
+        exit(0)
+    new_df = tmper[['index',"class","mutation-type","method", "line"]].copy()
+    all_df = tmper[['index', "class", "mutation-type", "method", "line"]].copy()
     budget_df = pd.read_csv(path_fp_budget,names = ["class", "pred","time"])
     new_df = pd.merge(new_df, budget_df, how='left', on=["class"])
     new_df['uni_budget'] = uni_time
     new_df['FP_budget'] = np.where(new_df['time'] > int(uni_time), uni_time, new_df['time'])
     #new_df['pred_bug'] = new_df['time'] / float(uni_time)
     del new_df['time']
-    list_name = list(arr_uni[0])
+    list_name = list(tmper)
     res = [k for k in list_name if 'org' in k]
     dict_list=[]
     all_df['UNI'] = 0
@@ -328,10 +334,10 @@ if __name__ == "__main__":
     #arr_p = [ path+x+'/' for x in dir_names_tmp]
 
     arr=sys.argv
-  #  arr_p = "py fin /home/eran/Desktop/testing/09_17_02_57_45_t=60_/pit_test/report_pit/ /home/eran/Desktop/testing/09_17_02_57_45_t=60_/pit_test/report_pit/FP_budget_time.csv 60"
-  #  arr= arr_p.split(" ")
+   # arr_p = "pythpy fin /home/eran/Desktop/testing/09_22_01_36_01_t=150_/pit_test/report_pit/ /home/eran/Desktop/testing/09_22_01_36_01_t=150_/pit_test/report_pit/FP_budget_time.csv 150"
+   # arr= arr_p.split(" ")
     if len(arr) < 2 :
-        fin_mereg("/home/eran/Desktop/testing/")
+        fin_mereg("/home/eran/Desktop/testing/new_test/")
         print "no args"
         exit(0)
     mod = arr[1]
