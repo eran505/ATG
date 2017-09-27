@@ -72,6 +72,8 @@ def boundary_budget_allocation(dico,time_per_k,upper,lower,filtering):
     Total = size_set_classes*time_per_k
     LB = size_set_classes*lower
     budget_time = Total - LB
+    if budget_time < 0 :
+        budget_time=0
     d = dico.copy()
     for entry in dico.keys() :
         time_b = ( dico[entry] * budget_time ) + lower
@@ -273,8 +275,8 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-  #  sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
-  #      ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30','180','90']
+    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
+        ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30','180','20']
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)

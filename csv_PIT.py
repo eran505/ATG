@@ -153,13 +153,13 @@ def init_clac(arr_path,out):
     for path in arr_path :
         name_dir = name_ext(path)
         ctr += 1
-        #dfs = merge_all_mutation_df(path+'pit-reports/')
-        dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
+        dfs = merge_all_mutation_df(path+'pit-reports/')
+        #dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
         print dfs.shape
         size =  len(list(dfs))
         mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
-        write_to_csv(path+'PIT_'+str(name_dir)+str(size)+'.csv', dfs)
+        #write_to_csv(path+'PIT_'+str(name_dir)+str(size)+'.csv', dfs)
         write_to_csv(out + 'PIT_' + str(name_dir) + str(size) + '.csv', dfs)
         #delet_csv(path)
     return arr_dfs
@@ -235,13 +235,22 @@ def clac_by_package(dir_path,path_fp_budget,uni_time):
             arr_uni.append(pd.read_csv(p))
         elif str(p).__contains__('_FP_'):
             arr_fp.append(pd.read_csv(p))
+    max_num=0
+    max_obj=None
     if len(arr_uni)>0:
-        tmper = arr_uni[0]
+        for m in arr_uni:
+            if len(list(m))>max_num:
+                max_obj=m
+                max_num = len(list(m))
     elif len(arr_fp)>0 :
-        tmper= arr_fp[0]
+        for m in arr_fp:
+            if len(list(m))>max_num:
+                max_obj=m
+                max_num = len(list(m))
     else:
         print ("BAD_Args: no FP or UNI is found")
         exit(0)
+    tmper = max_obj
     new_df = tmper[['index',"class","mutation-type","method", "line"]].copy()
     all_df = tmper[['index', "class", "mutation-type", "method", "line"]].copy()
     budget_df = pd.read_csv(path_fp_budget,names = ["class", "pred","time"])
@@ -255,39 +264,54 @@ def clac_by_package(dir_path,path_fp_budget,uni_time):
     dict_list=[]
     all_df['UNI'] = 0
     all_df['FP'] = 0
+    size_uni = len(arr_uni)
+    size_fp = len(arr_fp)
+
     for k in res:
-        flag = 0
+        ctr_uni = []
+        ctr_fp = []
         new_df['UNI'] = 0
         new_df['FP'] = 0
         for df_uni in arr_uni:
             if k in df_uni.columns:
+                ctr_uni.append(df_uni)
                 continue
-            else:
-                flag = 1
         for df_fp in arr_fp:
             if k in df_fp.columns:
+                ctr_fp.append(df_fp)
                 continue
-            else:
-                flag = 1
-        if flag == 0 :
-            for df_fp in arr_fp:
+        if len(ctr_fp)> 0 :
+            for df_fp in ctr_fp:
                 new_df['FP'] += np.where(df_fp[k] == 'KILLED', 1 , 0)
-            for df_uni in arr_uni:
+        if len(ctr_uni)>0:
+            for df_uni in ctr_uni:
                 new_df['UNI'] += np.where(df_uni[k] == 'KILLED', 1 , 0)
 
+        new_df['kill_fp'] = np.where( new_df['FP']>0 , 1 , 0)
 
-            new_df['kill_fp'] = np.where( new_df['FP']>0 , 1 , 0)
-
-            new_df['kill_uni'] = np.where(new_df['UNI']>0, 1 , 0)
-
-
-            dict_list.append({"package":k ,"FP":new_df['FP'].sum() ,"UNI":new_df['UNI'].sum()
-                                ,"kill_fp":new_df['kill_fp'].sum() , "kill_uni":new_df['kill_uni'].sum()    })
-            all_df['FP']+=new_df['FP']
-            all_df['UNI'] += new_df['UNI']
-            all_df['kill_fp']=new_df['kill_fp']
-            all_df['kill_uni'] = new_df['kill_uni']
-            new_df.to_csv(dir_path+str(k)+'.csv', encoding='utf-8', index=False)
+        new_df['kill_uni'] = np.where(new_df['UNI']>0, 1 , 0)
+        if (size_fp)>0:
+            tmp_size_fp=float(len(ctr_fp))/ float(size_fp)
+            new_df["test_suite_FP"] =  tmp_size_fp
+        else:
+            tmp_size_fp = 0
+            new_df["test_suite_FP"]=tmp_size_fp
+        if (size_uni)>0:
+            tmp_size_u = float(len(ctr_uni))/ float(size_uni)
+            new_df["test_suite_U"] = tmp_size_u
+        else:
+            tmp_size_u =  0
+            new_df["test_suite_U"]=tmp_size_u
+        dict_list.append({"package":k ,"FP":new_df['FP'].sum() ,"UNI":new_df['UNI'].sum()
+                                ,"kill_fp":new_df['kill_fp'].sum() , "kill_uni":new_df['kill_uni'].sum()  ,
+                              "test_suite_FP":tmp_size_fp,
+                              "test_suite_U": tmp_size_u
+                              })
+        all_df['FP']+=new_df['FP']
+        all_df['UNI'] += new_df['UNI']
+        all_df['kill_fp']=new_df['kill_fp']
+        all_df['kill_uni'] = new_df['kill_uni']
+        new_df.to_csv(dir_path+str(k)+'.csv', encoding='utf-8', index=False)
     if len(dict_list)>0 :
         df = pd.DataFrame(dict_list, columns=dict_list[0].keys())
         df.to_csv(dir_path+'fin.csv', encoding='utf-8', index=False)
@@ -298,6 +322,7 @@ def fin_mereg(path):
     walker=pit_render_test.walker(path)
     list_p = walker.walk("fin.csv")
     list_d = []
+    big_dico={}
     for p in list_p:
         ISstop = True
         time_b = "null"
@@ -315,43 +340,55 @@ def fin_mereg(path):
     for item in list_d:
         csv_file = csv.reader(open(item["path"], "rb"), delimiter=",")
         for row in csv_file:
-            item["FP"] = row[0]
-            item["uni"] = row[1]
-            item["kil_uni"] = row[2]
-            item["kil_fp"] = row[3]
-            item["pacakge"] = row[4]
-    df = pd.DataFrame(list_d, columns=list_d[0].keys())
-    df.to_csv(path + 'all_fin.csv', encoding='utf-8', index=False)
+            if str(row[2]).__contains__("org"):
+                item_tmp={}
+                if row[2] in big_dico :
+                    val = big_dico[str(row[2])]
+                else:
+                    big_dico[str(row[2])]=[]
+                    val =  big_dico[str(row[2])]
+                item_tmp["FP"] = row[0]
+                item_tmp["test_suite_U"] = row[1]
+                item_tmp["pacakge"] = row[2]
+                item_tmp["test_suite_FP"] = row[3]
+                item_tmp["kil_uni"] = row[4]
+                item_tmp["kil_fp"] = row[5]
+                item_tmp["uni"] = row[6]
+                item_tmp["time"] = item["time"]
+                val.append(item_tmp)
+                big_dico[str(row[2])] = val
+    for key_i in big_dico.keys() :
+        df = pd.DataFrame(big_dico[key_i])
+        df.to_csv(path +str(key_i) +'_fin.csv', encoding='utf-8', index=False)
 
 
 
 
 if __name__ == "__main__":
-    #dir_names= ['ALL_t=1' ,'ALL_t=3' ]#, 'ALL_t=4']
-    #dir_names_tmp = ['pit_tmp','pit_tmp_2']
-    #out = '/home/eran/thesis/test_gen/experiment/'
-    #path = '/home/eran/thesis/test_gen/experiment/all_pit/'
-    #arr_p = [ path+x+'/' for x in dir_names_tmp]
-
     arr=sys.argv
-   # arr_p = "pythpy fin /home/eran/Desktop/testing/09_22_01_36_01_t=150_/pit_test/report_pit/ /home/eran/Desktop/testing/09_22_01_36_01_t=150_/pit_test/report_pit/FP_budget_time.csv 150"
-   # arr= arr_p.split(" ")
-    if len(arr) < 2 :
-        fin_mereg("/home/eran/Desktop/testing/new_test/")
-        print "no args"
+    #arr_p = "py fin /home/eran/Desktop/dis/new_FP/09_22_03_59_19_t=150_/pit_test/ /home/eran/Desktop/dis/new_FP/09_22_03_59_19_t=150_/pit_test/FP_budget_time.csv 150"
+    #arr= arr_p.split(" ")
+    if len(arr) > 2 :
+        #fin_mereg("/home/eran/Desktop/dis/new_FP/") #data_mutation #new_FP
+        mod = arr[1]
+        if mod == "fin" :
+            die_p = arr[2]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
+            fpcsv = arr[3]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
+            uni = arr[4]  # '30'
+            clac_by_package(die_p, fpcsv, uni)
+        elif mod=='all':
+            dico = init_clac( [ arr[2] ],arr[3])
+        else:
+            print "fail csv_PIT"
+    else :
+        import pip
+        installed_packages = pip.get_installed_distributions()
+        print installed_packages
+        flat_installed_packages = [package.project_name for package in installed_packages]
+        for item in flat_installed_packages:
+            print item
+        print "[Error] ----no args------"
         exit(0)
-    mod = arr[1]
-    if mod == "fin" :
-        die_p = arr[2]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
-        fpcsv = arr[3]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
-        uni = arr[4]  # '30'
-        clac_by_package(die_p, fpcsv, uni)
-    elif mod=='all':
-        dico = init_clac( [ arr[2] ],arr[3])
-    else:
-        print "fail csv_PIT"
-
-
 
 
 
