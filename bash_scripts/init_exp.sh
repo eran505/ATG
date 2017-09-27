@@ -36,8 +36,6 @@ if [[ $cur_dir == *"ise"* ]]; then
 	python ${ATG}budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/linear/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} ${m} 30 180 ${t}
 else
 	python  ${ATG}budget_generation.py  /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/eran/programs/EVOSUITE/jar/ ${newdir} ${m} 30 180 ${t}
-
-
 fi
 python ${ATG}pit_render_test.py ${newdir}
 mkdir "pit_test"
