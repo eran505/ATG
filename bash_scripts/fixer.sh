@@ -53,7 +53,9 @@ for ((i=0;i<cnt;i++)); do
     for D in `find ${pitest}  -maxdepth 1  -type d  `
 	do
 		if [[ ${D} == *"ALL"* ]]; then
+                   echo ""
                    echo "python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/"
+                   echo ""
 		   #echo ".....sleeping_10_sec.."
 		   #sleep 10
                   # python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/
@@ -63,7 +65,9 @@ for ((i=0;i<cnt;i++)); do
     if [[  ${str_time} == *"exp"* ]]; then
     	str_time=${str_time##*_t=}
     	str_time=${str_time%%_*}
+    	echo""
     	echo "python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${str_time}"
+    	echo ""
     	#python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${str_time}
     fi
     #echo ${PWD}
