@@ -9,9 +9,12 @@ fi
 father_dir=${PWD}
 for D in `find ${PWD}  -maxdepth 1  -type d  `
 do
-
-	string=${D}
-	array+=(${D}"/")
+    echo $D
+    if echo "${D}" | grep -q "0"
+    then
+	    string=${D}
+	    array+=(${D}"/")
+	fi
 
 done
 
@@ -35,27 +38,33 @@ for ((i=0;i<cnt;i++)); do
     for D in `find ${path_dir}  -maxdepth 1  -type d  `
 	do
 		string=${D}
-		if [[ ${string} == *"FP"* ]]; then
-			#bash ${path_dir}pit_test/init_script_pitest.sh ${D}/org/
+		    echo $D
+        if echo "${D}" | grep -q "t="
+        then
+            #bash ${path_dir}pit_test/init_script_pitest.sh ${D}/org/
 			#echo "piting..."
             str_time=${string}
-
 		fi
 	done
     #echo "making dir  ${pitest}report_pit "
         if [  -d "${pitest}report_pit" ]; then
-     		rm -r ${pitest}report_pit
+     		#rm -r ${pitest}report_pit
+     		echo ""
          fi
-    mkdir "report_pit"
+    #mkdir "report_pit"
     for D in `find ${pitest}  -maxdepth 1  -type d  `
 	do
-		if [[ ${D} == *"ALL"* ]]; then
-                   echo "" >> ${father_dir}/info.txt
-                   echo "python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/" >> ${father_dir}/info.txt
-                   echo "">> ${father_dir}/info.txt
-		   #echo ".....sleeping_10_sec.."
-		   #sleep 10
-                  # python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/
+
+
+	    if echo "${D}" | grep -q "t="
+        then
+                echo "" >> ${father_dir}/info.txt
+                echo "python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/" >> ${father_dir}/info.txt
+                echo "">> ${father_dir}/info.txt
+		        #echo ".....sleeping_10_sec.."
+		        #sleep 10
+                # python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/
+
 		fi
         done
     cp ${path_dir}FP_budget_time.csv ${pitest}report_pit/
