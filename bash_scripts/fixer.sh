@@ -6,16 +6,13 @@ if [ -z "$ATG" ]; then
 echo "missing path value ATG repo"
 exit
 fi
-
+father_dir=${PWD}
 for D in `find ${PWD}  -maxdepth 1  -type d  `
 do
 
 	string=${D}
+	array+=(${D}"/")
 
-	if [[ ${string} == *"0"* ]]; then
-		array+=(${D}"/")
-
-	fi
 done
 
 
@@ -53,9 +50,9 @@ for ((i=0;i<cnt;i++)); do
     for D in `find ${pitest}  -maxdepth 1  -type d  `
 	do
 		if [[ ${D} == *"ALL"* ]]; then
-                   echo ""
-                   echo "python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/"
-                   echo ""
+                   echo "" >> ${father_dir}/info.txt
+                   echo "python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/" >> ${father_dir}/info.txt
+                   echo "">> ${father_dir}/info.txt
 		   #echo ".....sleeping_10_sec.."
 		   #sleep 10
                   # python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/
@@ -65,9 +62,9 @@ for ((i=0;i<cnt;i++)); do
     if [[  ${str_time} == *"exp"* ]]; then
     	str_time=${str_time##*_t=}
     	str_time=${str_time%%_*}
-    	echo""
-    	echo "python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${str_time}"
-    	echo ""
+    	echo"">> ${father_dir}/info.txt
+    	echo "python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${str_time}">> ${father_dir}/info.txt
+    	echo "">> ${father_dir}/info.txt
     	#python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${str_time}
     fi
     #echo ${PWD}
