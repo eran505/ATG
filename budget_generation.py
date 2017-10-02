@@ -174,7 +174,6 @@ def get_all_class(root,end) :
 
 def get_all_command(budget_time,seed,mem=1000):
     commands=[]
-
     search = int(budget_time)/2
     const_factor = 5
     half_budget =  int(budget_time)/2
@@ -275,8 +274,11 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-    #sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
-    #    ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30','180','20']
+  #  sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
+  #       ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30','180','180']
+   # str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
+   # arr_str = str_val.split(" ")
+   #sys.argv = arr_str
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)

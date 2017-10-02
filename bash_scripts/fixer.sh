@@ -12,7 +12,7 @@ do
 
 	string=${D}
 
-	if [[ ${string} == *"09"* ]]; then
+	if [[ ${string} == *"0"* ]]; then
 		array+=(${D}"/")
 
 	fi
@@ -39,9 +39,9 @@ for ((i=0;i<cnt;i++)); do
 	do
 		string=${D}
 		if [[ ${string} == *"FP"* ]]; then
-			bash ${path_dir}pit_test/init_script_pitest.sh ${D}/org/
+			#bash ${path_dir}pit_test/init_script_pitest.sh ${D}/org/
 			echo "piting..."
-                        str_time=${string}
+            str_time=${string}
 
 		fi
 	done

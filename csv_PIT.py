@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import csv
 
-from scipy.io.matlab.miobase import arr_dtype_number
 
 import pit_render_test
 
@@ -160,7 +159,7 @@ def init_clac(arr_path,out):
         mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
         #write_to_csv(path+'PIT_'+str(name_dir)+str(size)+'.csv', dfs)
-        write_to_csv(out + 'PIT_' + str(name_dir) + str(size) + '.csv', dfs)
+        write_to_csv(out + 'PIT_' + str(name_dir) +"_s="+str(size) + '.csv', dfs)
         #delet_csv(path)
     return arr_dfs
 
@@ -369,7 +368,7 @@ if __name__ == "__main__":
     #arr_p = "py fin /home/eran/Desktop/dis/new_FP/09_22_03_59_19_t=150_/pit_test/ /home/eran/Desktop/dis/new_FP/09_22_03_59_19_t=150_/pit_test/FP_budget_time.csv 150"
     #arr= arr_p.split(" ")
     if len(arr) > 2 :
-        #fin_mereg("/home/eran/Desktop/dis/new_FP/") #data_mutation #new_FP
+
         mod = arr[1]
         if mod == "fin" :
             die_p = arr[2]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
@@ -381,12 +380,7 @@ if __name__ == "__main__":
         else:
             print "fail csv_PIT"
     else :
-        import pip
-        installed_packages = pip.get_installed_distributions()
-        print installed_packages
-        flat_installed_packages = [package.project_name for package in installed_packages]
-        for item in flat_installed_packages:
-            print item
+        #fin_mereg("/home/eran/Desktop/testing/new_test/")  # data_mutation #new_FP
         print "[Error] ----no args------"
         exit(0)
 

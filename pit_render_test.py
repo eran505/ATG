@@ -82,7 +82,7 @@ def fix_bug_tests(root):
 
 
 def main(sys):
-    if sys.argv > 1 :
+    if len(sys.argv) > 1 :
         root = sys.argv[1]
         fix_bug_tests(root)
 
