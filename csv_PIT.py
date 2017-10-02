@@ -109,8 +109,9 @@ def merge_df(list_df):
 
 
 def merge_all_mutation_df(root_p):
-    print 'root=',root_p
     all_dir= get_all_dir(root_p)
+    for d in all_dir:
+        print d,'\n'
     dict_mut=make_dcit(all_dir)
     dfs = _data_df(dict_mut)
     print list(dfs)
