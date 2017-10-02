@@ -365,8 +365,8 @@ def fin_mereg(path):
 
 if __name__ == "__main__":
     arr=sys.argv
-    #arr_p = "py fin /home/eran/Desktop/dis/new_FP/09_22_03_59_19_t=150_/pit_test/ /home/eran/Desktop/dis/new_FP/09_22_03_59_19_t=150_/pit_test/FP_budget_time.csv 150"
-    #arr= arr_p.split(" ")
+    arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
+    arr= arr_p.split(" ")
     if len(arr) > 2 :
 
         mod = arr[1]
