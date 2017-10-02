@@ -365,8 +365,8 @@ def fin_mereg(path):
 
 if __name__ == "__main__":
     arr=sys.argv
-    arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
-    arr= arr_p.split(" ")
+    #arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
+    #arr= arr_p.split(" ")
     if len(arr) > 2 :
 
         mod = arr[1]
@@ -380,7 +380,7 @@ if __name__ == "__main__":
         else:
             print "fail csv_PIT"
     else :
-        #fin_mereg("/home/eran/Desktop/testing/new_test/")  # data_mutation #new_FP
+        fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
         print "[Error] ----no args------"
         exit(0)
 
