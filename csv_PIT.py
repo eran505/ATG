@@ -17,6 +17,7 @@ def get_csv_summary(root_p):
 def get_all_dir(root_p):
     walker=pit_render_test.walker(root_p)
     classes_list = walker.walk("org",False,0)
+    print "class_list = ",classes_list
     return classes_list
 
 def get_name_CUT(root_p):
