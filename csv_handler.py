@@ -35,14 +35,26 @@ def main_csv(path_csv) :
         copy_mutation(dir,out+name_dir+"/")
 
     print "done !"
+def main_info(path_p):
+    with open(path_p) as f:
+        content = f.readlines()
+        a = [x for x in content if x != '\n']
+        for x in a:
+            os.system(x)
+
 
 def init_script():
-    #sys.argv = ["","/home/eran/Desktop/testing/"]
-    if len(sys.argv) == 2 :
-        path_csv = sys.argv[1]
-        main_csv(path_csv)
+    sys.argv = ["p","info","/home/eran/Desktop/testing/new_test/info.txt"]
+    if len(sys.argv) == 3 :
+        mode = sys.argv[1]
+        if mode == 'info':
+            main_info(sys.argv[2])
+        elif mode == "csv":
+            main_csv(sys.argv[2])
+        else :
+            print('error no mode ')
     else:
-        print 'Usage :\n-p [path] '
+        print 'Usage : -csv [path] '
 
 if __name__ == "__main__":
     init_script()

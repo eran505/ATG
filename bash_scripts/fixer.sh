@@ -18,7 +18,12 @@ do
 
 done
 
-
+file=${PWD}"/info.txt"
+if [ -f "$file" ]
+then
+	echo "$file found and being deleted."
+	rm $file
+fi
 
 cnt=${#array[@]}
 for ((i=0;i<cnt;i++)); do
@@ -56,7 +61,7 @@ for ((i=0;i<cnt;i++)); do
 	do
 
 
-	    if echo "${D}" | grep -q "t="
+	    if echo "${D}" | grep -q "it="
         then
                 echo "" >> ${father_dir}/info.txt
                 echo "python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/" >> ${father_dir}/info.txt
