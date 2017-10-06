@@ -44,7 +44,7 @@ def main_info(path_p):
 
 
 def init_script():
-    sys.argv = ["p","info","/home/eran/Desktop/testing/new_test/info.txt"]
+    #sys.argv = ["p","info","/home/eran/Desktop/testing/new_test/info.txt"]
     if len(sys.argv) == 3 :
         mode = sys.argv[1]
         if mode == 'info':
