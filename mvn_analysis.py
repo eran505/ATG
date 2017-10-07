@@ -172,11 +172,17 @@ def data_to_csv(dico,path,name,k_name):
         dict_writer.writeheader()
         dict_writer.writerows(li_dic)
 
-def main(sys):
-    li = origin_java("/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction")
-    pro = '/home/eran/Desktop/testing/new_test/'
-    li_obj = analysis(pro, li)
-    flush_data(li_obj,"/home/eran/Desktop/mvn/")
+def main(math_p,dir_p,out_p):
+    li = origin_java(math_p)
+    li_obj = analysis(dir_p, li)
+    flush_data(li_obj,out_p)
     print "done !"
 if __name__ == "__main__":
-    main(sys)
+    arr= sys.argv
+    if len(arr) == 4:
+        math_p = arr[1]
+        dir_p = arr[2]
+        out_p=arr[3]
+        main(math_p,dir_p,out_p)
+    else:
+        print("[package_origin_dir] [input_dir] [out_dir]")
