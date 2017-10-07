@@ -373,7 +373,7 @@ def info_input(path_info):  #/home/eran/Desktop/testing/new_test
                 print x
             arr = x.split(" ")
             arr=arr[1:]
-            #main_pars(arr)
+            main_pars(arr)
 
 
 def main_pars(arr):
