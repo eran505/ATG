@@ -402,9 +402,7 @@ if __name__ == "__main__":
   #  arr = ['py','/home/eran/Desktop/testing/new_test/info.txt']
     if len(arr) == 2:
         if arr[1] == 'f':
-            dir_p=raw_input('Enter your input:')
-            dir_p = str(dir_p).replace(" ","")
-            fin_mereg(dir_p)  # data_mutation #new_FP
+            fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
             exit(0)
         info_input(arr[1])
         exit(0)
