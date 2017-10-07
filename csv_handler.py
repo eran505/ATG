@@ -36,11 +36,15 @@ def main_csv(path_csv) :
 
     print "done !"
 def main_info(path_p):
+    all
     with open(path_p) as f:
         content = f.readlines()
         a = [x for x in content if x != '\n']
         for x in a:
-            os.system(x)
+
+            arr = x.split(" ")
+            arr=arr[:2]
+            print arr
 
 
 def init_script():

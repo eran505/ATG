@@ -363,12 +363,20 @@ def fin_mereg(path):
         df.to_csv(path +str(key_i) +'_fin.csv', encoding='utf-8', index=False)
 
 
+def info_input(path_info):  #/home/eran/Desktop/testing/new_test
+    with open(path_info) as f:
+        content = f.readlines()
+        a = [x for x in content if x != '\n']
+        for x in a:
+            x = x.replace('\n',"")
+            if x.__contains__('\n'):
+                print x
+            arr = x.split(" ")
+            arr=arr[1:]
+            #main_pars(arr)
 
 
-if __name__ == "__main__":
-    arr=sys.argv
-    #arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
-    #arr= arr_p.split(" ")
+def main_pars(arr):
     if len(arr) > 2 :
 
         mod = arr[1]
@@ -387,6 +395,17 @@ if __name__ == "__main__":
         exit(0)
 
 
+
+
+if __name__ == "__main__":
+    arr=sys.argv
+  #  arr = ['py','/home/eran/Desktop/testing/new_test/info.txt']
+    if len(arr) == 2:
+        info_input(arr[1])
+        exit(0)
+    #arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
+    #arr= arr_p.split(" ")
+    main_pars(arr)
 
 
 
