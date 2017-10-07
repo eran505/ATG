@@ -390,7 +390,7 @@ def main_pars(arr):
         else:
             print "fail csv_PIT"
     else :
-        fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
+        # fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
         print "[Error] ----no args------"
         exit(0)
 
@@ -401,6 +401,11 @@ if __name__ == "__main__":
     arr=sys.argv
   #  arr = ['py','/home/eran/Desktop/testing/new_test/info.txt']
     if len(arr) == 2:
+        if arr[1] == 'f':
+            dir_p=raw_input('Enter your input:')
+            dir_p = str(dir_p).replace(" ","")
+            fin_mereg(dir_p)  # data_mutation #new_FP
+            exit(0)
         info_input(arr[1])
         exit(0)
     #arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
