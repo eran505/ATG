@@ -52,31 +52,41 @@ class ProjectCase:
         walker = pit_render_test.walker(self._path)
         list_java = walker.walk("ESTest.java")
         list_txt = walker.walk("ESTest.txt")
-        list_java,list_txt = self.list_clean(list_java,list_txt)
+        list_class = walker.walk("ESTest.class")
+        list_java,list_txt,list_class = self.list_clean(list_java,list_txt,list_class)
         for klass in list_java :
             if klass[0][:-7] in self.dict:
-                self.dict[klass[0][:-7]]={"generate":1 ,"un_compile":1  }
+                self.dict[klass[0][:-7]]={"generate":1 ,"un_compile":1 , "report":0 }
+        for comp_klass in list_class:
+            if  comp_klass[0][:-7] in self.dict:
+                tmp = self.dict[comp_klass[0][:-7] ]
+                tmp["compile"] = 1
+                tmp["un_compile"]=0
+            else:
+                raise Exception("[Exception] file in txt but not in java: ",comp_klass[0])
         for txt_f in list_txt:
             if txt_f[0][:-7] in self.dict:
                 tmp = self.dict[txt_f[0][:-7] ]
                 tmp["p"] = txt_f[1]
-                tmp["compile"] = 1
-                tmp["un_compile"]=0
+                tmp["report"] = 1
             else:
                 raise Exception("[Exception] file in txt but not in java: ",txt_f[0])
         self.read_txt()
         return self.dict
-    def list_clean(self,list_java,list_txt):
+    def list_clean(self,list_java,list_txt,list_class):
         new_list_java=[]
         new_list_txt=[]
+        new_class_list=[]
+        for z in list_class:
+            new_class_list.append([clean_path_math(z, ".class"), z])
         for x in list_java:
             new_list_java.append([clean_path_math(x,".java"),x])
         for y in list_txt:
             new_list_txt.append([clean_path_math(y,".txt","/org."),y])
-        return  new_list_java,new_list_txt
+        return  new_list_java,new_list_txt,new_class_list
     def read_txt(self):
         for var in self.dict.values():
-            if "un_compile" in var and var["un_compile"]==0 :
+            if "un_compile" in var and var["report"]==1 :
                 p = var["p"]
                 del var["p"]
                 with open(p) as f:
@@ -107,15 +117,15 @@ class BigProject:
         self._time = -1
         self.list_org = list_p
         self.proj_list = []
-        self.dict_fin_all = { "Errors":0 , "run":0 , "compile":0 , "un_compile":0 , "Skipped":0 ,"Failures":0 , "generate":0 ,"size":0 }
+        self.dict_fin_all = { "Errors":0 , "report":0,"run":0 , "compile":0 , "un_compile":0 , "Skipped":0 ,"Failures":0 , "generate":0 ,"size":0 }
         self.dict_fin_FP = {}
         self.dict_fin_U = {}
         self.constractor()
         self.merge_all()
     def constractor(self):
         for x in self.list_org:
-            self.dict_fin_U[x] = { "Errors":0 , "run":0 , "compile":0 , "un_compile":0 , "Skipped":0 ,"Failures":0 , "generate":0 ,"size":0 }
-            self.dict_fin_FP[x] ={ "Errors":0 , "run":0 , "compile":0 , "un_compile":0 , "Skipped":0 ,"Failures":0 , "generate":0 ,"size":0 }
+            self.dict_fin_U[x] = { "Errors":0 , "report":0, "run":0 , "compile":0 , "un_compile":0 , "Skipped":0 ,"Failures":0 , "generate":0 ,"size":0 }
+            self.dict_fin_FP[x] ={ "Errors":0 ,"report":0, "run":0 , "compile":0 , "un_compile":0 , "Skipped":0 ,"Failures":0 , "generate":0 ,"size":0 }
         prefix = self._path.find("_t=")+3
         suf = self._path.find("_/pit_test")
         self._time =  self._path[prefix:suf]
@@ -179,10 +189,12 @@ def main(math_p,dir_p,out_p):
     print "done !"
 if __name__ == "__main__":
     arr= sys.argv
+    #arr = ["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/",
+    #       "/home/eran/Desktop/testing/new_test/","/home/eran/Desktop/mvn/"]
     if len(arr) == 4:
         math_p = arr[1]
         dir_p = arr[2]
         out_p=arr[3]
         main(math_p,dir_p,out_p)
     else:
-        print("[package_origin_dir] [input_dir] [out_dir]")
+        print("[package_origin_dir(class file)] [input_dir] [out_dir]")
