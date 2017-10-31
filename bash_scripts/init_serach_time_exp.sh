@@ -9,6 +9,6 @@ while [ $ctr -le 300 ]
         echo "generate testing with time budget= $ctr"
         des_dir=${location_dir}/T_${ctr}/
         mkdir ${location_dir}/T_${ctr}/
-        #bash serach_time_exp.sh ${des_dir} ${ctr} ~/eran/repo/ATG/
+        bash serach_time_exp.sh ${des_dir} ${ctr} ~/eran/repo/ATG/
         ((ctr=ctr+10))
     done
