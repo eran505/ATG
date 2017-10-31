@@ -298,7 +298,7 @@ def main_func():
 
 
 def fixer(path_p):
-
+    print "fixing.."
 
 #proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
 

@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import csv
 import random as rand
-from scipy.io.matlab.miobase import arr_dtype_number
 
 import pit_render_test
 

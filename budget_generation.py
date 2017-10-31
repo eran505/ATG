@@ -186,11 +186,15 @@ def get_all_command(budget_time,seed,mem=1000):
     write_t = x_budget
 
     commands.append("-seed %s"%seed)
-    commands.append("-Dconfiguration_id=%s" %seed)
-    commands.append("-Dreuse_leftover_time=true")
-    commands.append("-Dtest_comments=false")
-    commands.append("-Dshow_progress=false")
     commands.append("-Dsearch_budget=%s" % search)
+    commands.append("-Dshow_progress=false")
+    commands.append("-Dtest_comments=false")
+    commands.append("-Dconfiguration_id=%s" %seed)
+
+    return " ".join(str(i) for i in commands )
+
+
+    commands.append("-Dreuse_leftover_time=true")
     #commands.append("-Dglobal_timeout=%s" % search)
     commands.append("-Dinitialization_timeout=%s" %  initialization)
     commands.append("-Dminimization_timeout=%s" %  minimization)
@@ -206,8 +210,61 @@ def get_all_command(budget_time,seed,mem=1000):
     return " ".join(str(i) for i in commands )
 
 
+def get_instance_bug_and_fix(bug_lis, fix_lis , delimiter):
+    result_dict={}
+    if len(fix_lis) != len(bug_lis):
+        print ("-----Errorbox: fix list and bug list not in the same size fix_size={0} bug_size={1}-----".format(len(fix_lis),len(bug_lis)))
+    for item in bug_lis:
+        for it in item:
+            name_dot = it[0]+'/'+it[1]
+            val= name_dot.find(delimiter)
+            res = name_dot[val:-6]
+            bug_path = name_dot[:val]
+            res =res.replace("/",".")
+            result_dict[res] = 1
+    for tmp_pac in fix_lis:
+        for tmp_k in tmp_pac:
+            name_dot = tmp_k[0] + '/' +tmp_k[1]
+            val = name_dot.find(delimiter)
+            res = name_dot[val:-6]
+            fix_path = name_dot[:val]
+            res = res.replace("/", ".")
+            if res in result_dict:
+                result_dict[res] = 2
+            else :
+                print "---[Error] in get_instance_bug_and_fix function ---- "
+
+    return result_dict,fix_path[:-1],bug_path[:-1]
 
 
+
+
+def get_all_class_v3(root_p):
+    arr_root = str(root_p).split('/')
+    name_klass = arr_root[-1]
+    path_klass = arr_root[:-1]
+    str1_path_root = '/'.join(path_klass)
+    walker = pit_render_test.walker(str1_path_root)
+    list_java = walker.walk(name_klass+".class",True,0)
+    if len(list_java)>0:
+        return [str(str1_path_root),str(name_klass+".class")]
+    else:
+        return []
+
+def spliter(str_path):
+    arr_p = str(str_path).split("/")
+    name_p = arr_p[-1]
+    str1_path_root = '/'.join(arr_p[:-1])
+    return [str1_path_root,name_p]
+#'/home/eran/Desktop/defect4j_exmple/fixed/target/classes/org/apache/commons/math3/optim/nonlinear/scalar/gradient/.class'
+def get_all_class_v2(root):
+    walker = pit_render_test.walker(root)
+    list_java = walker.walk(".class",True,0)
+    new_list = [i for i in list_java if str(i).__contains__("$") == False and str(i).__contains__("package-info") == False]
+    new_list_sp =[]
+    for p in new_list :
+        new_list_sp.append(spliter(p))
+    return new_list_sp
 
 def get_all_class_v1(root) :
     size=0
@@ -220,17 +277,65 @@ def get_all_class_v1(root) :
                 class_list.append([str(path),str(name)])
     return class_list
 
+'''
+"The term original in our context refers to the version which EvoSuiteR considers as correct,
+and the term regression refers to the version which EvoSuiteR considers to have potential regressions.
+Thus, the generated tests are intended to pass on the original version, and fail on the regression version".
+[Link] : https://github.com/EvoSuite/evosuite/wiki/Regression-Testing
+'''
+def regression_test(evo_name, evo_path, list_fixed, list_buggy,budget_dic, dis_path, lower_b , upper_b, seed , total_b) :  # fixed = original |||| bug =  regression
+    evo_string = "java -jar " + evo_path + evo_name +" -regressionSuite"
+    parms0 = " -Dregression_skip_similar=true"
+    parms2 = " -Dregression_statistics=true"
+    parms3 = " -Dreport_dir=" + dis_path
+    parms4 = " -Dtest_dir=" + dis_path
+    parms5 = " -Doutput_variables=TARGET_CLASS,criterion,configuration_id,Total_Methods,Covered_Methods,Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals,Coverage,search_budget"
+    criterion = "-criterion BRANCH:EXCEPTION:METHOD"
+    all_p = parms2+parms3+parms4+parms5+parms0
+    all_command=""
+    result_dict, fix_path, bug_path=get_instance_bug_and_fix(list_buggy,list_fixed,'org')
+
+    if 'mode' in budget_dic:
+        mode =  budget_dic['mode']
+        list_class = []
+    else :
+        list_class = budget_dic.keys()
+    size_list_class = len(list_class)
+
+    for test_case in result_dict.keys():
+        if size_list_class == 0:
+            time_budget = total_b
+        else:
+            if test_case  in list_class:
+                value_time = budget_dic[test_case]
+                value_time = float(value_time)
+                time_budget = int(round(value_time))
+            else:
+                time_budget = lower_b
+        all_time = get_all_command(time_budget, seed)
+        all_time = ""
+        all_p=all_time +" "+ all_p
+        command = "{0} -projectCP {1} -Dregressioncp={2} -class {5} {3} {4}".format(evo_string,fix_path,bug_path,criterion,all_p,test_case)
+        #command = evo_string + "-class " +test_case+" -projectCP "+fix_path+" -Dregressioncp="+bug_path+" "+criterion+" "+all_p
+        print (command)
+        all_command = all_command +'\n'*2 + command
+        os.system(command)
+    if os.path.exists(dis_path + 'statistics.csv'):
+        remove_dot_csv(dis_path + 'statistics.csv')
+    text_file = open(dis_path + "command.txt", "w")
+    text_file.write("command: \n  %s" % all_command)
+    text_file.close()
+
 def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path,lower_b,seed,b_class):
 
     evo_string = "java -jar " + evo_path +evo_name
 
     criterion = " "
 
-
     parms3=" -Dreport_dir="+dis_path
     parms4=" -Dtest_dir="+dis_path
-    parms5=" -Doutput_variables=TARGET_CLASS,criterion,configuration_id,Lines,Covered_Lines,Total_Methods,Covered_Methods,\
-Total_Branches,Covered_Branches,ExceptionCoverage,Size,Length,Total_Time,Covered_Goals,Total_Goals,Coverage,search_budget"
+    parms5=" -Doutput_variables=TARGET_CLASS,criterion,configuration_id,Total_Methods,Covered_Methods,\
+Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals,Coverage,search_budget"
 
     all_p = parms3+parms4+parms5
     all_command=''
@@ -274,8 +379,8 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-  #  sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
-  #       ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'FP','30','180','180']
+    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
+         ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'U','30','180','30']
    # str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
    # arr_str = str_val.split(" ")
    #sys.argv = arr_str
@@ -285,6 +390,9 @@ def init_main():
     mode = sys.argv[5]
     if mode == 'exp':
         int_exp(sys.argv)
+        return
+    if mode == 'reg':
+        #regression_testing(sys.argv)
         return
     v_path = sys.argv[1]  # target = /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org
     v_evo_name = sys.argv[2]  #evo_version = evosuite-1.0.5.jar
@@ -349,7 +457,98 @@ def int_exp(args):
                 single_call_EvoSuite(v_evo_name, v_evo_path, target_list, uni_budget, full_dis,lower_b,seed,b_klass)
 
 
-init_main()
+
+
+def regression_testing_handler(bug_obj): #params [ -buggy_path  -fixed_path -[U/F/O/A] -path_csv_FP -mode -output_path -evo_version -evo_path -time_budget -Lower_b -Up_b  ]
+    print "[regression]"
+
+    #args=["",'A',str(rel_path)+"csv/Most_out_files.csv"
+    #    ,'/home/eran/Desktop/defect4j_exmple/out/',"evosuite-1.0.5.jar", "/home/eran/programs/EVOSUITE/jar/",'100' , '30', '180']
+    #buggy_path = args[1]
+    #fixed_path = args[2]
+    args=bug_obj.info
+    buggy_path = str(bug_obj.root)+"buggy/target/classes/"
+    fixed_path = str(bug_obj.root)+"fixed/target/classes/"
+
+    modified_class_paths = []
+    modified_package_path=[]
+    for p_path in bug_obj.modified_class:
+        modified_class_paths.append(str(p_path).replace(".","/"))
+
+    for pac_path in bug_obj.infected_packages:
+        modified_package_path.append(str(pac_path).replace(".", "/"))
+
+    run_var=args[1]
+    csv_path_fp=args[2]
+    out_path=args[3]
+    evo_version=args[4]
+    evo_path=args[5]
+    total_budget_class=int(args[6])
+    lower_b = int(args[7])
+    upper_b = int(args[8])
+
+
+
+    fp_budget, d = get_time_fault_prediction(csv_path_fp, 'FileName', 'prediction', out_path,upper_b,lower_b,total_budget_class)
+    if run_var == 'A':
+        comp = ["OR", "FP","U"]
+    else :
+        comp = [run_var]
+    target_list_fixed_list_package = []
+    target_list_buggy_list_package= []
+    for modified_item in set(modified_package_path):
+        target_list_fixed_list_package.append(get_all_class_v2(fixed_path+modified_item))
+        target_list_buggy_list_package.append(get_all_class_v2(buggy_path+modified_item))
+
+    target_list_fixed_list_classes = []
+    target_list_buggy_list_classes = []
+    for modified_item in modified_class_paths:
+        target_list_fixed_list_classes.append(get_all_class_v3(fixed_path+modified_item))
+        target_list_buggy_list_classes.append(get_all_class_v3(buggy_path+modified_item))
+
+    dict_to_csv(d, out_path)
+    for i in range(0):
+
+        seed = time.strftime('%s')[-5:]
+        for parm in comp:
+            localtime = time.asctime(time.localtime(time.time()))
+            dir_name = "{0}_D4j_{1}_t={2}_it={3}_b={4}_p={5}".format(str(parm),str(localtime),str(total_budget_class),str(i),str(bug_obj.id),str(bug_obj.p_name)[:2])
+            full_dis = mkdir_Os(out_path, dir_name)
+            if full_dis == 'null':
+                print('cant make dir')
+                exit(1)
+            if str(parm) == 'FP' :
+                regression_test(evo_version, evo_path, target_list_fixed_list_package, target_list_buggy_list_package, fp_budget, full_dis, lower_b, upper_b, seed, total_budget_class)
+            elif str(parm )== 'U':
+                mode_budget={'mode':'U'}
+                regression_test(evo_version, evo_path, target_list_fixed_list_package, target_list_buggy_list_package, mode_budget, full_dis, lower_b, upper_b,seed, total_budget_class)
+            elif str(parm) == 'OR':
+                mode_budget = {'mode': 'OR'}
+                regression_test(evo_version, evo_path, [target_list_fixed_list_classes], [target_list_buggy_list_classes], mode_budget, full_dis, lower_b, upper_b,seed, total_budget_class)
+
+
+def get_bug_object(bug_obj):
+    args_params=[]
+    args_params.append("")
+    args_params.append(bug_obj.root+"buggy/") #path to bug version
+    args_params.append(bug_obj.root+"fixed/") #path to the fixed version
+    args_params.append(bug_obj.info[2])  #runnig mode
+    args_params.append(bug_obj.info[7])  #csv_path
+    args_params.append("D4j") #mode
+    args_params.append(bug_obj.info[3])  #out path
+    args_params.append(bug_obj.info[1])  #evo_version
+    args_params.append(bug_obj.info[0])  #evo_path
+    args_params.append(bug_obj.info[4])  #total budget per class
+    args_params.append(bug_obj.info[6])  #lower
+    args_params.append(bug_obj.info[5])  #upper
+    return args_params
+
+
+
+if __name__ == "__main__":
+    init_main()
+
+
 
 
 
