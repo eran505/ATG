@@ -381,9 +381,9 @@ def init_main():
 
     sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
          ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'U','30','180','30']
-   # str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
-   # arr_str = str_val.split(" ")
-   #sys.argv = arr_str
+    # str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
+    # arr_str = str_val.split(" ")
+    #sys.argv = arr_str
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -406,11 +406,12 @@ def init_main():
         budget_dico,d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
     else:
         budget_dico = {}
-    ctr=0
+    const = "345"
     print "all=",len(budget_dico.keys())
     print"time=",b_klass
     for i in range(4):
         seed = time.strftime('%s')[-5:]
+        seed = str(i)+str(const)+str(i)  #<--------remove---remove---remove-----------
         localtime = time.asctime(time.localtime(time.time()))
         if mode == 'FP':
             localtime_str ='FP_'+ str(localtime)+'_t='+str(b_klass)+'_it='+str(i)
