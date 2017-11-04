@@ -1,5 +1,5 @@
 
-import  os
+import  os,copy
 import sys,time
 import subprocess
 project_dict = {}
@@ -30,7 +30,8 @@ class Bug_4j:
     def get_data(self):
         self.check_out_data('f')
         self.check_out_data('b')
-        self.compile_data()
+        sig = self.compile_data()
+        return sig
 
     def correspond_package(self):
         for klass in self.modified_class :
@@ -47,7 +48,7 @@ class Bug_4j:
         print "-----command=\n"+command+"\n --------------"
         process = subprocess.Popen(command,shell=True,stdout=subprocess.PIPE)
         process.wait()
-        print process.returncode
+        return process.returncode
 
 
     def compile_data(self):
@@ -55,17 +56,20 @@ class Bug_4j:
             print "compile fixed version..."
             relative_path = "bash_scripts/ant_compile.sh"
             command_str = relative_path+" "+self.root+"fixed"
-            self.init_shell_script(command_str)
+            sig_f = self.init_shell_script(command_str)
             command_str = relative_path+" "+self.root+"buggy"
-            self.init_shell_script(command_str)
+            sig_b = self.init_shell_script(command_str)
+            if sig_b == 1 or sig_f==1 :
+                return 1
+            return 0
 
 
     def check_out_data(self,var='f'):
         print "checking out version..."
         if var =='f':
-            str_command = self.defects4j+' checkout -p {1} -v {0}"{3}" -w {2}/fixed/'.format(self.id, self.p_name, self.root,var)
+            str_command = self.defects4j+' checkout -p {1} -v {0}"{3}" -w {2}fixed/'.format(self.id, self.p_name, self.root,var)
         elif var =='b':
-            str_command = self.defects4j+' checkout -p {1} -v {0}"{3}" -w {2}/buggy/'.format(self.id, self.p_name, self.root,var)
+            str_command = self.defects4j+' checkout -p {1} -v {0}"{3}" -w {2}buggy/'.format(self.id, self.p_name, self.root,var)
         else :
             raise Exception("input to the method can be either 'f' or 'b' ")
         x = os.system(str_command)
@@ -88,6 +92,7 @@ class Bug_4j:
             os.mkdir(self.root+item)
         self.extract_data()
         self.correspond_package()
+        self.info[4] = self.root
 
     def extract_data(self):
         if self.isValid():
@@ -120,19 +125,23 @@ def before_op():
 def main_bugger(info,proj,idBug,out_path): #[ Evo_path , evo_version , mode , out_path , budget_time , upper , lowe ,
     print "starting.."
     bug22 = Bug_4j(proj,idBug,info,out_path)
-    bug22.get_data()
-    bg.regression_testing_handler(bug22)
-
+    val = bug22.get_data()
+    if val == 0:
+        bg.regression_testing_handler(bug22)
+    else:
+        print "Error val={0} in project {2} BUG {1}".format(val,idBug,proj)
 def main_wrapper():
     args = pars_parms()
     args = ["","Math", 'A', str(os.getcwd() + '/') + "csv/Most_out_files.csv"
-        , '/home/eran/Desktop/defect4j_exmple/out/', "evosuite-1.0.5.jar", "/home/eran/programs/EVOSUITE/jar/", '100','30', '180']
+        ,'/home/eran/Desktop/defect4j_exmple/out/', "evosuite-1.0.5.jar", "/home/eran/programs/EVOSUITE/jar/", '100','30', '180']
     proj_name = args[1]
+    path_original = copy.deepcopy(args[4])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
-    for i in range(1,num_of_bugs):
+    for i in range(92,num_of_bugs):
         localtime = time.asctime(time.localtime(time.time()))
+        localtime = str(localtime).replace(":","_")
         dir_name = "P_{0}_B_{1}_{2}".format(proj_name,str(i) ,str(localtime) )
-        full_dis = bg.mkdir_Os( args[4] , dir_name)
+        full_dis = bg.mkdir_Os( path_original , dir_name)
         if full_dis == 'null':
             print('cant make dir')
             exit(1)

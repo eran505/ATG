@@ -79,7 +79,7 @@ def boundary_budget_allocation(dico,time_per_k,upper,lower,filtering):
         time_b = ( dico[entry] * budget_time ) + lower
         if float(time_b) > float(upper):
             time_b = upper
-            print "in"
+            #print "in"
         d[entry] = [ d[entry] , time_b]
         dico[entry] = time_b
     return dico, d
@@ -283,7 +283,7 @@ and the term regression refers to the version which EvoSuiteR considers to have 
 Thus, the generated tests are intended to pass on the original version, and fail on the regression version".
 [Link] : https://github.com/EvoSuite/evosuite/wiki/Regression-Testing
 '''
-def regression_test(evo_name, evo_path, list_fixed, list_buggy,budget_dic, dis_path, lower_b , upper_b, seed , total_b) :  # fixed = original |||| bug =  regression
+def regression_test(evo_name, evo_path, list_fixed, list_buggy,budget_dic, dis_path, lower_b , upper_b, seed , total_b,m_class) :  # fixed = original |||| bug =  regression
     evo_string = "java -jar " + evo_path + evo_name +" -regressionSuite"
     parms0 = " -Dregression_skip_similar=true"
     parms2 = " -Dregression_statistics=true"
@@ -303,6 +303,8 @@ def regression_test(evo_name, evo_path, list_fixed, list_buggy,budget_dic, dis_p
     size_list_class = len(list_class)
 
     for test_case in result_dict.keys():
+        if test_case not in m_class:
+            continue
         if size_list_class == 0:
             time_budget = total_b
         else:
@@ -313,7 +315,7 @@ def regression_test(evo_name, evo_path, list_fixed, list_buggy,budget_dic, dis_p
             else:
                 time_budget = lower_b
         all_time = get_all_command(time_budget, seed)
-        all_time = ""
+        #all_time = ""
         all_p=all_time +" "+ all_p
         command = "{0} -projectCP {1} -Dregressioncp={2} -class {5} {3} {4}".format(evo_string,fix_path,bug_path,criterion,all_p,test_case)
         #command = evo_string + "-class " +test_case+" -projectCP "+fix_path+" -Dregressioncp="+bug_path+" "+criterion+" "+all_p
@@ -409,7 +411,7 @@ def init_main():
     const = "345"
     print "all=",len(budget_dico.keys())
     print"time=",b_klass
-    for i in range(4):
+    for i in range(3):
         seed = time.strftime('%s')[-5:]
         seed = str(i)+str(const)+str(i)  #<--------remove---remove---remove-----------
         localtime = time.asctime(time.localtime(time.time()))
@@ -424,7 +426,7 @@ def init_main():
         target_list = get_all_class_v1(v_path)
         if mode == 'FP':
             dict_to_csv(d,v_dis_path)
-        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,lower_b,seed,b_klass)
+        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,lower_b,seed,b_klass,infect)
 
 
 
@@ -470,7 +472,7 @@ def regression_testing_handler(bug_obj): #params [ -buggy_path  -fixed_path -[U/
     args=bug_obj.info
     buggy_path = str(bug_obj.root)+"buggy/target/classes/"
     fixed_path = str(bug_obj.root)+"fixed/target/classes/"
-
+    m_class = bug_obj.modified_class
     modified_class_paths = []
     modified_package_path=[]
     for p_path in bug_obj.modified_class:
@@ -479,22 +481,25 @@ def regression_testing_handler(bug_obj): #params [ -buggy_path  -fixed_path -[U/
     for pac_path in bug_obj.infected_packages:
         modified_package_path.append(str(pac_path).replace(".", "/"))
 
-    run_var=args[1]
-    csv_path_fp=args[2]
-    out_path=args[3]
-    evo_version=args[4]
-    evo_path=args[5]
-    total_budget_class=int(args[6])
-    lower_b = int(args[7])
-    upper_b = int(args[8])
+    run_var=args[2]
+    csv_path_fp=args[3]
+    out_path=args[4]
+    evo_version=args[5]
+    evo_path=args[6]
+    total_budget_class=int(args[7])
+    lower_b = int(args[8])
+    upper_b = int(args[9])
 
 
 
-    fp_budget, d = get_time_fault_prediction(csv_path_fp, 'FileName', 'prediction', out_path,upper_b,lower_b,total_budget_class)
     if run_var == 'A':
         comp = ["OR", "FP","U"]
     else :
         comp = [run_var]
+    if "FP" in comp :
+        fp_budget, d = get_time_fault_prediction(csv_path_fp, 'FileName', 'prediction', out_path,upper_b,lower_b,total_budget_class)
+        dict_to_csv(d, out_path)
+
     target_list_fixed_list_package = []
     target_list_buggy_list_package= []
     for modified_item in set(modified_package_path):
@@ -507,8 +512,11 @@ def regression_testing_handler(bug_obj): #params [ -buggy_path  -fixed_path -[U/
         target_list_fixed_list_classes.append(get_all_class_v3(fixed_path+modified_item))
         target_list_buggy_list_classes.append(get_all_class_v3(buggy_path+modified_item))
 
-    dict_to_csv(d, out_path)
-    for i in range(0):
+    if len(target_list_buggy_list_classes) == 0 or len(target_list_fixed_list_classes) == 0  :
+        print " [Error] no target class has been found "
+        return
+
+    for i in range(1):
 
         seed = time.strftime('%s')[-5:]
         for parm in comp:
@@ -519,13 +527,13 @@ def regression_testing_handler(bug_obj): #params [ -buggy_path  -fixed_path -[U/
                 print('cant make dir')
                 exit(1)
             if str(parm) == 'FP' :
-                regression_test(evo_version, evo_path, target_list_fixed_list_package, target_list_buggy_list_package, fp_budget, full_dis, lower_b, upper_b, seed, total_budget_class)
+                regression_test(evo_version, evo_path, target_list_fixed_list_package, target_list_buggy_list_package, fp_budget, full_dis, lower_b, upper_b, seed, total_budget_class,m_class)
             elif str(parm )== 'U':
                 mode_budget={'mode':'U'}
-                regression_test(evo_version, evo_path, target_list_fixed_list_package, target_list_buggy_list_package, mode_budget, full_dis, lower_b, upper_b,seed, total_budget_class)
+                regression_test(evo_version, evo_path, target_list_fixed_list_package, target_list_buggy_list_package, mode_budget, full_dis, lower_b, upper_b,seed, total_budget_class,m_class)
             elif str(parm) == 'OR':
                 mode_budget = {'mode': 'OR'}
-                regression_test(evo_version, evo_path, [target_list_fixed_list_classes], [target_list_buggy_list_classes], mode_budget, full_dis, lower_b, upper_b,seed, total_budget_class)
+                regression_test(evo_version, evo_path, [target_list_fixed_list_classes], [target_list_buggy_list_classes], mode_budget, full_dis, lower_b, upper_b,seed,total_budget_class,m_class)
 
 
 def get_bug_object(bug_obj):
