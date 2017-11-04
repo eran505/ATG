@@ -426,7 +426,7 @@ def init_main():
         target_list = get_all_class_v1(v_path)
         if mode == 'FP':
             dict_to_csv(d,v_dis_path)
-        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,lower_b,seed,b_klass,infect)
+        single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,lower_b,seed,b_klass)
 
 
 
