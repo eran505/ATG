@@ -1,5 +1,68 @@
 import sys,csv
 import pit_render_test
+import pandas as pd
+import numpy as np
+
+def get_time_from_path(str_path,prefix):
+    pos_time_bud=str(str_path).find(prefix)
+    if pos_time_bud < 0 :
+        return ""
+    index = pos_time_bud + len(prefix)
+    acc=""
+    while index < len(str_path) :
+        if str_path[index] == "_" or str_path[index]=='/':
+            break
+        acc = acc + str_path[index]
+        index+=1
+    return acc
+
+def mereg_df(list_df,key):
+    if len(list_df)>1:
+        df_merge = list_df[0]
+        for i in range(1,len(list_df)):
+            df_merge=df_merge.merge(list_df[i], on=key, how='outer')
+        return df_merge
+    elif len(list_df) == 1 :
+        return list_df
+    else:
+        raise Exception("Error in mereg_df function with key="+key)
+
+def analyse_budget(root_path_csv,out_path_name):
+    print "starting...."
+    walker = pit_render_test.walker(root_path_csv)
+    list_csv= walker.walk("statistics.csv")
+    list_df = []
+    list_dic_df={}
+    #df_ans = pd.DataFrame()
+    for item in list_csv:
+        time_str = get_time_from_path(str(item),"_t=")
+        df_item = pd.read_csv(str(item))
+        #print list(df_item)
+        df_item_budget = pd.DataFrame(df_item[[' TARGET_CLASS','Total_Time']])
+        df_item_budget['Total_Time_'+time_str] = df_item_budget['Total_Time']
+        del df_item_budget['Total_Time']
+
+        if time_str in list_dic_df:
+            list_dic_df[time_str].append(df_item_budget)
+            df_ans = pd.DataFrame(df_item_budget[' TARGET_CLASS'].copy())
+        else:
+            list_dic_df[time_str] = [df_item_budget]
+        list_df.append(df_item_budget)
+    print "done"
+    list_fin_df=[]
+
+    if len(list_dic_df)>1:
+        for key in list_dic_df.keys():
+            budget_df_i=mereg_df(list_dic_df[key],' TARGET_CLASS')
+            list_col = list(budget_df_i)
+            print key
+           # print budget_df_i
+            list_col.remove(' TARGET_CLASS')
+            budget_df_i["mean_"+key] = budget_df_i[list_col].mean(axis=1)
+            df_ans = df_ans.merge(budget_df_i[[' TARGET_CLASS',"mean_"+key]], on=' TARGET_CLASS', how='outer')
+            #df_ans["mean_"+key] = budget_df_i["mean_"+key].copy()
+
+        df_ans.to_csv(out_path_name, encoding='utf-8', index=False)
 
 
 def clean_path_math(p,sufix='.class',prefix='/org/'):
@@ -187,14 +250,20 @@ def main(math_p,dir_p,out_p):
     li_obj = analysis(dir_p, li)
     flush_data(li_obj,out_p)
     print "done !"
+
+
 if __name__ == "__main__":
     arr= sys.argv
     #arr = ["","/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/",
     #       "/home/eran/Desktop/testing/new_test/","/home/eran/Desktop/mvn/"]
+    print("[package_origin_dir(class file)] [input_dir] [out_dir]")
+    print "[ root-csv , out_path_csv ] "
     if len(arr) == 4:
         math_p = arr[1]
         dir_p = arr[2]
         out_p=arr[3]
         main(math_p,dir_p,out_p)
     else:
-        print("[package_origin_dir(class file)] [input_dir] [out_dir]")
+        if len(arr) == 3:
+            analyse_budget(arr[1],arr[2])
+
