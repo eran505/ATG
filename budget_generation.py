@@ -336,7 +336,7 @@ def single_call_EvoSuite(evo_name,evo_path,classes_list,time,dis_path,lower_b,se
 
     parms3=" -Dreport_dir="+dis_path
     parms4=" -Dtest_dir="+dis_path
-    parms5=" -Doutput_variables=TARGET_CLASS,criterion,configuration_id,Total_Methods,Covered_Methods,\
+    parms5=" -Doutput_variables=TARGET_CLASS,criterion,configuration_id,\
 Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals,Coverage,search_budget"
 
     all_p = parms3+parms4+parms5
@@ -381,8 +381,8 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-    #sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
-    #     ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'U','30','180','30']
+    sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
+         ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/",'U','10','180','10']
     # str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
     # arr_str = str_val.split(" ")
     #sys.argv = arr_str
@@ -424,6 +424,10 @@ def init_main():
             print('cant make dir')
             exit(1)
         target_list = get_all_class_v1(v_path)
+        if str(v_path).__contains__("frac"):
+            target_list1 = get_all_class_v3(v_path+'Fraction')
+            target_list2 = get_all_class_v3(v_path+'BigFraction')
+            target_list = [target_list1 , target_list2]
         if mode == 'FP':
             dict_to_csv(d,v_dis_path)
         single_call_EvoSuite(v_evo_name,v_evo_path,target_list,budget_dico,full_dis,lower_b,seed,b_klass)
