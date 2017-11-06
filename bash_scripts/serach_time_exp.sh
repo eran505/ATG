@@ -20,4 +20,4 @@ exit
 fi
 
 
-python ${ATG}budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} U 30 180 ${t}
+python ${ATG}budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} U 5 600 ${t}
