@@ -449,7 +449,7 @@ def int_exp(args):
     comp = ["FP","U"]
     target_list = get_all_class_v1(v_path)
     dict_to_csv(d, v_dis_path)
-    for i in range(2):
+    for i in range(1):
         seed = time.strftime('%s')[-5:]
         for parm in comp:
             localtime = time.asctime(time.localtime(time.time()))
