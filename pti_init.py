@@ -285,8 +285,8 @@ def transform_data(list_son):
     d={}
     print 'size=',len(list_son)
     for item in list_son:
-        print item
-        print '-'*30
+        #print item
+        #print '-'*30
         prefix = item[0]
         dic = item[1]
         if dic is None:
