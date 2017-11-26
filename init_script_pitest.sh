@@ -13,7 +13,7 @@ fi
 #exit
 #fi
 
-suffix_name=${path_arg##*2017}
+suffix_name=${path_arg##*2017}  #TODO: change the suffix to "##*201"
 suffix_name=${suffix_name%/org/}
 prefix_name="U"
 
@@ -46,6 +46,7 @@ cp -ar ${ATG}pom.xml ${relative_path}
 cp -ar ${ATG}pti_init.py ${relative_path}
 cd ${relative_path}
 mvn -fn install
+mkdir target/log_pit/
 python pti_init.py
 
 echo "done"

@@ -3,6 +3,31 @@
 import glob, os ,sys ,re
 import time
 
+class Tree(object):
+    def __init__(self):
+        self.descendants=None
+        self.data=None
+        self.str =''
+        self.prefix=''
+
+
+def get_son(node):
+    acc=[]
+    acc.append([node.prefix,node.data])
+    for pac in node.descendants:
+        acc+=get_son(node.descendants[pac])
+    return acc
+
+
+def get_class_tree(root,package_class):
+    arr_package_class = str(package_class).split('.')
+    cur =root
+    package = arr_package_class[:-1]
+    class_name = arr_package_class[-1]
+    for item in package:
+        cur = cur.descendants[item]
+    all_son_class = get_son(cur)
+    return all_son_class
 
 def walking(root, rec="", file_t=True, lv=-1, full=True):
     size = 0
@@ -144,6 +169,57 @@ def pair_test_class11(list_tests,list_class):
                 break
     return dict
 
+def tree_build(dico):
+    root = Tree()
+    root.descendants={}
+    root.str='root'
+    recursive_package_mode(dico,root)
+    return root
+
+def recursive_package_mode(dico,root_node):
+    d= make_package_dict(dico)
+    #root = root_node
+    size = len(d.keys())
+    ctr=0
+
+    for key in d:
+        package_prefix = ''
+        cur_node = root_node
+        splited_key = str(key).split('.')
+        for pac in splited_key:
+            package_prefix = package_prefix+str(pac)+'.'
+            if pac in cur_node.descendants:
+                cur_node=cur_node.descendants[pac]
+                continue
+            else:
+                tree_obj = Tree()
+                tree_obj.descendants = {}
+                tree_obj.str=str(pac)
+                tree_obj.prefix=package_prefix[:-1]
+                cur_node.descendants[pac] = tree_obj
+                cur_node=cur_node.descendants[pac]
+        cur_node.data=d[key]
+
+def make_package_dict(dico):
+    package_dict=dict()
+    for key,vale in dico.iteritems():
+        str_key_arr = str(key).split('.')
+        class_name = str(str_key_arr[-1])
+        if len(str_key_arr[:-1])>1:
+            package_name = '.'.join(str_key_arr[:-1])
+        else :
+            package_name = str((str_key_arr[:-1]))
+        if package_name  in package_dict:
+            package_dict[package_name][class_name]=dico[key]
+        else:
+            package_dict[package_name] = {class_name:dico[key]}
+    return package_dict
+
+
+
+
+
+
 def make_pom_package(dico):
     target_str_data = "<targetClasses>"+'\n'
     test_str_data = "<targetTests>"+'\n'
@@ -177,7 +253,7 @@ def modf_pom(path,tag_c,tag_t):
     with open(path, 'r') as myfile:
         data = myfile.read()
         data = re.sub('\n','<nlt>',data)
-        #data = re.sub('<targetClasses>(.*?)</targetClasses>',tag_c,data)
+        data = re.sub('<targetClasses>(.*?)</targetClasses>',tag_c,data)  #TODO:in  "all-mode"  this line in comment
         data = re.sub('<targetTests>(.*?)</targetTests>',tag_t,data)
         data = re.sub('<nlt>', '\n', data)
     text_file = open(path, "w")
@@ -193,6 +269,59 @@ def modf_only_one(dico):
     target_str_data+='</targetClasses> '
     test_str_data+='</targetTests> '
     return target_str_data,test_str_data
+
+
+def get_java_and_test(dico):
+    javas=[]
+    tests=[]
+    package = []
+    for key in dico:
+        package.append(key)
+        javas.append(dico[key][0])
+        tests.append(dico[key][1])
+    return javas,tests,package
+
+def transform_data(list_son):
+    d={}
+    print 'size=',len(list_son)
+    for item in list_son:
+        print item
+        print '-'*30
+        prefix = item[0]
+        dic = item[1]
+        if dic is None:
+            continue
+        for key  in dic :
+            d[prefix+'.'+key]=prefix+'.'+key+'_ESTest'
+    return d
+
+def rec_package_test(pom_path,class_path,test_path):
+    list_calss=walk(class_path)
+    list_test = walk(test_path)
+    if len(list_test) == 0:
+        print "no tests founds"
+        exit(0)
+    print 'class=',len(list_calss)
+    print 'test=',len(list_test)
+    dico = pair_test_class11(list_test,list_calss)
+    r = tree_build(dico) ###########################
+    javas,tests,packages = get_java_and_test(dico)
+    #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
+    #exit()
+    for key,value in dico.iteritems():
+        dico_son_val= get_class_tree(r, key)
+        value_target = transform_data(dico_son_val)
+        tag_key, tag_val = make_pom_package({key:str(key)+'_ESTest'})
+        tag_c,tag_t = make_pom_package(value_target)
+        modf_pom(pom_path,tag_key,tag_t)
+        command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
+        command =" mvn org.pitest:pitest-maven:mutationCoverage"
+        os.system(command_v1)
+        proj_path1 = os.getcwd()
+        arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
+        if len(arr) > 0:
+            str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
+            os.system(str2)
 
 def package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
@@ -216,6 +345,7 @@ def package_test(pom_path,class_path,test_path):
         if len(arr) >0:
             str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
             os.system(str2)
+
 
 def pit_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
@@ -290,10 +420,12 @@ def main_in():
 
 def main_func():
     proj_path= os.getcwd()+'/'
+    #proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
     tests_path=proj_path+'src/test/java/org/'
-    package_test(pom_path,classes_pth,tests_path)
+    rec_package_test(pom_path,classes_pth,tests_path)
+    #package_test(pom_path,classes_pth,tests_path)
 
 
 
