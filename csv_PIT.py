@@ -84,18 +84,18 @@ def _data_df(list_data):
             df.drop(df.columns[[0,len(list(df))-1]], axis=1, inplace=True)
             #df.set_index(["class","method","line"], inplace=True)
             #df.reset_index(level=['class','mutation-type','method','line'],inplace=True)
-            if len(df) == 47163 :
-                df_list.append(df)
-            else:
-                error_dir+=1
-                print item['name']
-                del_error_files(item['dir'])
+            #if len(df) == 47163 :
+            df_list.append(df)
+            #else:
+            #    error_dir+=1
+            #    print item['name']
+            #    #del_error_files(item['dir'])
     print 'error_dir=',error_dir
     result = merge_df(df_list)
     return result
 
-def del_error_files(path_err):
-    os.system('rm -r '+path_err)
+#def del_error_files(path_err):
+#    os.system('rm -r '+path_err)
 
 def merge_df(list_df):
     df_all = list_df[0]
