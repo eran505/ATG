@@ -141,12 +141,12 @@ def name_ext(p):
     else :
         return arr[-2]
 
-def delet_csv(root_p):
-    walker=pit_render_test.walker(root_p)
-    list_p = walker.walk("mutations.csv")
-    for csv_f in list_p:
-        if str(csv_f).__contains__('org.apache.commons') is True :
-            os.system("rm "+csv_f)
+#def delet_csv(root_p):
+#    walker=pit_render_test.walker(root_p)
+#    list_p = walker.walk("mutations.csv")
+#    for csv_f in list_p:
+#        if str(csv_f).__contains__('org.apache.commons') is True :
+#            os.system("rm "+csv_f)
 
 def init_clac(arr_path,out):
     ctr=0
