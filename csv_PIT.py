@@ -83,7 +83,7 @@ def _data_df(list_data):
             df = pd.read_csv(csvs[0],names = ["class-suffix", "class", "mutation-type", "method","line",item['name'],"test"])
             df.drop(df.columns[[0,len(list(df))-1]], axis=1, inplace=True)
             #df.set_index(["class","method","line"], inplace=True)
-            df.reset_index(level=['class','mutation-type','method','line'],inplace=True)
+            #df.reset_index(level=['class','mutation-type','method','line'],inplace=True)
             if len(df) == 47163 :
                 df_list.append(df)
             else:

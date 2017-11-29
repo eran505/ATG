@@ -9,7 +9,7 @@ echo "missing path value ATG repo"
 exit
 fi
 
-
+echo "pwd="${newdir}
 
 
 python ${ATG}pit_render_test.py ${newdir}
