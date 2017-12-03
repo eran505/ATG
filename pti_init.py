@@ -315,7 +315,7 @@ def rec_package_test(pom_path,class_path,test_path):
         tag_c,tag_t = make_pom_package(value_target)
         modf_pom(pom_path,tag_key,tag_t)
         command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
-        command =" mvn org.pitest:pitest-maven:mutationCoverage"
+        command =" mvn org.pitest:pitest-maven:mutationCoverage "
         os.system(command_v1)
         proj_path1 = os.getcwd()
         arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
@@ -420,7 +420,7 @@ def main_in():
 
 def main_func():
     proj_path= os.getcwd()+'/'
-    #proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
+    proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
     tests_path=proj_path+'src/test/java/org/'

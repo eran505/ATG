@@ -88,7 +88,7 @@ def _data_df(list_data,time=''):
         if len(csvs) > 0 :
             df = pd.read_csv(csvs[0],names = ["class-suffix", "class", "mutation-type", "method","line",item['name']+'_'+time_b,"test"])
             df.drop(df.columns[[0,len(list(df))-1]], axis=1, inplace=True)
-           # df.set_index(["class","method","line"], inplace=True)
+            #df.set_index(["class","method","line"], inplace=True)
             #df.reset_index(level=['class','mutation-type','method','line'],inplace=True)
             #if len(df) == 47163 :
             df_list.append(df)
@@ -96,24 +96,22 @@ def _data_df(list_data,time=''):
             #    error_dir+=1
             #    print item['name']
             #    #del_error_files(item['dir'])
-    print 'error_dir=',error_dir
-    result = merge_df(df_list)
-    return result
+    #print 'error_dir=',error_dir
+    #result = merge_df(df_list)
+    return df_list
 
 #def del_error_files(path_err):
 #    os.system('rm -r '+path_err)
 
-def merge_df(list_df,bol=True):
+def merge_df(list_df):
     df_all = list_df[0]
     ctr = 0
     while ctr<len(list_df):
+        #print (list_df[ctr].index.values) #df.index.values
         if ctr == 0 :
             ctr += 1
             continue
-        if bol:
-            df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","mutation-type","method","line"])
-        else:
-            df_all = pd.merge(df_all, list_df[ctr], how='inner',on=["class", "mutation-type", "method", "line"])
+        df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","mutation-type","method","line"])
         ctr += 1
     return df_all
 
@@ -123,22 +121,19 @@ def merge_all_mutation_df(root_p,name=None,time = None):
         all_dir= get_all_dir(root_p)
     else:
         all_dir = get_all_dir(root_p,name)
-    for d in all_dir:
-        print d,'\n'
+    #for d in all_dir:
+       # print d,'\n'
     dict_mut=make_dcit(all_dir)
     dfs = _data_df(dict_mut,time)
-    print list(dfs)
+    #print list(dfs)
     return  dfs
 
 
 def write_to_csv(dest_path ,df):
     df.to_csv(dest_path, encoding='utf-8')
 
-def mean_all(df,bol=True):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERROR
-    if bol:
-        list_name = list(df)[5:]
-    else:
-        list_name = list(df)[4:]
+def mean_all(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERROR
+    list_name = list(df)[5:]
     for name  in arr_sign:
         df[name+'_sum'] = (df[list_name] == name).sum(axis=1)
     string = '_sum'
@@ -147,113 +142,21 @@ def mean_all(df,bol=True):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN
     for it in my_new_list:
         df[it[:-3]+"mean"] = (df[it].astype(float))/df['total']
         df[it[:-3] + "mean_norm"] = (df[it].astype(float)) / df['total']
-    return df
-
-
-def mean_all_FPU(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERROR
-    list_name = list(df)[4:]
-    fp=[]
-    u=[]
-    for item in list_name:
-        if str(item).__contains__('FP'):
-            fp.append(item)
-        else:
-            u.append(item)
-    if len(fp)>0:
-        df=get_mean_df(df,fp,'FP')
-    if len(u)>0:
-        df=get_mean_df(df, u, 'U')
-    return df
-
-def get_mean_df(df,list_col,name_mode):
-    for name  in arr_sign:
-        df[name+'_sum_'+name_mode] = (df[list_col] == name).sum(axis=1)
-    string = '_sum_'+name_mode
-    my_new_list = [x + string for x in arr_sign]
-    df['total'] = df[my_new_list].sum(axis=1)
-    for it in my_new_list:
-        df[it[:-3]+"mean_"+name_mode] = (df[it].astype(float))/df['total']
-        df[it[:-3] + "mean_norm"+name_mode] = (df[it].astype(float)) / df['total']
-    return df
 
 def name_ext(p):
-    print p
+    #print p
     arr = str(p).split('/')
     if len(arr[-1])>2:
         return  arr[-1]
     else :
         return arr[-2]
 
-def get_data_df_by_name(list_data):
-    df_list=[]
-    result = ""
-    error_dir=0
-    names_list=["class","method","line"]
-    for item in list_data:
-        if item['csv'] is None:
-            continue
-        csvs = item['csv']
-        rec_name = "{0}_t={1}_i={2}".format(item['mode'],item['budget'],item['it'])
-        names_list.append(rec_name)
-        if len(csvs) > 0 :
-            df = pd.read_csv(csvs,names = ["class-suffix", "class", "mutation-type", "method","line",rec_name,"test"])
-            #df['index']=df.set_index(["class","method","line"], inplace=True)
-            df.drop(df.columns[[0,len(list(df))-1]], axis=1, inplace=True)
-            if df.empty:
-                continue
-            df_list.append(df)
-    if len(df_list) > 0:
-        result = merge_df(df_list,False)
-    else:
-        result =None
-    return result
-
-def get_all_class_by_name(path_root,out_path):
-    if out_path[-1] != '/':
-        out_path = out_path + '/'
-    dict_package_prefix=dict()
-    walker=pit_render_test.walker(path_root)
-    classes_list = walker.walk('ALL', False, 1,False)
-    print classes_list
-    for class_item in classes_list:
-        walker = pit_render_test.walker(path_root+'/'+class_item+'/commons-math3-3.5-src/target/pit-reports/')
-        classes_list = walker.walk('org.apache.commons.math',False)
-        d = {}
-        for item in classes_list:
-            name = str(item).split('/')[-1]
-            if os.path.exists(item+'/mutations.csv'):
-                d[name]=item+'/mutations.csv'
-            else:
-                d[name]=None
-        dict_package_prefix[class_item] = d
-    dico = merge_dict_by_class(dict_package_prefix)
-    res_dataframe={}
-    for ky in dico :
-        tmp = get_data_df_by_name(dict(dico[ky]).values())
-        if tmp is None:
-            continue
-        res_dataframe[ky]=mean_all_FPU(tmp)
-
-    for k in res_dataframe :
-        if res_dataframe[k] is None:
-            continue
-        write_to_csv(out_path+k+'.csv',res_dataframe[k])
-
-
-    print "done"
-def merge_dict_by_class(dict_dir):
-    dict_class={}
-    for key in dict_dir:
-        for second_key in dict_dir[key]:
-            time,it,mode = extract_it_time(key)
-            if second_key in dict_class:
-                dict_class[second_key][key] = {'name':second_key,'csv':dict_dir[key][second_key],'budget':time, 'mode':mode , 'it':it }
-            else:
-                dict_class[second_key]={}
-                dict_class[second_key][key] = {'name':second_key,'csv': dict_dir[key][second_key], 'budget': time, 'mode': mode, 'it': it}
-    return dict_class
-
-
+#def delet_csv(root_p):
+#    walker=pit_render_test.walker(root_p)
+#    list_p = walker.walk("mutations.csv")
+#    for csv_f in list_p:
+#        if str(csv_f).__contains__('org.apache.commons') is True :
+#            os.system("rm "+csv_f)
 
 def init_clac_v2(arr_path,out,name=None):
     ctr=0
@@ -268,8 +171,7 @@ def init_clac_v2(arr_path,out,name=None):
         else:
             dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/',name,name_dir)
         acc[name_dir]=dfs
-    print dfs.shape
-    size =  len(list(dfs))
+
     res_df = merge_df(acc.values())
     #mean_all(dfs)
     arr_dfs.append({'id':ctr , 'data':dfs})
@@ -295,7 +197,7 @@ def init_clac(arr_path,out,name=None):
         else:
             dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/',name,name_dir)
 
-        print dfs.shape
+        #print dfs.shape
         size =  len(list(dfs))
         if name is None:
             mean_all(dfs)
@@ -526,7 +428,7 @@ def by_class(path,out,class_name):
         ctr += 1
         #dfs = merge_all_mutation_df(path+'pit-reports/')
         dfs = merge_all_mutation_df(path+'commons-math3-3.5-src/target/pit-reports/')
-        print dfs.shape
+       #print dfs.shape
         size =  len(list(dfs))
         mean_all(dfs)
         arr_dfs.append({'id':ctr , 'data':dfs})
@@ -537,7 +439,9 @@ def by_class(path,out,class_name):
 
 
 def main_pars(arr):
+    arr = [ "","class",["/home/eran/Desktop/exm/pit_test/ALL_U__t=10_it=0/","/home/eran/Desktop/exm/pit_test/ALL_FP__t=10_it=1/"], "/home/eran/Desktop/exm/out/"]
     if len(arr) > 2 :
+
         mod = arr[1]
         if mod == "fin" :
             die_p = arr[2]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
@@ -547,25 +451,19 @@ def main_pars(arr):
         elif mod=='all':
             dico = init_clac(  arr[2] ,arr[3],'org.apache.commons.math3.linear.PreconditionedIterativeLinearSolver')
         elif mod =='class':
-            dico = get_all_class_by_name(  arr[2] , arr[3])
-
+            dico = init_clac_v2(  arr[2] ,arr[3],'org.apache.commons.math3.linear.PreconditionedIterativeLinearSolver')
+            print "fail csv_PIT"
     else :
         # fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
         print "[Error] ----no args------"
         exit(0)
 
 
-def extract_it_time(str_name_dir='ALL_U__t=10_it=0'):
-    it_index = str_name_dir.find('_it=') #3
-    time_index = str_name_dir.find('_t=') #2
-    mode_index = str_name_dir.find('ALL_')
-    mode = str_name_dir[mode_index +4:mode_index +6]
-    time_budget =  str_name_dir[time_index+3:it_index]
-    it = str_name_dir[it_index+4:]
-    return time_budget,it,mode
+
 
 if __name__ == "__main__":
     arr=sys.argv
+
   #  arr = ['py','/home/eran/Desktop/testing/new_test/info.txt']
     if len(arr) == 2:
         if arr[1] == 'f':
@@ -575,7 +473,6 @@ if __name__ == "__main__":
         exit(0)
     #arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
     #arr= arr_p.split(" ")
-    arr = ["",'class','/home/eran/Desktop/exm/pit_test','/home/eran/Desktop/exm/out/']
     main_pars(arr)
 
 
