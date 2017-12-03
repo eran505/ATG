@@ -575,7 +575,6 @@ if __name__ == "__main__":
         exit(0)
     #arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
     #arr= arr_p.split(" ")
-    arr = ["",'class','/home/eran/Desktop/exm/pit_test','/home/eran/Desktop/exm/out/']
     main_pars(arr)
 
 
