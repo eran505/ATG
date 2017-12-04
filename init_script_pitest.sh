@@ -27,7 +27,7 @@ echo ${string_dir}
 cur_dir=${PWD}/
 echo "pwd = "${cur_dir}
 #string_dir="ALL_"${name_arg}
-sleep 20
+
 ATG="/home/eran/thesis/repo/ATG/"
 Mathjar="/home/eran/thesis/zips/commons-math3-3.5-src.tar.gz"
 
@@ -40,13 +40,14 @@ fi
 
 mkdir ${cur_dir}${string_dir}
 tar -xzf ${Mathjar} -C ${cur_dir}${string_dir}
-relative_path=${cur_dir}${string_dir}commons-math3-3.5-src/
-rm -r ${cur_dir}${string_dir}commons-math3-3.5-src/src/test/java/org
+relative_path=${cur_dir}${string_dir}/commons-math3-3.5-src/
+rm -r ${cur_dir}${string_dir}/commons-math3-3.5-src/src/test/java/org
 rm ${relative_path}pom.xml
 cp -ar ${path_arg} ${relative_path}src/test/java/
 cp -ar ${ATG}pom.xml ${relative_path}
 cp -ar ${ATG}pti_init.py ${relative_path}
 cd ${relative_path}
+sleep 20
 mvn -fn install
 mkdir target/log_pit/
 python pti_init.py
