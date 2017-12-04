@@ -22,12 +22,13 @@ do
 
 	if [[ ${string} == *"t="* ]]; then
 		array+=(${D}"/")
+		echo ${D}"/"
 	fi
 done
 
 pit_dir=${newdir}pit_test/
-
-
+echo ${pit_dir}
+sleep 20
 cd ${pit_dir}
 cp ${ATG}init_script_pitest.sh .
 cnt=${#array[@]}
