@@ -20,7 +20,7 @@ do
 
 	string=${D}
 
-	if [[ ${string} == *"t="* ]]; then
+	if [[ ${string} == *"it="* ]]; then
 		array+=(${D}"/")
 		echo ${D}"/"
 	fi
