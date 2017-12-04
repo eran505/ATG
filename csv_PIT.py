@@ -599,8 +599,9 @@ def mkdir_os(dir_name,root_path):
 def aggregate_time_budget(root_path):
     dict_package_prefix = dict()
     walker = pit_render_test.walker(root_path)
-    classes_list = walker.walk('_t=', False, 1)
+    classes_list = walker.walk('_t=', False, 0)
     classes_list = [x+'/pit_test/' for x in classes_list]
+    print classes_list 
     time = ''
     d={}
     last=len("/pit_test/")+1
@@ -665,7 +666,7 @@ def merge_df_sum_by_class(df1_d,d_end,time_b):
 
 if __name__ == "__main__":
     arr=sys.argv
-    arr = ['py','class','/home/eran/Desktop/exm/bla_t=10_/pit_test']
+    #arr = ['py','class','/home/eran/Desktop/exm/bla_t=10_/pit_test']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
