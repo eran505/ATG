@@ -38,8 +38,8 @@ fi
 
 mkdir ${cur_dir}${string_dir}
 tar -xzf ${Mathjar} -C ${cur_dir}${string_dir}
-relative_path=${cur_dir}${string_dir}/commons-math3-3.5-src/
-rm -r ${cur_dir}${string_dir}/commons-math3-3.5-src/src/test/java/org
+relative_path=${cur_dir}${string_dir}commons-math3-3.5-src/
+rm -r ${cur_dir}${string_dir}commons-math3-3.5-src/src/test/java/org
 rm ${relative_path}pom.xml
 cp -ar ${path_arg} ${relative_path}src/test/java/
 cp -ar ${ATG}pom.xml ${relative_path}
