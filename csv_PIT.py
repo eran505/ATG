@@ -168,6 +168,8 @@ def mean_all_FPU(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERRO
 def get_mean_df(df,list_col,name_mode):
     for name  in arr_sign:
         df[name+'_sum_'+name_mode] = (df[list_col] == name).sum(axis=1)
+    for name  in arr_sign:
+        df[name+'_AVG_'+name_mode] = ( (df[list_col] == name).sum(axis=1) ) / len(list_col)
     string = '_sum_'+name_mode
     df[name_mode]=len(list_col)
     #my_new_list = [x + string for x in arr_sign]
@@ -608,19 +610,20 @@ def aggregate_time_budget(root_path):
 
 def cal_df_sum(df):
     list_col_1 = list(df)
-    list_col = [x for x in list_col_1 if x.__contains__("sum")]
-    u_num = 0
-    fp_num = 0
-    if "U" in list_col_1:
-        if (df['U'].count)>0:
-            u_num= df['U'][0]
-        else:
-            u_num=0
-    if "FP" in list_col_1:
-        if (df['FP'].count)>0:
-            fp_num = df['FP'][0]
-        else:
-            l_tmp = 0
+    list_col = [x for x in list_col_1 if x.__contains__("AVG")]
+    #u_num = 0
+    #fp_num = 0
+    #if "U" in list_col_1:
+    #    if (df['U'].count)>0:
+    #        u_num= df['U'][0]
+    #    else:
+    #        u_num=0
+    #if "FP" in list_col_1:
+    #    if (df['FP'].count)>0:
+    #        fp_num = df['FP'][0]
+    #    else:
+    #        fp_num  = 0
+
     d_total = {}
     fp=[0,0]
     u=[0,0]
@@ -636,10 +639,6 @@ def cal_df_sum(df):
                     u[0] = df[x].sum()
                 else:
                     u[1] += df[x].sum()
-    if u_num > 0:
-        u = u/u_num
-    if fp_num > 0 :
-        fp =fp/fp_num
     return fp,u
 
 def merge_df_sum_by_class(df1_d,d_end,time_b):
@@ -683,7 +682,7 @@ def main_pars(arr):
 
 if __name__ == "__main__":
     arr=sys.argv
-    #arr = ['py','arg','/home/eran/Desktop/exm/']
+    arr = ['py','arg','/home/eran/Desktop/exm/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
