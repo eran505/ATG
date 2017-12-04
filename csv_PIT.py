@@ -612,12 +612,12 @@ def cal_df_sum(df):
     u_num = 0
     fp_num = 0
     if "U" in list_col_1:
-        if len(df['U'].count)>0:
+        if (df['U'].count)>0:
             u_num= df['U'][0]
         else:
             u_num=0
     if "FP" in list_col_1:
-        if len(df['FP'].count)>0:
+        if (df['FP'].count)>0:
             fp_num = df['FP'][0]
         else:
             l_tmp = 0
