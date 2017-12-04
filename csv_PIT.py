@@ -612,9 +612,17 @@ def cal_df_sum(df):
     u_num = 0
     fp_num = 0
     if "U" in list_col_1:
-        u_num= df['U'][0]
+        l_tmp = df['U']
+        if len(l_tmp)>0:
+            u_num= df['U'][0]
+        else:
+            u_num=0
     if "FP" in list_col_1:
-        fp_num= df['FP'][0]
+        l_tmp = df['FP'][0]
+        if len(l_tmp)>0:
+            fp_num = l_tmp[0]
+        else:
+            l_tmp = 0
     d_total = {}
     fp=[0,0]
     u=[0,0]
@@ -632,7 +640,6 @@ def cal_df_sum(df):
                     u[1] += df[x].sum()
     if u_num > 0:
         u = u/u_num
-        print u
     if fp_num > 0 :
         fp =fp/fp_num
     return fp,u
