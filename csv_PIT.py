@@ -169,6 +169,7 @@ def get_mean_df(df,list_col,name_mode):
     for name  in arr_sign:
         df[name+'_sum_'+name_mode] = (df[list_col] == name).sum(axis=1)
     string = '_sum_'+name_mode
+    df[name_mode]=len(list_col)
     #my_new_list = [x + string for x in arr_sign]
     #df['total'] = df[my_new_list].sum(axis=1)
     #for it in my_new_list:
@@ -543,27 +544,6 @@ def by_class(path,out,class_name):
     return arr_dfs
 
 
-def main_pars(arr):
-    if len(arr) > 2 :
-        mod = arr[1]
-        if mod == "fin" :
-            die_p = arr[2]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
-            fpcsv = arr[3]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
-            uni = arr[4]  # '30'
-            clac_by_package(die_p, fpcsv, uni)
-        elif mod=='all':
-            dico = init_clac(  arr[2] ,arr[3],'org.apache.commons.math3.linear.PreconditionedIterativeLinearSolver')
-        elif mod == 'arg':
-            aggregate_time_budget(arr[2])
-        elif mod =='class':
-            if len(arr) > 3 :
-                dico = get_all_class_by_name(  arr[2] , arr[3])
-            else:
-                dico = get_all_class_by_name(arr[2])
-    else :
-        # fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
-        print "[Error] ----no args------"
-        exit(0)
 
 
 def extract_it_time(str_name_dir):
@@ -601,7 +581,7 @@ def aggregate_time_budget(root_path):
     walker = pit_render_test.walker(root_path)
     classes_list = walker.walk('_t=', False, 0)
     classes_list = [x+'/pit_test/' for x in classes_list]
-    print classes_list 
+    print classes_list
     time = ''
     d={}
     last=len("/pit_test/")+1
@@ -614,6 +594,8 @@ def aggregate_time_budget(root_path):
             d[p_path] = None
         get_all_class_by_name(p_path)
     classes_list = [x + 'out/' for x in classes_list]
+    time_arr = d.values()
+    time_arr = [str(x)+"_budget" for x in time_arr]
     print classes_list
     list_end={}
     for i in range(len(classes_list)):
@@ -625,8 +607,14 @@ def aggregate_time_budget(root_path):
     return list_end
 
 def cal_df_sum(df):
-    list_col = list(df)
-    list_col = [x for x in list_col if x.__contains__("sum")]
+    list_col_1 = list(df)
+    list_col = [x for x in list_col_1 if x.__contains__("sum")]
+    u_num = 0
+    fp_num = 0
+    if "U" in list_col_1:
+        u_num= df['U'][0]
+    if "FP" in list_col_1:
+        fp_num= df['FP'][0]
     d_total = {}
     fp=[0,0]
     u=[0,0]
@@ -642,7 +630,13 @@ def cal_df_sum(df):
                     u[0] = df[x].sum()
                 else:
                     u[1] += df[x].sum()
+    if u_num > 0:
+        u = u/u_num
+        print u
+    if fp_num > 0 :
+        fp =fp/fp_num
     return fp,u
+
 def merge_df_sum_by_class(df1_d,d_end,time_b):
     columns = ['Budget', 'FP_kill', 'U_kill', 'FP_Survived', 'U_Survived']
     for ky in df1_d :
@@ -653,7 +647,6 @@ def merge_df_sum_by_class(df1_d,d_end,time_b):
             df_tmp.loc[len(df_tmp)] = list_res
             d_end[ky] = df_tmp
         else:
-
             df_sumup = pd.DataFrame(columns=columns)
             fp,u = cal_df_sum(df1_d[ky])
             list_res = [time_b,fp[0],u[0],fp[1],u[1]]
@@ -661,12 +654,31 @@ def merge_df_sum_by_class(df1_d,d_end,time_b):
             d_end[ky] = df_sumup
 
 
-
-
+def main_pars(arr):
+    if len(arr) > 2 :
+        mod = arr[1]
+        if mod == "fin" :
+            die_p = arr[2]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/'
+            fpcsv = arr[3]  # '/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/FP_budget_time.csv'
+            uni = arr[4]  # '30'
+            clac_by_package(die_p, fpcsv, uni)
+        elif mod=='all':
+            dico = init_clac(  arr[2] ,arr[3],'org.apache.commons.math3.linear.PreconditionedIterativeLinearSolver')
+        elif mod == 'arg':
+            aggregate_time_budget(arr[2])
+        elif mod =='class':
+            if len(arr) > 3 :
+                dico = get_all_class_by_name(  arr[2] , arr[3])
+            else:
+                dico = get_all_class_by_name(arr[2])
+    else :
+        # fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
+        print "[Error] ----no args------"
+        exit(0)
 
 if __name__ == "__main__":
     arr=sys.argv
-    #arr = ['py','class','/home/eran/Desktop/exm/bla_t=10_/pit_test']
+    arr = ['py','arg','/home/eran/Desktop/exm/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
