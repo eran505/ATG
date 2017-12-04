@@ -635,9 +635,9 @@ def aggregate_time_budget(root_path):
     df_big = pd.DataFrame(df_big_d.values())
     path_out = mkdir_os('fin_out',root_path)
     write_to_csv(path_out+'big.csv',df_big)
-    for key_class in list_end :
-        write_to_csv(path_out+key_class+'.csv',list_end[key_class])
-    return list_end
+    #for key_class in list_end :
+    #    write_to_csv(path_out+key_class+'.csv',list_end[key_class])
+    #return list_end
 
 def cal_df_sum(df):
     list_col_1 = list(df)
@@ -714,7 +714,7 @@ def main_pars(arr):
 
 if __name__ == "__main__":
     arr=sys.argv
-    arr = ['py','arg','/home/eran/Desktop/exm/']
+    #arr = ['py','arg','/home/eran/Desktop/exm/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
