@@ -612,15 +612,13 @@ def cal_df_sum(df):
     u_num = 0
     fp_num = 0
     if "U" in list_col_1:
-        l_tmp = df['U']
-        if len(l_tmp)>0:
+        if len(df['U'].count)>0:
             u_num= df['U'][0]
         else:
             u_num=0
     if "FP" in list_col_1:
-        l_tmp = df['FP'][0]
-        if len(l_tmp)>0:
-            fp_num = l_tmp[0]
+        if len(df['FP'].count)>0:
+            fp_num = df['FP'][0]
         else:
             l_tmp = 0
     d_total = {}
