@@ -678,7 +678,7 @@ def main_pars(arr):
 
 if __name__ == "__main__":
     arr=sys.argv
-    arr = ['py','arg','/home/eran/Desktop/exm/']
+    #arr = ['py','arg','/home/eran/Desktop/exm/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
