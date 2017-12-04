@@ -7,9 +7,12 @@
   </component>
   <component name="BookmarkManager">
     <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="237" mnemonic="9" />
+    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="631" mnemonic="8" />
+    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="585" mnemonic="1" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f1a7b73c-86a7-4c1e-be59-956eb450e362" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/csv_PIT.py" afterPath="$PROJECT_DIR$/csv_PIT.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -28,8 +31,8 @@
       <file leaf-file-name="csv_PIT.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/csv_PIT.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="115">
-              <caret line="684" column="5" lean-forward="false" selection-start-line="684" selection-start-column="5" selection-end-line="684" selection-end-column="5" />
+            <state relative-caret-position="401">
+              <caret line="634" column="44" lean-forward="true" selection-start-line="634" selection-start-column="44" selection-end-line="634" selection-end-column="44" />
               <folding />
             </state>
           </provider>
@@ -46,10 +49,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>distribution</find>
-      <find>row</find>
-      <find>data_freq</find>
-      <find>FP</find>
       <find>pit_render_test</find>
       <find>v1</find>
       <find>ant</find>
@@ -76,6 +75,10 @@
       <find>print &quot;</find>
       <find>os.</find>
       <find>mean_all_FPU</find>
+      <find>cal_df_sum</find>
+      <find>==</find>
+      <find>====================================================================================================================</find>
+      <find>bugbug</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -568,8 +571,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/csv_PIT.py</url>
-          <line>168</line>
-          <option name="timeStamp" value="437" />
+          <line>635</line>
+          <option name="timeStamp" value="444" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -582,7 +585,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="438" />
+      <option name="time" value="446" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -856,8 +859,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/csv_PIT.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="115">
-          <caret line="684" column="5" lean-forward="false" selection-start-line="684" selection-start-column="5" selection-end-line="684" selection-end-column="5" />
+        <state relative-caret-position="401">
+          <caret line="634" column="44" lean-forward="true" selection-start-line="634" selection-start-column="44" selection-end-line="634" selection-end-column="44" />
           <folding />
         </state>
       </provider>

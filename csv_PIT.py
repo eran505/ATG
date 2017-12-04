@@ -577,6 +577,31 @@ def mkdir_os(dir_name,root_path):
         os.mkdir(root_path+dir_name)
         return root_path + dir_name + '/'
 
+def insert_to_big(df,dico_class_df,budget):
+    for ky in dico_class_df:
+        xx= list(dico_class_df[ky])
+        if not 'class' in xx :
+            print "bugbug"
+            continue
+        dico_class_df[ky].set_index(["class","mutation-type","method", "line"],drop=True,inplace=True)
+        dictionary = dico_class_df[ky].to_dict(orient="index")
+        for ky_s in dictionary:
+            if ky_s in df:
+                if 'KILLED_AVG_FP' in dictionary[ky_s]:
+                    df[ky_s][budget+"_FP"] = dictionary[ky_s]['KILLED_AVG_FP']
+                if 'KILLED_AVG_U' in dictionary[ky_s]:
+                    df[ky_s][budget + "_U"] = dictionary[ky_s]['KILLED_AVG_U']
+            else:
+                df[ky_s]={'ID':ky_s , budget+"_FP":0 , budget+'_U':0}
+                if 'KILLED_AVG_FP' in dictionary[ky_s]:
+                    df[ky_s][budget+"_FP"] = dictionary[ky_s]['KILLED_AVG_FP']
+                if 'KILLED_AVG_U' in dictionary[ky_s]:
+                    df[ky_s][budget + "_U"] = dictionary[ky_s]['KILLED_AVG_U']
+
+
+
+
+
 
 def aggregate_time_budget(root_path):
     dict_package_prefix = dict()
@@ -597,13 +622,19 @@ def aggregate_time_budget(root_path):
         get_all_class_by_name(p_path)
     classes_list = [x + 'out/' for x in classes_list]
     time_arr = d.values()
-    time_arr = [str(x)+"_budget" for x in time_arr]
+    time_arr_fp = [str(x)+"_budget_FP" for x in time_arr]
+    time_arr_u = [str(x) + "_budget_U" for x in time_arr]
     print classes_list
+    all_c = ['class']+time_arr_fp + time_arr_u
+    df_big_d = {}
     list_end={}
     for i in range(len(classes_list)):
         tmp_dico = get_sum_df(classes_list[i])
-        merge_df_sum_by_class(tmp_dico,list_end,d[classes_list[i][:-4]])
+        insert_to_big(df_big_d,tmp_dico, d[classes_list[i][:-4]] )
+        #merge_df_sum_by_class(tmp_dico,list_end,d[classes_list[i][:-4]])
+    df_big = pd.DataFrame(df_big_d.values())
     path_out = mkdir_os('fin_out',root_path)
+    write_to_csv(path_out+'big.csv',df_big)
     for key_class in list_end :
         write_to_csv(path_out+key_class+'.csv',list_end[key_class])
     return list_end
@@ -625,6 +656,7 @@ def cal_df_sum(df):
     #        fp_num  = 0
 
     d_total = {}
+
     fp=[0,0]
     u=[0,0]
     for x in list_col:
@@ -682,7 +714,7 @@ def main_pars(arr):
 
 if __name__ == "__main__":
     arr=sys.argv
-    #arr = ['py','arg','/home/eran/Desktop/exm/']
+    arr = ['py','arg','/home/eran/Desktop/exm/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
