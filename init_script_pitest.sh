@@ -12,7 +12,7 @@ fi
 #echo "missing path value name  "
 #exit
 #fi
-
+echo "========>"${1}
 suffix_name=${path_arg##*2017}  #TODO: change the suffix to "##*201"
 suffix_name=${suffix_name%/org/}
 prefix_name="U"
