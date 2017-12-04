@@ -37,23 +37,5 @@ for ((i=0;i<cnt;i++)); do
 done
 
 
-if [  -d "${pitest}report_pit" ]; then
-	rm -r ${pitest}report_pit
-fi
-mkdir ${pit_dir}"report_pit"
-mv ${pit_dir}FP_budget_time.csv ${pitest}report_pit/
-for D in `find ${pitest}  -maxdepth 1  -type d  `
-do
-	if [[ ${D} == *"ALL"* ]]; then
-		echo "python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/"
-                python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/
-	fi
-done
-
-echo "python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${2}"
-python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${2}
-
-
-echo ""
 
 exit
