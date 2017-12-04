@@ -422,7 +422,7 @@ def main_in():
 
 def main_func():
     proj_path= os.getcwd()+'/'
-    proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
+    #proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
     tests_path=proj_path+'src/test/java/org/'
