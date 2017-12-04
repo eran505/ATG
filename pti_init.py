@@ -309,6 +309,8 @@ def rec_package_test(pom_path,class_path,test_path):
     #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
     #exit()
     for key,value in dico.iteritems():
+        if not str(key).__contains__('org.apache.commons.math3.linear'):
+            continue
         dico_son_val= get_class_tree(r, key)
         value_target = transform_data(dico_son_val)
         tag_key, tag_val = make_pom_package({key:str(key)+'_ESTest'})
@@ -429,11 +431,9 @@ def main_func():
 
 
 
-def fixer(path_p):
-    print "fixing.."
 
 #proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
-
-main_func()
+if __name__ == "__main__":
+    main_func()
 #main_all()
 
