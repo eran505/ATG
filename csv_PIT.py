@@ -665,8 +665,6 @@ def merge_df_sum_by_class(df1_d,d_end,time_b):
 
 if __name__ == "__main__":
     arr=sys.argv
-    aggregate_time_budget('/home/eran/Desktop/exm')
-    exit()
     arr = ['py','class','/home/eran/Desktop/exm/bla_t=10_/pit_test']
     if len(arr) == 2:
         if arr[1] == 'f':
