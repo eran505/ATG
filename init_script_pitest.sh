@@ -23,6 +23,7 @@ fi
 
 string_dir="ALL_"${prefix_name}"_"${suffix_name}
 echo ${string_dir}
+sleep 10
 cur_dir=${PWD}/
 #string_dir="ALL_"${name_arg}
 
