@@ -169,11 +169,11 @@ def get_mean_df(df,list_col,name_mode):
     for name  in arr_sign:
         df[name+'_sum_'+name_mode] = (df[list_col] == name).sum(axis=1)
     string = '_sum_'+name_mode
-    my_new_list = [x + string for x in arr_sign]
-    df['total'] = df[my_new_list].sum(axis=1)
-    for it in my_new_list:
-        df[it[:-3]+"mean_"+name_mode] = (df[it].astype(float))/df['total']
-        df[it[:-3] + "mean_norm"+name_mode] = (df[it].astype(float)) / df['total']
+    #my_new_list = [x + string for x in arr_sign]
+    #df['total'] = df[my_new_list].sum(axis=1)
+    #for it in my_new_list:
+    #    df[it[:-3]+"mean_"+name_mode] = (df[it].astype(float))/df['total']
+    #    df[it[:-3] + "mean_norm"+name_mode] = (df[it].astype(float)) / df['total']
     return df
 
 def name_ext(p):
@@ -208,7 +208,13 @@ def get_data_df_by_name(list_data):
         result =None
     return result
 
-def get_all_class_by_name(path_root,out_path):
+def get_all_class_by_name(path_root,out_path=None):
+    if path_root[-1] != '/':
+        path_root = path_root + '/'
+    if out_path is None:
+        out_path=path_root+'out/'
+        if os.path.isdir(out_path) is False:
+            os.mkdir(out_path)
     if out_path[-1] != '/':
         out_path = out_path + '/'
     dict_package_prefix=dict()
@@ -238,6 +244,7 @@ def get_all_class_by_name(path_root,out_path):
         if res_dataframe[k] is None:
             continue
         write_to_csv(out_path+k+'.csv',res_dataframe[k])
+
 
 
     print "done"
@@ -546,16 +553,20 @@ def main_pars(arr):
             clac_by_package(die_p, fpcsv, uni)
         elif mod=='all':
             dico = init_clac(  arr[2] ,arr[3],'org.apache.commons.math3.linear.PreconditionedIterativeLinearSolver')
+        elif mod == 'arg':
+            aggregate_time_budget(arr[2])
         elif mod =='class':
-            dico = get_all_class_by_name(  arr[2] , arr[3])
-
+            if len(arr) > 3 :
+                dico = get_all_class_by_name(  arr[2] , arr[3])
+            else:
+                dico = get_all_class_by_name(arr[2])
     else :
         # fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
         print "[Error] ----no args------"
         exit(0)
 
 
-def extract_it_time(str_name_dir='ALL_U__t=10_it=0'):
+def extract_it_time(str_name_dir):
     it_index = str_name_dir.find('_it=') #3
     time_index = str_name_dir.find('_t=') #2
     mode_index = str_name_dir.find('ALL_')
@@ -564,14 +575,103 @@ def extract_it_time(str_name_dir='ALL_U__t=10_it=0'):
     it = str_name_dir[it_index+4:]
     return time_budget,it,mode
 
+
+def get_sum_df(p_path):
+    walker = pit_render_test.walker(p_path)
+    classes_list = walker.walk('.csv')
+    d={}
+    for csv_p in classes_list:
+        name_class = str(csv_p).split('/')[-1][:-4]
+        d[name_class] = csv_p
+        d[name_class] = pd.read_csv(csv_p)
+    return d
+
+def mkdir_os(dir_name,root_path):
+    if root_path[-1] != '/':
+        root_path=root_path+'/'
+    if os.path.isdir(root_path+dir_name):
+        return root_path+dir_name+'/'
+    else:
+        os.mkdir(root_path+dir_name)
+        return root_path + dir_name + '/'
+
+
+def aggregate_time_budget(root_path):
+    dict_package_prefix = dict()
+    walker = pit_render_test.walker(root_path)
+    classes_list = walker.walk('_t=', False, 1)
+    classes_list = [x+'/pit_test/' for x in classes_list]
+    time = ''
+    d={}
+    last=len("/pit_test/")+1
+    for p_path in classes_list:
+        y = str(p_path).find("t=")
+        if y > 0 :
+            time = p_path[y+2:-last]
+            d[p_path] = time
+        else:
+            d[p_path] = None
+        get_all_class_by_name(p_path)
+    classes_list = [x + 'out/' for x in classes_list]
+    print classes_list
+    list_end={}
+    for i in range(len(classes_list)):
+        tmp_dico = get_sum_df(classes_list[i])
+        merge_df_sum_by_class(tmp_dico,list_end,d[classes_list[i][:-4]])
+    path_out = mkdir_os('fin_out',root_path)
+    for key_class in list_end :
+        write_to_csv(path_out+key_class+'.csv',list_end[key_class])
+    return list_end
+
+def cal_df_sum(df):
+    list_col = list(df)
+    list_col = [x for x in list_col if x.__contains__("sum")]
+    d_total = {}
+    fp=[0,0]
+    u=[0,0]
+    for x in list_col:
+        if x.__contains__("FP"):
+            if x.__contains__("KILL"):
+                fp[0]=df[x].sum()
+            else:
+                fp[1]+=df[x].sum()
+        else:
+            if x.__contains__("U"):
+                if x.__contains__("KILL"):
+                    u[0] = df[x].sum()
+                else:
+                    u[1] += df[x].sum()
+    return fp,u
+def merge_df_sum_by_class(df1_d,d_end,time_b):
+    columns = ['Budget', 'FP_kill', 'U_kill', 'FP_Survived', 'U_Survived']
+    for ky in df1_d :
+        if ky in d_end:
+            df_tmp = d_end[ky]
+            fp, u = cal_df_sum(df1_d[ky])
+            list_res = [time_b, fp[0], u[0], fp[1], u[1]]
+            df_tmp.loc[len(df_tmp)] = list_res
+            d_end[ky] = df_tmp
+        else:
+
+            df_sumup = pd.DataFrame(columns=columns)
+            fp,u = cal_df_sum(df1_d[ky])
+            list_res = [time_b,fp[0],u[0],fp[1],u[1]]
+            df_sumup.loc[len(df_sumup)] = list_res
+            d_end[ky] = df_sumup
+
+
+
+
+
 if __name__ == "__main__":
     arr=sys.argv
-  #  arr = ['py','/home/eran/Desktop/testing/new_test/info.txt']
+    aggregate_time_budget('/home/eran/Desktop/exm')
+    exit()
+    arr = ['py','class','/home/eran/Desktop/exm/bla_t=10_/pit_test']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
             exit(0)
-        info_input(arr[1])
         exit(0)
     #arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
     #arr= arr_p.split(" ")
