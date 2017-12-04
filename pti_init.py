@@ -309,7 +309,7 @@ def rec_package_test(pom_path,class_path,test_path):
     #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
     #exit()
     for key,value in dico.iteritems():
-        if not str(key).__contains__('org.apache.commons.math3.linear'):
+        if not ( str(key).__contains__('org.apache.commons.math3.linear') or str(key).__contains__('org.apache.commons.math3.util') )  :
             continue
         dico_son_val= get_class_tree(r, key)
         value_target = transform_data(dico_son_val)
@@ -422,7 +422,7 @@ def main_in():
 
 def main_func():
     proj_path= os.getcwd()+'/'
-    #proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
+   # proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
     tests_path=proj_path+'src/test/java/org/'

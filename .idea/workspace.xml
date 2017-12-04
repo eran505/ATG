@@ -12,7 +12,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f1a7b73c-86a7-4c1e-be59-956eb450e362" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/init_script_pitest.sh" afterPath="$PROJECT_DIR$/init_script_pitest.sh" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pti_init.py" afterPath="$PROJECT_DIR$/pti_init.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -41,8 +40,8 @@
       <file leaf-file-name="pti_init.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pti_init.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="216">
-              <caret line="419" column="37" lean-forward="true" selection-start-line="419" selection-start-column="37" selection-end-line="419" selection-end-column="37" />
+            <state relative-caret-position="156">
+              <caret line="424" column="4" lean-forward="false" selection-start-line="424" selection-start-column="4" selection-end-line="424" selection-end-column="4" />
               <folding>
                 <element signature="e#2#26#0" expanded="true" />
               </folding>
@@ -617,7 +616,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="449" />
+      <option name="time" value="450" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -894,8 +893,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pti_init.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="419" column="37" lean-forward="true" selection-start-line="419" selection-start-column="37" selection-end-line="419" selection-end-column="37" />
+        <state relative-caret-position="156">
+          <caret line="424" column="4" lean-forward="false" selection-start-line="424" selection-start-column="4" selection-end-line="424" selection-end-column="4" />
           <folding>
             <element signature="e#2#26#0" expanded="true" />
           </folding>
