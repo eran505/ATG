@@ -23,10 +23,11 @@ fi
 
 string_dir="ALL_"${prefix_name}"_"${suffix_name}
 echo ${string_dir}
-sleep 10
-cur_dir=${PWD}/
-#string_dir="ALL_"${name_arg}
 
+cur_dir=${PWD}/
+echo "pwd = "${cur_dir}
+#string_dir="ALL_"${name_arg}
+sleep 20
 ATG="/home/eran/thesis/repo/ATG/"
 Mathjar="/home/eran/thesis/zips/commons-math3-3.5-src.tar.gz"
 
