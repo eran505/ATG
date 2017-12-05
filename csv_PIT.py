@@ -252,12 +252,13 @@ def get_all_class_by_name(path_root,out_path=None):
             continue
         print ky
         df_to_csv=mean_all_FPU(tmp)
+        print 'writing ',ky,' size = ',df_to_csv.shape
         write_to_csv(out_path+ky+'.csv',df_to_csv)
-
-    for k in res_dataframe :
-        if res_dataframe[k] is None:
-            continue
-        write_to_csv(out_path+k+'.csv',res_dataframe[k])
+        print 'Done !!!! ', ky, ' size = ', df_to_csv.shape
+    #for k in res_dataframe :
+    #    if res_dataframe[k] is None:
+    #        continue
+    #    write_to_csv(out_path+k+'.csv',res_dataframe[k])
 
 
 
