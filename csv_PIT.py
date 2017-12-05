@@ -114,7 +114,7 @@ def merge_df(list_df,bol=True):
         if bol:
             df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","mutation-type","method","line"])
         else:
-            df_all = pd.merge(df_all, list_df[ctr], how='inner',on=["class", "mutation-type", "method", "line"])
+            df_all = pd.merge(df_all, list_df[ctr], how='outer',on=["class", "mutation-type", "method", "line"])
         ctr += 1
     return df_all
 
