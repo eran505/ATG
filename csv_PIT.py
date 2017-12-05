@@ -150,9 +150,13 @@ def mean_all(df,bol=True):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN
     return df
 
 
+
 def mean_all_FPU(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERROR
-    print "ALL_col=",list(df)
-    list_name = list(df)[4:]
+    list_name = list(df)
+    list_name.remove('class')
+    list_name.remove('mutation-type')
+    list_name.remove('method')
+    list_name.remove('line')
     fp=[]
     u=[]
     for item in list_name:

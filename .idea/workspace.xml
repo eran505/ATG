@@ -6,9 +6,9 @@
     </enabled-run-configurations>
   </component>
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="240" mnemonic="9" />
-    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="635" mnemonic="8" />
-    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="589" mnemonic="1" />
+    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="244" mnemonic="9" />
+    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="639" mnemonic="8" />
+    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="593" mnemonic="1" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f1a7b73c-86a7-4c1e-be59-956eb450e362" name="Default" comment="">
@@ -30,8 +30,8 @@
       <file leaf-file-name="csv_PIT.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/csv_PIT.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="276">
-              <caret line="153" column="29" lean-forward="false" selection-start-line="153" selection-start-column="29" selection-end-line="153" selection-end-column="29" />
+            <state relative-caret-position="315">
+              <caret line="159" column="9" lean-forward="true" selection-start-line="159" selection-start-column="9" selection-end-line="159" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -68,7 +68,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>v1</find>
       <find>ant</find>
       <find>&quot;in</find>
       <find>pit</find>
@@ -98,6 +97,7 @@
       <find>mkd</find>
       <find>cal_df_sum</find>
       <find>mean_all_FPU</find>
+      <find>drop</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -565,12 +565,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/csv_PIT.py</url>
-          <line>503</line>
+          <line>507</line>
           <option name="timeStamp" value="395" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/csv_PIT.py</url>
-          <line>515</line>
+          <line>519</line>
           <option name="timeStamp" value="401" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -590,7 +590,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/csv_PIT.py</url>
-          <line>639</line>
+          <line>643</line>
           <option name="timeStamp" value="444" />
         </line-breakpoint>
       </breakpoints>
@@ -878,8 +878,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/csv_PIT.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="276">
-          <caret line="153" column="29" lean-forward="false" selection-start-line="153" selection-start-column="29" selection-end-line="153" selection-end-column="29" />
+        <state relative-caret-position="315">
+          <caret line="159" column="9" lean-forward="true" selection-start-line="159" selection-start-column="9" selection-end-line="159" selection-end-column="9" />
           <folding />
         </state>
       </provider>
