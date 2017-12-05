@@ -211,6 +211,7 @@ def get_data_df_by_name(list_data):
             if df.empty:
                 continue
             df_list.append(df)
+            print 'li: ',list(df)
     if len(df_list) > 0:
         result = merge_df(df_list,False)
     else:
