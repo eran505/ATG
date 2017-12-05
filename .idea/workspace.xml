@@ -7,8 +7,8 @@
   </component>
   <component name="BookmarkManager">
     <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="239" mnemonic="9" />
-    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="633" mnemonic="8" />
-    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="587" mnemonic="1" />
+    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="634" mnemonic="8" />
+    <bookmark url="file://$PROJECT_DIR$/csv_PIT.py" line="588" mnemonic="1" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f1a7b73c-86a7-4c1e-be59-956eb450e362" name="Default" comment="">
@@ -31,8 +31,8 @@
       <file leaf-file-name="csv_PIT.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/csv_PIT.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="334">
-              <caret line="168" column="21" lean-forward="false" selection-start-line="168" selection-start-column="21" selection-end-line="168" selection-end-column="21" />
+            <state relative-caret-position="246">
+              <caret line="245" column="16" lean-forward="false" selection-start-line="245" selection-start-column="16" selection-end-line="245" selection-end-column="16" />
               <folding />
             </state>
           </provider>
@@ -93,12 +93,12 @@
       <find>mean_all</find>
       <find>print &quot;</find>
       <find>os.</find>
-      <find>mean_all_FPU</find>
       <find>==</find>
       <find>====================================================================================================================</find>
       <find>bugbug</find>
       <find>mkd</find>
       <find>cal_df_sum</find>
+      <find>mean_all_FPU</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -165,6 +165,7 @@
     </navigator>
     <panes>
       <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -193,7 +194,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -566,12 +566,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/csv_PIT.py</url>
-          <line>501</line>
+          <line>502</line>
           <option name="timeStamp" value="395" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/csv_PIT.py</url>
-          <line>513</line>
+          <line>514</line>
           <option name="timeStamp" value="401" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -591,7 +591,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/csv_PIT.py</url>
-          <line>637</line>
+          <line>638</line>
           <option name="timeStamp" value="444" />
         </line-breakpoint>
       </breakpoints>
@@ -874,16 +874,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="456">
           <caret line="424" column="4" lean-forward="false" selection-start-line="424" selection-start-column="4" selection-end-line="424" selection-end-column="4" />
-          <folding>
-            <element signature="e#2#26#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/csv_PIT.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="334">
-          <caret line="168" column="21" lean-forward="false" selection-start-line="168" selection-start-column="21" selection-end-line="168" selection-end-column="21" />
+        <state relative-caret-position="246">
+          <caret line="245" column="16" lean-forward="false" selection-start-line="245" selection-start-column="16" selection-end-line="245" selection-end-column="16" />
           <folding />
         </state>
       </provider>

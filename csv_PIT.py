@@ -243,6 +243,7 @@ def get_all_class_by_name(path_root,out_path=None):
         tmp = get_data_df_by_name(dict(dico[ky]).values())
         if tmp is None:
             continue
+        print ky
         res_dataframe[ky]=mean_all_FPU(tmp)
 
     for k in res_dataframe :
