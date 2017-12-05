@@ -245,13 +245,14 @@ def get_all_class_by_name(path_root,out_path=None):
     dico = merge_dict_by_class(dict_package_prefix)
     res_dataframe={}
     for ky in dico :
-        if not str(ky).__contains__("org.apache.commons.math3.linear"):
-            continue
+        #if not str(ky).__contains__("org.apache.commons.math3.linear"):
+        #    continue
         tmp = get_data_df_by_name(dict(dico[ky]).values())
         if tmp is None:
             continue
         print ky
-        res_dataframe[ky]=mean_all_FPU(tmp)
+        df_to_csv=mean_all_FPU(tmp)
+        write_to_csv(out_path+ky+'.csv',df_to_csv)
 
     for k in res_dataframe :
         if res_dataframe[k] is None:
