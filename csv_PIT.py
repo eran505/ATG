@@ -166,6 +166,8 @@ def mean_all_FPU(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERRO
     return df
 
 def get_mean_df(df,list_col,name_mode):
+    print 'list_col= ',list_col
+    print 'name_mode= ',name_mode
     for name  in arr_sign:
         df[name+'_sum_'+name_mode] = (df[list_col] == name).sum(axis=1)
     for name  in arr_sign:
