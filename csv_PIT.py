@@ -151,8 +151,8 @@ def mean_all(df,bol=True):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN
 
 
 def mean_all_FPU(df):    #[ KILLED , NO_COVERAGE ,SURVIVED ,TIMED_OUT , RUN_ERROR
+    print "ALL_col=",list_name
     list_name = list(df)[4:]
-    print list_name
     fp=[]
     u=[]
     for item in list_name:
