@@ -106,6 +106,7 @@ def _data_df(list_data,time=''):
 def merge_df(list_df,bol=True):
     df_all = list_df[0]
     ctr = 0
+    print list_df
     while ctr<len(list_df):
         if ctr == 0 :
             ctr += 1
