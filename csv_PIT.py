@@ -251,6 +251,7 @@ def get_all_class_by_name(path_root,out_path=None):
         if tmp is None:
             continue
         print ky
+        print 'tmp shape = ',tmp.shape
         df_to_csv=mean_all_FPU(tmp)
         print 'writing ',ky,' size = ',df_to_csv.shape
         write_to_csv(out_path+ky+'.csv',df_to_csv)
