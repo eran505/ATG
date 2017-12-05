@@ -210,6 +210,7 @@ def get_data_df_by_name(list_data):
             df.drop(df.columns[[0,len(list(df))-1]], axis=1, inplace=True)
             if df.empty:
                 continue
+            print "df_size = ",df.shape
             df_list.append(df)
             print 'li: ',list(df)
     if len(df_list) > 0:
