@@ -12,7 +12,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f1a7b73c-86a7-4c1e-be59-956eb450e362" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bash_scripts/vtest.sh" afterPath="$PROJECT_DIR$/bash_scripts/vtest.sh" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pti_init.py" afterPath="$PROJECT_DIR$/pti_init.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -51,8 +50,8 @@
       <file leaf-file-name="pti_init.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pti_init.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="173">
-              <caret line="317" column="40" lean-forward="true" selection-start-line="317" selection-start-column="40" selection-end-line="317" selection-end-column="40" />
+            <state relative-caret-position="233">
+              <caret line="327" column="41" lean-forward="false" selection-start-line="327" selection-start-column="41" selection-end-line="327" selection-end-column="41" />
               <folding>
                 <element signature="e#2#26#0" expanded="true" />
               </folding>
@@ -879,8 +878,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pti_init.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="173">
-          <caret line="317" column="40" lean-forward="true" selection-start-line="317" selection-start-column="40" selection-end-line="317" selection-end-column="40" />
+        <state relative-caret-position="233">
+          <caret line="327" column="41" lean-forward="false" selection-start-line="327" selection-start-column="41" selection-end-line="327" selection-end-column="41" />
           <folding>
             <element signature="e#2#26#0" expanded="true" />
           </folding>

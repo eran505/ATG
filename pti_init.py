@@ -325,7 +325,7 @@ def rec_package_test(pom_path,class_path,test_path):
         arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
         if len(arr) > 0:
             if len(walking(arr[0],".csv"))==0:
-                os.system("rm -r "+arr[0])
+                print "os.system('rm -r '+arr[0])"
             else:
                 str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
                 os.system(str2)
