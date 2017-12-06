@@ -329,7 +329,6 @@ def rec_package_test(pom_path,class_path,test_path):
             else:
                 str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
                 os.system(str2)
-
 def package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
     list_test = walk(test_path)
