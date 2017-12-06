@@ -322,8 +322,11 @@ def rec_package_test(pom_path,class_path,test_path):
         proj_path1 = os.getcwd()
         arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
         if len(arr) > 0:
-            str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
-            os.system(str2)
+            if len(walking(arr[0],".csv"))==0:
+                os.system("rm -r "+arr[0])
+            else:
+                str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
+                os.system(str2)
 
 def package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
