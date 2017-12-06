@@ -316,9 +316,11 @@ def rec_package_test(pom_path,class_path,test_path):
         tag_key, tag_val = make_pom_package({key:str(key)+'_ESTest'})
         tag_c,tag_t = make_pom_package(value_target)
         modf_pom(pom_path,tag_key,tag_t)
-        command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
+        print "tag_class= ",tag_key
+        print "tag_test= ",tag_t
+        #command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
         command =" mvn org.pitest:pitest-maven:mutationCoverage "
-        os.system(command_v1)
+        os.system(command)
         proj_path1 = os.getcwd()
         arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
         if len(arr) > 0:
