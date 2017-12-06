@@ -104,6 +104,8 @@ def _data_df(list_data,time=''):
 #    os.system('rm -r '+path_err)
 
 def merge_df(list_df,bol=True):
+    for df in list_df:
+        df.drop_duplicates(keep=False,inplace=True)
     df_all = list_df[0]
     ctr = 0
     print 'szie=',len(list_df)
@@ -111,10 +113,11 @@ def merge_df(list_df,bol=True):
         if ctr == 0 :
             ctr += 1
             continue
+        print 'df_all.shape = ', df_all.shape
         if bol:
             df_all = pd.merge(df_all, list_df[ctr], how='inner',on=['index',"class","mutation-type","method","line"])
         else:
-            df_all = pd.merge(df_all, list_df[ctr], how='outer',on=["class", "mutation-type", "method", "line"])
+            df_all = pd.merge(df_all, list_df[ctr], how='inner',on=["class","mutation-type","method","line"])  # "class", "mutation-type", "method",
         ctr += 1
     return df_all
 
@@ -726,7 +729,43 @@ def main_pars(arr):
         print "[Error] ----no args------"
         exit(0)
 
+
+
+########################3
+def get_data_df_by_name_v1(list_data):
+    df_list=[]
+    result = ""
+    error_dir=0
+    names_list=["class","method","line"]
+    for item in list_data:
+        if item['csv'] is None:
+            continue
+        csvs = item['csv']
+        rec_name = "{0}_t={1}_i={2}".format(item['mode'],item['budget'],item['it'])
+        names_list.append(rec_name)
+        if len(csvs) > 0 :
+            df = pd.read_csv(csvs,names = ["class-suffix", "class", "mutation-type", "method","line",rec_name,"test"])
+            #df['index']=df.set_index(["class","method","line"], inplace=True)
+            df.drop(df.columns[[0,len(list(df))-1]], axis=1, inplace=True)
+            if df.empty:
+                continue
+            print "df_size = ",df.shape
+            df_list.append(df)
+            print 'li: ',list(df)
+    if len(df_list) > 0:
+        result = merge_df(df_list,False)
+    else:
+        result =None
+    return result
+
+#####################
+
 if __name__ == "__main__":
+    #get_data_df_by_name_v1([{'csv':'/home/eran/Desktop/xxx/mutations_fp1.csv','mode':'FP','budget':10,"it":1},
+    #                        {'csv':'/home/eran/Desktop/xxx/mutations_fp2.csv','mode':'FP','budget':10,"it":2},
+    #                        {'csv':'/home/eran/Desktop/xxx/mutations_u1.csv','mode':'U','budget':10,"it":1},
+    #                        {'csv': '/home/eran/Desktop/xxx/mutations_u2.csv', 'mode': 'U', 'budget': 10, "it": 2}])
+    #exit()
     arr=sys.argv
     #arr = ['py','arg','/home/eran/Desktop/exm/']
     if len(arr) == 2:
