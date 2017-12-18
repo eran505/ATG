@@ -295,6 +295,7 @@ def transform_data(list_son):
             d[prefix+'.'+key]=prefix+'.'+key+'_ESTest'
     return d
 
+
 def rec_package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
     list_test = walk(test_path)
@@ -318,17 +319,15 @@ def rec_package_test(pom_path,class_path,test_path):
         modf_pom(pom_path,tag_key,tag_t)
         print "tag_class= ",tag_key
         print "tag_test= ",tag_t
-        #command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
-        command =" mvn org.pitest:pitest-maven:mutationCoverage "
-        os.system(command)
+        command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
+        #command =" mvn org.pitest:pitest-maven:mutationCoverage "
+        os.system(command_v1)
         proj_path1 = os.getcwd()
         arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
         if len(arr) > 0:
-            if len(walking(arr[0],".csv"))==0:
-                print "os.system('rm -r '+arr[0])"
-            else:
-                str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
-                os.system(str2)
+            str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
+            os.system(str2)
+
 def package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
     list_test = walk(test_path)
@@ -374,6 +373,11 @@ def main_one_by_one(pom_path,class_path,test_path):
         modf_pom(pom_path, tag_c, tag_t)
         c_command = "mvn org.pitest:pitest-maven:mutationCoverage"
         os.system(c_command)
+        proj_path1 = os.getcwd()
+        arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
+        if len(arr) >0:
+            str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
+            os.system(str2)
     print('done !')
 
 
