@@ -442,12 +442,15 @@ def main_func():
 def fixer():
     proj_path= os.getcwd()+'/'
     path_result = walking(proj_path,"ALL",False,2)
+    print "path_result=",path_result
     for p_r in proj_path:
         if os.path.isdir(proj_path+"commons-math3-3.5-src/"):
             empty, full=clean_empty_dir(proj_path+"commons-math3-3.5-src/")
             print "path:",p_r
             print "empty:",empty
             print "full:",full
+        else:
+            print "no path:: ",proj_path,"commons-math3-3.5-src/"
 
 
 def clean_empty_dir(path):
@@ -473,6 +476,7 @@ if __name__ == "__main__":
     if len(args)==1:
         main_func()
     else:
+        print "fixer"
         fixer()
 #main_all()
 
