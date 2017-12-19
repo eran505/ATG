@@ -295,6 +295,8 @@ def transform_data(list_son):
             d[prefix+'.'+key]=prefix+'.'+key+'_ESTest'
     return d
 
+def fixer_class(pom_path,class_path,test_path):
+    print "fix..."
 
 def rec_package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
@@ -437,11 +439,40 @@ def main_func():
     rec_package_test(pom_path,classes_pth,tests_path)
     #package_test(pom_path,classes_pth,tests_path)
 
+def fixer():
+    proj_path= os.getcwd()+'/'
+    path_result = walking(proj_path,"ALL",False,2)
+    for p_r in proj_path:
+        if os.path.isdir(proj_path+"commons-math3-3.5-src/"):
+            empty, full=clean_empty_dir(proj_path+"commons-math3-3.5-src/")
+            print "path:",p_r
+            print "empty:",empty
+            print "full:",full
+
+
+def clean_empty_dir(path):
+    empty=[]
+    full=[]
+    path_p = path+"target/pit-reports/"
+    res_walking = walking(path_p,"org",False,-1,False)
+    if len(res_walking) == 0:
+        print "Path = {0} has no mutation dir".format(path_p)
+        return None,None
+    for dir in res_walking:
+        if not os.listdir(path_p+dir):
+            empty.append(dir)
+        else:
+            full.append(dir)
+    return empty,full
 
 
 
-#proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
+    #proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
 if __name__ == "__main__":
-    main_func()
+    args = sys.argv
+    if len(args)==1:
+        main_func()
+    else:
+        fixer()
 #main_all()
 

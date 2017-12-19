@@ -31,7 +31,7 @@
       <file leaf-file-name="csv_PIT.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/csv_PIT.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="422">
+            <state relative-caret-position="11310">
               <caret line="760" column="21" lean-forward="false" selection-start-line="760" selection-start-column="21" selection-end-line="760" selection-end-column="21" />
               <folding />
             </state>
@@ -71,8 +71,8 @@
       <file leaf-file-name="pti_init.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pti_init.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="200">
-              <caret line="296" column="0" lean-forward="true" selection-start-line="296" selection-start-column="0" selection-end-line="296" selection-end-column="0" />
+            <state relative-caret-position="312">
+              <caret line="450" column="0" lean-forward="true" selection-start-line="450" selection-start-column="0" selection-end-line="450" selection-end-column="0" />
               <folding>
                 <element signature="e#2#26#0" expanded="true" />
               </folding>
@@ -201,8 +201,8 @@
   <component name="ProjectFrameBounds">
     <option name="x" value="63" />
     <option name="y" value="24" />
-    <option name="width" value="1817" />
-    <option name="height" value="910" />
+    <option name="width" value="1825" />
+    <option name="height" value="921" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -220,7 +220,6 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -263,6 +262,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -574,10 +574,10 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="63" y="24" width="1817" height="910" extended-state="6" />
+    <frame x="63" y="24" width="1825" height="921" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22853957" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22807992" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3287841" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282532" sideWeight="0.5201745" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3287841" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -933,7 +933,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/csv_PIT.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="422">
+        <state relative-caret-position="11310">
           <caret line="760" column="21" lean-forward="false" selection-start-line="760" selection-start-column="21" selection-end-line="760" selection-end-column="21" />
           <folding />
         </state>
@@ -941,8 +941,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pti_init.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="296" column="0" lean-forward="true" selection-start-line="296" selection-start-column="0" selection-end-line="296" selection-end-column="0" />
+        <state relative-caret-position="312">
+          <caret line="450" column="0" lean-forward="true" selection-start-line="450" selection-start-column="0" selection-end-line="450" selection-end-column="0" />
           <folding>
             <element signature="e#2#26#0" expanded="true" />
           </folding>
