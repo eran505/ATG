@@ -450,7 +450,7 @@ def fixer():
             print "empty:",empty
             print "full:",full
         else:
-            print "no path:: ",proj_path,"commons-math3-3.5-src/"
+            print "no path:: ",p_r,"commons-math3-3.5-src/"
 
 
 def clean_empty_dir(path):
