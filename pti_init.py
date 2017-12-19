@@ -464,6 +464,7 @@ def clean_empty_dir(path):
     for dir in res_walking:
         if not os.listdir(path_p+dir):
             empty.append(dir)
+            os.rmdir(path_p+dir)
         else:
             full.append(dir)
     return empty,full
