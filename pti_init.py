@@ -444,8 +444,8 @@ def fixer():
     path_result = walking(proj_path,"ALL",False,2)
     print "path_result=",path_result
     for p_r in path_result:
-        if os.path.isdir(p_r+"commons-math3-3.5-src/"):
-            empty, full=clean_empty_dir(p_r+"commons-math3-3.5-src/")
+        if os.path.isdir(p_r+"/commons-math3-3.5-src/"):
+            empty, full=clean_empty_dir(p_r+"/commons-math3-3.5-src/")
             print "path:",p_r
             print "empty:",empty
             print "full:",full
