@@ -298,7 +298,7 @@ def transform_data(list_son):
 def fixer_class(pom_path,class_path,test_path):
     print "fix..."
 
-def rec_package_test(pom_path,class_path,test_path):
+def rec_package_test(pom_path,class_path,test_path,full=None):
     list_calss=walk(class_path)
     list_test = walk(test_path)
     if len(list_test) == 0:
@@ -314,6 +314,9 @@ def rec_package_test(pom_path,class_path,test_path):
     for key,value in dico.iteritems():
         if not ( str(key).__contains__('org.apache.commons.math3.linear') or str(key).__contains__('org.apache.commons.math3.util') )  :
             continue
+        if full is not None:
+            if key in full:
+                continue
         dico_son_val= get_class_tree(r, key)
         value_target = transform_data(dico_son_val)
         tag_key, tag_val = make_pom_package({key:str(key)+'_ESTest'})
@@ -444,11 +447,13 @@ def fixer():
     path_result = walking(proj_path,"ALL",False,2)
     print "path_result=",path_result
     for p_r in path_result:
+        relative_path = p_r+"/commons-math3-3.5-src/"
+        pom_path = relative_path + 'pom.xml'
+        classes_pth = relative_path + 'src/main/java/org/'
+        tests_path = relative_path + 'src/test/java/org/'
         if os.path.isdir(p_r+"/commons-math3-3.5-src/"):
             empty, full=clean_empty_dir(p_r+"/commons-math3-3.5-src/")
-            print "path:",p_r
-            print "empty:",empty
-            print "full:",full
+            rec_package_test(pom_path, classes_pth, tests_path,full)
         else:
             print "no path:: ",p_r,"commons-math3-3.5-src/"
 
@@ -464,7 +469,7 @@ def clean_empty_dir(path):
     for dir in res_walking:
         if not os.listdir(path_p+dir):
             empty.append(dir)
-            os.rmdir(path_p+dir)
+            #os.rmdir(path_p+dir)
         else:
             full.append(dir)
     return empty,full
