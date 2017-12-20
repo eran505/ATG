@@ -453,7 +453,11 @@ def fixer():
         tests_path = relative_path + 'src/test/java/org/'
         if os.path.isdir(p_r+"/commons-math3-3.5-src/"):
             empty, full=clean_empty_dir(p_r+"/commons-math3-3.5-src/")
-            rec_package_test(pom_path, classes_pth, tests_path,full)
+            print "empty="
+            print empty
+            print "full:"
+            print full
+            #rec_package_test(pom_path, classes_pth, tests_path,full)
         else:
             print "no path:: ",p_r,"commons-math3-3.5-src/"
 
@@ -469,6 +473,7 @@ def clean_empty_dir(path):
     for dir in res_walking:
         if not os.listdir(path_p+dir):
             empty.append(dir)
+            print "XXX->>> ",path_p+dir
             os.rmdir(path_p+dir)
         else:
             full.append(dir)
