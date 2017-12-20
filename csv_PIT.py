@@ -650,8 +650,20 @@ def aggregate_time_budget(root_path):
         insert_to_big(df_big_d,tmp_dico, d[classes_list[i][:-4]] )
         #merge_df_sum_by_class(tmp_dico,list_end,d[classes_list[i][:-4]])
     df_big = pd.DataFrame(df_big_d.values())
+    list_colo = list(df_big)
+    fp_list = [x for x in list_colo if str(x).__contains__("FP") ]
+    u_list = [x for x in list_colo if str(x).__contains__("U")]
+    fp_df = df_big.copy(deep=True)
+    u_df = df_big.copy(deep=True)
+    for col0 in fp_list:
+        fp_df = fp_df[np.isfinite(fp_df[col0])]
+    for col1 in u_list:
+        u_df = u_df[np.isfinite(u_df[col1])]
+
     path_out = mkdir_os('fin_out',root_path)
     write_to_csv(path_out+'big.csv',df_big)
+    write_to_csv(path_out + 'fp_df.csv', fp_df)
+    write_to_csv(path_out + 'u_df.csv', u_df)
     #for key_class in list_end :
     #    write_to_csv(path_out+key_class+'.csv',list_end[key_class])
     #return list_end
