@@ -651,19 +651,29 @@ def aggregate_time_budget(root_path):
         #merge_df_sum_by_class(tmp_dico,list_end,d[classes_list[i][:-4]])
     df_big = pd.DataFrame(df_big_d.values())
     list_colo = list(df_big)
-    fp_list = [x for x in list_colo if str(x).__contains__("FP") ]
-    u_list = [x for x in list_colo if str(x).__contains__("U")]
-    fp_df = df_big.copy(deep=True)
-    u_df = df_big.copy(deep=True)
-    for col0 in fp_list:
-        fp_df = fp_df[np.isfinite(fp_df[col0])]
-    for col1 in u_list:
-        u_df = u_df[np.isfinite(u_df[col1])]
+    _list10 = [x for x in list_colo if str(x).__contains__("10") ]
+    _list30 = [x for x in list_colo if str(x).__contains__("30") ]
+    _list60 = [x for x in list_colo if str(x).__contains__("60") ]
+    _list90 = [x for x in list_colo if str(x).__contains__("90") ]
+    _df10 = df_big.copy(deep=True)
+    _df30 = df_big.copy(deep=True)
+    _df60 = df_big.copy(deep=True)
+    _df90 = df_big.copy(deep=True)
+    for col0 in _list10:
+        _df10 = _df10[np.isfinite(_df10[col0])]
+    for col1 in _list30:
+        _df30 = _df30[np.isfinite(_df30[col1])]
+    for col2 in _list60:
+        _df60 = _df60[np.isfinite(_df60[col2])]
+    for col3 in _list90:
+        _df90 = _df90[np.isfinite(_df90[col3])]
 
     path_out = mkdir_os('fin_out',root_path)
     write_to_csv(path_out+'big.csv',df_big)
-    write_to_csv(path_out + 'fp_df.csv', fp_df)
-    write_to_csv(path_out + 'u_df.csv', u_df)
+    write_to_csv(path_out + 'df10.csv', _df10)
+    write_to_csv(path_out + 'df30.csv', _df30)
+    write_to_csv(path_out + 'df60.csv', _df60)
+    write_to_csv(path_out + 'df90.csv', _df90)
     #for key_class in list_end :
     #    write_to_csv(path_out+key_class+'.csv',list_end[key_class])
     #return list_end
