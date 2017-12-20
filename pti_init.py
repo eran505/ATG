@@ -474,7 +474,7 @@ def clean_empty_dir(path):
         if not os.listdir(path_p+dir):
             empty.append(dir)
             print "XXX->>> ",path_p+dir
-            os.rmdir(path_p+dir)
+            os.system("rm -r "+path_p+dir)
         else:
             full.append(dir)
     return empty,full
