@@ -15,15 +15,15 @@ class Cleaner:
 
 
     def fit(self):
-        arr = self.get_outputs_test(False)
+        arr = self.get_outputs_test(True)
         res = []
         if arr is None:
             print "no path found arr in function fit"
             return
         for xml in arr :
             res.append(self.pars_xml(xml))
-        #os.chdir(self.mvn_path)
-        #os.system("mvn clean test")
+        os.chdir(self.mvn_path)
+        os.system("mvn clean test")
 
 
 
@@ -176,10 +176,20 @@ class Cleaner:
 
 import sys
 
+def get_all_project(path):
+    projes = pit_render_test.walk(path,"commons-math3-3.5-src",False)
+    print projes
+
+
 if __name__ == "__main__":
+
+
+
     args = sys.argv
     if len(args) == 2 :
-        obj = Cleaner(args[1])
-        obj.fit()
+        proj_arr = get_all_project(args[1])
+        for p_path in proj_arr:
+            obj = Cleaner(p_path)
+            obj.fit()
     else:
         print "No Path was given !!"
