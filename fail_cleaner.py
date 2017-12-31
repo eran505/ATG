@@ -177,11 +177,6 @@ class Cleaner:
 import sys
 
 if __name__ == "__main__":
-    #/home/ise/eran/flaky  /home/ise/Desktop/
-    obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src")
-    obj.fit()
-
-    exit()
     args = sys.argv
     if len(args) == 2 :
         obj = Cleaner(args[1])
