@@ -312,8 +312,8 @@ def rec_package_test(pom_path,class_path,test_path,full=None):
     #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
     #exit()
     for key,value in dico.iteritems():
-        if not ( str(key).__contains__('org.apache.commons.math3.linear') or str(key).__contains__('org.apache.commons.math3.util') )  :
-            continue
+        #if not ( str(key).__contains__('org.apache.commons.math3.linear') or str(key).__contains__('org.apache.commons.math3.util') )  :
+        #    continue
         if full is not None:
             if key in full:
                 continue
