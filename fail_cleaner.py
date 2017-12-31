@@ -178,7 +178,7 @@ import sys
 
 def get_all_project(path):
     projes = pit_render_test.walk(path,"commons-math3-3.5-src",False)
-    print projes
+    return projes
 
 
 if __name__ == "__main__":
