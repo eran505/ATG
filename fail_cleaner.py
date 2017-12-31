@@ -21,7 +21,12 @@ class Cleaner:
             print "no path found arr in function fit"
             return
         for xml in arr :
-            res.append(self.pars_xml(xml))
+            f,e,all = self.pars_xml(xml)
+            res += all
+        text_file = open(self.mvn_path+"clear_out.txt", "w")
+        for item in res:
+            text_file.write("%s\n" % item)
+        text_file.close()
         os.chdir(self.mvn_path)
         os.system("mvn clean test")
 
@@ -72,6 +77,7 @@ class Cleaner:
         #print "parsing xml...."
         err={}
         fail={}
+        all = []
         root_node = xml.etree.ElementTree.parse(path_file).getroot()
         val,bol = self.intTryParse(root_node.attrib['errors'])
         if bol is False:
@@ -91,9 +97,10 @@ class Cleaner:
                                 self._insert_to_d(err,elt.attrib['classname'],elt.attrib['name'])
                             elif msg.tag == 'failure':
                                 self._insert_to_d(fail, elt.attrib['classname'], elt.attrib['name'])
+                            all.append( str(elt.attrib['classname']) +" --- "+  str(elt.attrib['name']) )
         if len(fail) or len(err) > 0:
             self.del_test_cases(fail,err)
-        return err,fail
+        return err,fail,all
 
     def _fix_del(self,p,lis_del):
         list_to_remove=[]
@@ -182,7 +189,6 @@ def get_all_project(path):
 
 
 if __name__ == "__main__":
-
 
 
     args = sys.argv
