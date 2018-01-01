@@ -2,7 +2,7 @@ import time
 
 import pit_render_test
 import xml.etree.ElementTree
-import os
+import os,re
 
 class Cleaner:
     def __init__(self, Path_mvn ,_remove=False,Clean_Fail=True,Clean_Error=True,test_out = 'target/surefire-reports/'):
@@ -135,7 +135,8 @@ class Cleaner:
             for x in arr :
                 counter+=1
                 if x.__contains__("@Test"):
-                    d[ctr] = counter
+                    name = self.get_name_func(arr[counter+1])
+                    d[name] = counter
                     ctr+=1
             d[ctr]=size-2
         ''''
@@ -172,6 +173,27 @@ class Cleaner:
         text_file.write('\n'.join(arr))
         text_file.close()
 
+    def get_name_func(self,string_func):
+        #print string_func
+        acc=""
+        #  public void test0()  throws Throwable  {
+        res = string_func.split(" ")
+        for x in res:
+            if x.__contains__("test") and x.__contains__("("):
+                for w in x[4:]:
+                    if w in ["0","1","2","3","4","5","6","7","8","9"]:
+                        acc+=w
+        #print "acc={}".format(acc)
+        val,bol = self.intTryParse(acc)
+        if bol is False:
+            print "[Error] in parsing function name cant pars to INT {}".format(string_func)
+            exit()
+        if len(acc)==0:
+            print "[Error] in parsing function name {}".format(string_func)
+            exit()
+        #print "val=",val
+        return val
+
 
     def del_test_cases(self,del_dico,del_err_d):
         print "#"*200
@@ -204,9 +226,9 @@ def get_all_project(path):
 
 if __name__ == "__main__":
 
-#    obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src/")
-#    obj.fit()
-#    exit()
+    obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src/")
+    obj.fit()
+    exit()
 
     args = sys.argv
     if len(args) == 2 :
