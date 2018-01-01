@@ -28,7 +28,7 @@ class Cleaner:
             text_file.write("%s\n" % item)
         text_file.close()
         os.chdir(self.mvn_path)
-        os.system("mvn clean test")
+        os.system("mvn clean test >> out_test.txt  2>&1 ")
 
 
 
