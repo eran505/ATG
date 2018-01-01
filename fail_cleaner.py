@@ -21,7 +21,7 @@ class Cleaner:
         localtime_str = str(localtime)
         print "*"*70 + "New" + "*"*70
         print "mvn_path = {}".format(self.mvn_path)
-        arr = self.get_outputs_test(True)
+        arr = self.get_outputs_test(False)
         res = []
         if arr is None:
             print "no path found arr in function fit"
@@ -33,6 +33,7 @@ class Cleaner:
         for item in res:
             text_file.write("%s\n" % item)
         text_file.close()
+        print "mvn clean test "
         os.chdir(self.mvn_path)
         os.system("mvn clean test >> out_test.txt  2>&1 ")
 
@@ -80,7 +81,6 @@ class Cleaner:
 
 
     def pars_xml(self,path_file):
-        #print "parsing xml...."
         err={}
         fail={}
         all = []
@@ -105,6 +105,7 @@ class Cleaner:
                                 self._insert_to_d(fail, elt.attrib['classname'], elt.attrib['name'])
                             all.append( str(elt.attrib['classname']) +" --- "+  str(elt.attrib['name']) )
         if len(fail) or len(err) > 0:
+            print "in"
             self.del_test_cases(fail,err)
         return err,fail,all
 
@@ -174,6 +175,7 @@ class Cleaner:
             del_dico=del_err_d
             del_err_d={}
         absolute_path = self.mvn_path+self.const_src_test
+        print "-->del_dico=",del_dico
         for key in del_dico.keys():
             item = del_dico[key]
             p = absolute_path + item['path'] +item['class_name']+".java"
@@ -196,6 +198,9 @@ def get_all_project(path):
 
 if __name__ == "__main__":
 
+#    obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src/")
+#    obj.fit()
+#    exit()
 
     args = sys.argv
     if len(args) == 2 :
