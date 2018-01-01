@@ -226,9 +226,9 @@ def get_all_project(path):
 
 if __name__ == "__main__":
 
-    obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src/")
-    obj.fit()
-    exit()
+    #obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src/")
+    #obj.fit()
+    #exit()
 
     args = sys.argv
     if len(args) == 2 :
