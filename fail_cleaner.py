@@ -23,6 +23,10 @@ class Cleaner:
         print "mvn_path = {}".format(self.mvn_path)
         arr = self.get_outputs_test(False)
         res = []
+        set_arr =set(arr)
+        print "set_len:",len(set_arr)
+        print "arr_len:",len(arr)
+        arr = list(set_arr)
         if arr is None:
             print "no path found arr in function fit"
             return
@@ -84,6 +88,7 @@ class Cleaner:
         err={}
         fail={}
         all = []
+
         root_node = xml.etree.ElementTree.parse(path_file).getroot()
         val,bol = self.intTryParse(root_node.attrib['errors'])
         if bol is False:
