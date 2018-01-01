@@ -1,3 +1,5 @@
+import time
+
 import pit_render_test
 import xml.etree.ElementTree
 import os
@@ -15,8 +17,11 @@ class Cleaner:
 
 
     def fit(self):
+        localtime = time.asctime(time.localtime(time.time()))
+        localtime_str = str(localtime)
+        print "*"*70 + "New" + "*"*70
+        print "mvn_path = {}".format(self.mvn_path)
         arr = self.get_outputs_test(True)
-        return
         res = []
         if arr is None:
             print "no path found arr in function fit"
@@ -24,7 +29,7 @@ class Cleaner:
         for xml in arr :
             f,e,all = self.pars_xml(xml)
             res += all
-        text_file = open(self.mvn_path+"clear_out.txt", "w")
+        text_file = open(self.mvn_path+"clear_{0}_.txt".format(localtime_str), "w")
         for item in res:
             text_file.write("%s\n" % item)
         text_file.close()
