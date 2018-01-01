@@ -137,7 +137,8 @@ class Cleaner:
                 if x.__contains__("@Test"):
                     name = self.get_name_func(arr[counter+1])
                     d[name] = counter
-                    ctr+=1
+                    ctr=name
+            ctr+=1
             d[ctr]=size-2
         ''''
         k_list_size = len(d.keys())
@@ -165,13 +166,22 @@ class Cleaner:
         print d
         for intger in to_del:
             range_start  = d[intger]
-            range_end = d[intger+1]
+            next  = self._get_next(d,intger)
+            range_end = d[next]
             arr=arr[:range_start] + arr[range_end:]
         cla = str(p).split('/')
         pp= "/home/ise/Desktop/out/"+cla[-1]
         text_file = open(p, "w")
         text_file.write('\n'.join(arr))
         text_file.close()
+
+    def _get_next(self,d,key):
+        list_key = dict(d).keys()
+        for k in list_key:
+            if k>key:
+                return k
+        print "[Error] in get_next no bigger key "
+        exit()
 
     def get_name_func(self,string_func):
         #print string_func
