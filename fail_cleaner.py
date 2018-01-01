@@ -15,7 +15,8 @@ class Cleaner:
 
 
     def fit(self):
-        arr = self.get_outputs_test(False)
+        arr = self.get_outputs_test(True)
+        return
         res = []
         if arr is None:
             print "no path found arr in function fit"
@@ -48,7 +49,7 @@ class Cleaner:
     def get_outputs_test(self,clean=True):
         if clean:
             os.chdir(self.mvn_path)
-            os.system("mvn clean test")
+            os.system("mvn clean test >> out_test_start.txt  2>&1")
         if (os.path.isdir(self.mvn_path+self.test_dir)):
             all_xml = pit_render_test.walk(self.mvn_path+self.test_dir,".xml",)
             if len(all_xml) == 0 :
