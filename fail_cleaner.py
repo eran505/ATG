@@ -15,7 +15,7 @@ class Cleaner:
 
 
     def fit(self):
-        arr = self.get_outputs_test(True)
+        arr = self.get_outputs_test(False)
         res = []
         if arr is None:
             print "no path found arr in function fit"
