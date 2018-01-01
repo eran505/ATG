@@ -131,6 +131,7 @@ class Cleaner:
             data = myfile.read()
             arr=str(data).split('\n')
             size = len(arr)
+            print "S={}".format(size)
             for x in arr :
                 counter+=1
                 if x.__contains__("@Test"):
