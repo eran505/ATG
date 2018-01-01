@@ -21,7 +21,7 @@ class Cleaner:
         localtime_str = str(localtime)
         print "*"*70 + "New" + "*"*70
         print "mvn_path = {}".format(self.mvn_path)
-        arr = self.get_outputs_test(False)
+        arr = self.get_outputs_test(True)
         res = []
         set_arr =set(arr)
         print "set_len:",len(set_arr)
