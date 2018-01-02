@@ -263,11 +263,6 @@ def get_all_project(path):
 
 if __name__ == "__main__":
 
-    obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src/")
-    #obj.fit()
-    obj._del_class("/home/ise/eran/flaky/commons-math3-3.5-src/src/test/java/org/apache/commons/math3/random/ValueServer_ESTest.java")
-
-    exit()
     args = sys.argv
     if len(args) == 2 :
         proj_arr = get_all_project(args[1])
