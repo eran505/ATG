@@ -70,8 +70,8 @@
       <file leaf-file-name="pti_init.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pti_init.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="426">
-              <caret line="326" column="98" lean-forward="true" selection-start-line="326" selection-start-column="93" selection-end-line="326" selection-end-column="98" />
+            <state relative-caret-position="366">
+              <caret line="322" column="52" lean-forward="true" selection-start-line="322" selection-start-column="52" selection-end-line="322" selection-end-column="52" />
               <folding>
                 <element signature="e#2#26#0" expanded="true" />
               </folding>
@@ -82,8 +82,8 @@
       <file leaf-file-name="fail_cleaner.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fail_cleaner.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="24" column="16" lean-forward="true" selection-start-line="24" selection-start-column="16" selection-end-line="24" selection-end-column="16" />
+            <state relative-caret-position="207">
+              <caret line="149" column="38" lean-forward="true" selection-start-line="149" selection-start-column="38" selection-end-line="149" selection-end-column="38" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -145,8 +145,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>pit</find>
-      <find>rec</find>
       <find>descendants</find>
       <find>pit_tes</find>
       <find>del</find>
@@ -175,6 +173,8 @@
       <find>get_data_df_by_name</find>
       <find>os.</find>
       <find>pars_xml</find>
+      <find>[Error] c</find>
+      <find>_del_class</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -867,16 +867,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pti_init.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="426">
-          <caret line="326" column="98" lean-forward="true" selection-start-line="326" selection-start-column="93" selection-end-line="326" selection-end-column="98" />
-          <folding>
-            <element signature="e#2#26#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/budget_generation.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="396">
@@ -888,10 +878,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pti_init.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="366">
+          <caret line="322" column="52" lean-forward="true" selection-start-line="322" selection-start-column="52" selection-end-line="322" selection-end-column="52" />
+          <folding>
+            <element signature="e#2#26#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/fail_cleaner.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="24" column="16" lean-forward="true" selection-start-line="24" selection-start-column="16" selection-end-line="24" selection-end-column="16" />
+        <state relative-caret-position="207">
+          <caret line="149" column="38" lean-forward="true" selection-start-line="149" selection-start-column="38" selection-end-line="149" selection-end-column="38" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>

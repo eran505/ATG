@@ -114,6 +114,30 @@ class Cleaner:
             self.del_test_cases(fail,err)
         return err,fail,all
 
+    def _del_class(self,p_path):
+        scaffolding = "_ESTest_scaffolding.java"
+        res = str(p_path).split('/')
+        class_name_arr = res[-1].split("_")
+        name = class_name_arr[0]
+        name = name + scaffolding
+        res[-1]=name
+        scaff_path = '/'.join(res)
+        if os.path.isfile(scaff_path) and os.path.isfile(p_path):
+            print "scaff_path = {}".format(scaff_path)
+            print "p_path = {}".format(p_path)
+            os.system("rm {}".format(scaff_path))
+            os.system("rm {}".format(p_path))
+            return True
+        else:
+            print "[Error] problem with the del file class function-->"
+            bol2 = os.path.isfile(scaff_path)
+            bol1 = os.path.isfile(p_path)
+            if bol1 is False:
+                print "[Error] the file: {} is not exists in the filesystem".format(p_path)
+            if bol2 is False:
+                print "[Error] the file: {} is not exists in the filesystem".format(scaff_path)
+            exit(-1)
+
     def _fix_del(self,p,lis_del):
         list_to_remove=[]
         ctr = 0
@@ -122,8 +146,11 @@ class Cleaner:
         for it in lis_del:
             val, bol = self.intTryParse(it[4:])
             if bol is False:
-                print "[Error] cant parss in fix the test case {} , in {}".format(it,p)
-                exit()
+                if "initializationError" == it:
+                    self._del_class(p)
+                else :
+                    print "[Error] cant parss in fix the test case {} , in {}".format(it, p)
+                    exit()
             to_del.append(val)
         size = 0
         counter=-1
@@ -236,10 +263,11 @@ def get_all_project(path):
 
 if __name__ == "__main__":
 
-    #obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src/")
+    obj = Cleaner("/home/ise/eran/flaky/commons-math3-3.5-src/")
     #obj.fit()
-    #exit()
+    obj._del_class("/home/ise/eran/flaky/commons-math3-3.5-src/src/test/java/org/apache/commons/math3/random/ValueServer_ESTest.java")
 
+    exit()
     args = sys.argv
     if len(args) == 2 :
         proj_arr = get_all_project(args[1])
