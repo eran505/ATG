@@ -327,8 +327,8 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
         tag_key, tag_val = make_pom_package({key:str(key)+'_ESTest'})
         tag_c,tag_t = make_pom_package(value_target)
         modf_pom(pom_path,tag_key,tag_t)
-        print "tag_class= ",tag_key
-        print "tag_test= ",tag_t
+        #print "tag_class= ",tag_key
+        #print "tag_test= ",tag_t
         command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
         #command =" mvn org.pitest:pitest-maven:mutationCoverage "
         os.system(command_v1)
@@ -440,6 +440,7 @@ def main_in():
 
 def main_func(arg=None):
     proj_path= os.getcwd()+'/'
+    print proj_path
    # proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
