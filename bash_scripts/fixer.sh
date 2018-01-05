@@ -1,89 +1,86 @@
 #!/usr/bin/env bash
 
-ATG=${1}
+ATG="/home/ise/eran/repo/ATG/"
 
-if [ -z "$ATG" ]; then
-echo "missing path value ATG repo"
-exit
-fi
+arg_package=${1}
+
+
 father_dir=${PWD}
 for D in `find ${PWD}  -maxdepth 1  -type d  `
 do
-    echo $D
-    if echo "${D}" | grep -q "0"
-    then
+
+    dir_name=${D##*/}
+    if [[ $dir_name == *"_t="* ]]; then
+
+            ##echo ${D}"/pit_test/"
 	    string=${D}
-	    array+=(${D}"/")
+	    array+=(${D}"/pit_test/")
 	fi
 
 done
 
-file=${PWD}"/info.txt"
-if [ -f "$file" ]
-then
-	echo "$file found and being deleted."
-	rm $file
+str_data=$(date +'%m_%d__%H_%M_%S')
+file_log="log_fix_${str_data}_.txt"
+if [ ! -d "${PWD}/logs" ]; then
+  mkdir "${PWD}/logs"
 fi
+
+touch "${PWD}/logs/"${file_log}
+
+file_log=${PWD}"/logs/"${file_log}
 
 cnt=${#array[@]}
 for ((i=0;i<cnt;i++)); do
-    path_dir=${array[i]}
-    #echo ${path_dir}
-    pitest=${path_dir}pit_test/
-    if [ ! -d "$pitest" ]; then
-    	mkdir ${path_dir}pit_test/
-	#echo "dir made"
-    fi
-   #mv ${path_dir}FP_budget_time.csv ${path_dir}pit_test/
-   #cp ${ATG}init_script_pitest.sh ${path_dir}pit_test/
-    #echo " -------------------------------------------------- "
-    #echo "cding into ${pitest} dir.. the  cur dir = ${PWD}/ "
-    cd "${pitest}"
-    str_time="null"
-    for D in `find ${path_dir}  -maxdepth 1  -type d  `
-	do
-		string=${D}
-		    echo $D
-        if echo "${D}" | grep -q "t="
-        then
-            #bash ${path_dir}pit_test/init_script_pitest.sh ${D}/org/
-			#echo "piting..."
-            str_time=${string}
+	path_dir=${array[i]}
+	if [ ! -d "${path_dir}" ]; then
+  		echo "No pit_test in ${path_dir}" >> ${file_log}
+		echo "" >> ${file_log}
+		continue
+	fi
+
+	for Dir in `find ${path_dir}  -maxdepth 1  -type d  `
+		do
+    		dir_n=${Dir##*/}
+    		if [[ $dir_n == *"ALL"* ]]; then
+
+			echo ${Dir}"/"
+			if [ ! -d ${Dir}"/commons-math3-3.5-src" ]; then
+		  		echo "No commons-math3-3.5-src in ${Dir}" >> ${file_log}
+				echo "" >> ${file_log}
+				continue
+			fi
+			array_all+=(${Dir}"/commons-math3-3.5-src/")
 		fi
+
 	done
-    #echo "making dir  ${pitest}report_pit "
-        if [  -d "${pitest}report_pit" ]; then
-     		#rm -r ${pitest}report_pit
-     		echo ""
-         fi
-    #mkdir "report_pit"
-    for D in `find ${pitest}  -maxdepth 1  -type d  `
-	do
+done
 
+# go over all the ALL_U dir
 
-	    if echo "${D}" | grep -q "it="
-        then
-                echo "" >> ${father_dir}/info.txt
-                echo "python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/" >> ${father_dir}/info.txt
-                echo "">> ${father_dir}/info.txt
-		        #echo ".....sleeping_10_sec.."
-		        #sleep 10
-                # python ${ATG}csv_PIT.py all ${D}/ ${pitest}report_pit/
+size=${#array_all[@]}
+for ((i=0;i<size;i++)); do
+	dir_i=${array_all[i]}
+	if [ ! -d ${dir_i}"/target" ]; then
+		echo "Need to compile the path no target dir ${dir_i} \n" >> ${file_log}
+		echo "" >> ${file_log}
+		continue
+	fi
+	# if pti_init is in the dir so del
+	file_pit=${dir_i}"pti_init.py"
+	if [ -f "$file_pit" ]
+	then
+		rm "$file_pit"
+	fi
+	#copy the pti_init for ATG
+	cp ${ATG}"pti_init.py" ${dir_i}
+	if [ -z "$arg_package" ]; then
+		python ${dir_i}"pti_init.py"
 
-		fi
-        done
-    cp ${path_dir}FP_budget_time.csv ${pitest}report_pit/
-    if [[  ${str_time} == *"exp"* ]]; then
-    	str_time=${str_time##*_t=}
-    	str_time=${str_time%%_*}
-    	echo"">> ${father_dir}/info.txt
-    	echo "python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${str_time}">> ${father_dir}/info.txt
-    	echo "">> ${father_dir}/info.txt
-    	#python ${ATG}csv_PIT.py fin ${pitest}report_pit/ ${pitest}report_pit/FP_budget_time.csv ${str_time}
-    fi
-    #echo ${PWD}
-    cd ".."
-    cd ".."
+	else
+		python ${dir_i}"pti_init.py" ${arg_package}
+	fi
+
 
 done
 
+echo "END !!"

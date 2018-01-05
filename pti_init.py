@@ -298,7 +298,12 @@ def transform_data(list_son):
 def fixer_class(pom_path,class_path,test_path):
     print "fix..."
 
-def rec_package_test(pom_path,class_path,test_path,full=None):
+
+def isPrefix(prefix,str_package):
+    bol = str(str_package).startswith(prefix)
+    return bol
+
+def rec_package_test(pom_path,class_path,test_path,arg=None):
     list_calss=walk(class_path)
     list_test = walk(test_path)
     if len(list_test) == 0:
@@ -314,8 +319,8 @@ def rec_package_test(pom_path,class_path,test_path,full=None):
     for key,value in dico.iteritems():
         #if not ( str(key).__contains__('org.apache.commons.math3.linear') or str(key).__contains__('org.apache.commons.math3.util') )  :
         #    continue
-        if full is not None:
-            if key in full:
+        if arg is not None:
+            if isPrefix(arg,key) is False:
                 continue
         dico_son_val= get_class_tree(r, key)
         value_target = transform_data(dico_son_val)
@@ -433,13 +438,13 @@ def main_in():
     tests_path = proj_path + 'src/test/java/org/'
     main_one_by_one(pom_path,classes_pth,tests_path)
 
-def main_func():
+def main_func(arg=None):
     proj_path= os.getcwd()+'/'
    # proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
     tests_path=proj_path+'src/test/java/org/'
-    rec_package_test(pom_path,classes_pth,tests_path)
+    rec_package_test(pom_path,classes_pth,tests_path,arg)
     #package_test(pom_path,classes_pth,tests_path)
 
 def fixer():
@@ -486,6 +491,11 @@ if __name__ == "__main__":
     args = sys.argv
     if len(args)==1:
         main_func()
+    elif len(args)==2:
+        if len(args[1])>3:
+            main_func(args[1])
+        else:
+            main_func()
     else:
         print "fixer"
         fixer()
