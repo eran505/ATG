@@ -149,6 +149,7 @@ class Cleaner:
             if bol is False:
                 if "initializationError" == it:
                     self._del_class(p)
+                    return
                 else :
                     print "[Error] cant parss in fix the test case {} , in {}".format(it, p)
                     exit()
