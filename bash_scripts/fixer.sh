@@ -73,10 +73,20 @@ for ((i=0;i<size;i++)); do
 	fi
 	#copy the pti_init for ATG
 	cp ${ATG}"pti_init.py" ${dir_i}
+
+	#crate dir for pit logs
+	if [ ! -d ${dir_i}"/target/log_pit" ]; then
+		mkdir
+	fi
+
+	#start the pit program
+	echo "starting PIT on ${dir_i}"
 	if [ -z "$arg_package" ]; then
+		cd ${dir_i}
 		python ${dir_i}"pti_init.py"
 
 	else
+		cd ${dir_i}
 		python ${dir_i}"pti_init.py" ${arg_package}
 	fi
 
