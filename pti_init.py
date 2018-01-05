@@ -303,7 +303,14 @@ def isPrefix(prefix,str_package):
     bol = str(str_package).startswith(prefix)
     return bol
 
+def log_dir(path):
+    bol = os.path.isdir(path)
+    if bol is False:
+        os.system("mkdir {}".format(path))
+
 def rec_package_test(pom_path,class_path,test_path,arg=None):
+    proj_path_log = os.getcwd()+"/target/log_pit"
+    log_dir(proj_path_log)
     list_calss=walk(class_path)
     list_test = walk(test_path)
     if len(list_test) == 0:
