@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3598241f-4dc6-461c-b6a6-b0c5eb75749f" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/budget_generation.py" afterPath="$PROJECT_DIR$/budget_generation.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/csv_PIT.py" afterPath="$PROJECT_DIR$/csv_PIT.py" />
-    </list>
+    <list default="true" id="3598241f-4dc6-461c-b6a6-b0c5eb75749f" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -84,8 +80,8 @@
       <file leaf-file-name="budget_generation.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/budget_generation.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="435" column="4" lean-forward="false" selection-start-line="435" selection-start-column="4" selection-end-line="435" selection-end-column="4" />
+            <state relative-caret-position="285">
+              <caret line="444" column="14" lean-forward="true" selection-start-line="444" selection-start-column="14" selection-end-line="444" selection-end-column="14" />
               <folding>
                 <element signature="e#0#24#0" expanded="true" />
               </folding>
@@ -593,8 +589,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/budget_generation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="435" column="4" lean-forward="false" selection-start-line="435" selection-start-column="4" selection-end-line="435" selection-end-column="4" />
+        <state relative-caret-position="285">
+          <caret line="444" column="14" lean-forward="true" selection-start-line="444" selection-start-column="14" selection-end-line="444" selection-end-column="14" />
           <folding>
             <element signature="e#0#24#0" expanded="true" />
           </folding>
