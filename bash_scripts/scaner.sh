@@ -101,7 +101,7 @@ for ((i=0;i<size;i++)); do
 	#num_dir=$(ls -1 | wc -l)
 	#echo " ${num_dir} : ${dir_i} " >> ${file_log}
 	#echo "" >> ${file_log}
-
+    echo "here"
 	for D in `find ${p_path}  -maxdepth 1  -type d  `
     do
         array_pit+=(${D})
