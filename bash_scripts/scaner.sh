@@ -85,24 +85,21 @@ size=${#array_all[@]}
 
 echo "found:${size}"
 for ((i=0;i<size;i++)); do
-    echo "i=${i}"
-    echo "dir_i:${array_all[i]}"
 	dir_i=${array_all[i]}
 	# if pti_init is in the dir so del
 	if [ ! -d ${dir_i}"target/pit-reports" ]; then
-	    echo "in_no pit ${dir_i}"
 		echo "No PIT outputs ${dir_i} " >> ${file_log}
 		echo "" >> ${file_log}
 		continue
 	fi
-	echo "pass"
 	p_path=${dir_i}"target/pit-reports"
 	#cd ${dir_i}"/target/pit-reports"
+	echo "p=${p_path}"
 	pit_ctr=$((pit_ctr+1))
 	#num_dir=$(ls -1 | wc -l)
 	#echo " ${num_dir} : ${dir_i} " >> ${file_log}
 	#echo "" >> ${file_log}
-    array_pi=()
+    array_pit=()
 	for D in `find ${p_path}  -maxdepth 1  -type d  `
     do
             array_pit+=(${D})
