@@ -495,13 +495,6 @@ def int_exp(args):
     b_klass = int(sys.argv[8])
     rel_path = os.getcwd() + '/'
     fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
-    print sum(fp_budget.values())
-    print len(fp_budget)
-    print len(fp_budget)*b_klass
-    sum_d=0
-    for x in d:
-        sum_d+=d[x][1]
-    print "d sum=",sum_d
     uni_budget = {}
     comp = ["FP","U"]
     target_list = get_all_class_v1(v_path)
