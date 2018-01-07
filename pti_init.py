@@ -323,7 +323,10 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
     javas,tests,packages = get_java_and_test(dico)
     #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
     #exit()
+    ctr = len(dico)
     for key,value in dico.iteritems():
+        print "class left: ",ctr
+        ctr-=1
         #if not ( str(key).__contains__('org.apache.commons.math3.linear') or str(key).__contains__('org.apache.commons.math3.util') )  :
         #    continue
         if arg is not None:
