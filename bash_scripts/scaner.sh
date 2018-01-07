@@ -116,7 +116,7 @@ for ((i=0;i<size;i++)); do
         else
             full_ctr=$((full_ctr+1))
     fi
-    done
+    
 
     echo "all:${cnt}, full:${full_ctr}, empty:${empty_ctr}, PATH:${path_dir}" >> ${file_log}
     echo "" >> ${file_log}
