@@ -233,10 +233,10 @@ def get_all_class_by_name(path_root,out_path=None):
         out_path = out_path + '/'
     dict_package_prefix=dict()
     walker=pit_render_test.walker(path_root)
-    classes_list = walker.walk('ALL', False, 1,False)
+    classes_list = walker.walk('ALL', False, 2,False)
     print classes_list
     for class_item in classes_list:
-        walker = pit_render_test.walker(path_root+'/'+class_item+'/commons-math3-3.5-src/target/pit-reports/')
+        walker = pit_render_test.walker(path_root+class_item+'/commons-math3-3.5-src/target/pit-reports/')
         classes_list = walker.walk('org.apache.commons.math',False)
         d = {}
         for item in classes_list:
@@ -745,7 +745,11 @@ def main_pars(arr):
             if len(arr) > 3 :
                 dico = get_all_class_by_name(  arr[2] , arr[3])
             else:
-                dico = get_all_class_by_name(arr[2])
+                walker = pit_render_test.walker(arr[2])
+                classes_list = walker.walk('t=', False, 0)
+                for pp in classes_list:
+                    if os.path.isdir(pp+"/pit_test"):
+                        dico = get_all_class_by_name(pp)
     else :
         # fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
         print "[Error] ----no args------"
@@ -787,9 +791,9 @@ if __name__ == "__main__":
     #                        {'csv':'/home/eran/Desktop/xxx/mutations_fp2.csv','mode':'FP','budget':10,"it":2},
     #                        {'csv':'/home/eran/Desktop/xxx/mutations_u1.csv','mode':'U','budget':10,"it":1},
     #                        {'csv': '/home/eran/Desktop/xxx/mutations_u2.csv', 'mode': 'U', 'budget': 10, "it": 2}])
-    #exit()
+    #exit()/home/ise/eran/new_exp/12_06_15_24_59_t=30_/pit_test/out
     arr=sys.argv
-    #arr = ['py','arg','/home/eran/Desktop/exm/']
+    arr = ['py','arg','/home/ise/eran/new_exp/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
