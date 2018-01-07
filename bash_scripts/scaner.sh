@@ -5,22 +5,13 @@ path=$1
 log_file=$2
 for D in `find ${path}  -maxdepth 1  -type d  `
 do
-
-    dir_name=${D##*/}
-    if [[ $dir_name == *"_t="* ]]; then
-
-            ##echo ${D}"/pit_test/"
-	    string=${D}
-	    array+=(${D})
-
-	fi
-
+    array_pit+=(${D})
 done
 empty_ctr=0
 full_ctr=0
-cnt=${#array[@]}
+cnt=${#array_pit[@]}
 for ((i=0;i<cnt;i++)); do
-   	path_dir=${array[i]}
+   	path_dir=${array_pit[i]}
     if [ -z "$(ls -A ${path_dir})" ]; then
         empty_ctr=$((empty_ctr+1))
     else
@@ -107,11 +98,11 @@ for ((i=0;i<size;i++)); do
 		continue
 	fi
 	p_path=${dir_i}"/target/pit-reports"
-	cd ${dir_i}"/target/pit-reports"
+	#cd ${dir_i}"/target/pit-reports"
 	pit_ctr=$((pit_ctr+1))
-	num_dir=$(ls -1 | wc -l)
-	echo " ${num_dir} : ${dir_i} " >> ${file_log}
-	echo "" >> ${file_log}
+	#num_dir=$(ls -1 | wc -l)
+	#echo " ${num_dir} : ${dir_i} " >> ${file_log}
+	#echo "" >> ${file_log}
 	print_something ${p_path} ${file_log}
 
 done
