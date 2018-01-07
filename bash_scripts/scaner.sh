@@ -85,6 +85,7 @@ size=${#array_all[@]}
 
 echo "found:${size}"
 for ((i=0;i<size;i++)); do
+    echo "i=${i}"
     echo "dir_i:${array_all[i]}"
 	dir_i=${array_all[i]}
 	# if pti_init is in the dir so del
