@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 print_something () {
+echo "in"
 path=$1
 log_file=$2
 for D in `find ${path}  -maxdepth 1  -type d  `
@@ -67,7 +68,7 @@ for ((i=0;i<cnt;i++)); do
     		dir_n=${Dir##*/}
     		if [[ $dir_n == *"ALL"* ]]; then
 
-			echo ${Dir}"/"
+			#echo ${Dir}"/"
 			if [ ! -d ${Dir}"/commons-math3-3.5-src" ]; then
 		  		echo "No commons-math3-3.5-src in ${Dir}" >> ${file_log}
 				echo "" >> ${file_log}
@@ -83,7 +84,8 @@ pit_ctr=0
 
 
 size=${#array_all[@]}
-all_ctr=${size}
+
+echo "found:${size}"
 for ((i=0;i<size;i++)); do
 	dir_i=${array_all[i]}
 	if [ ! -d ${dir_i}"/target" ]; then
@@ -106,7 +108,7 @@ for ((i=0;i<size;i++)); do
 	print_something ${p_path} ${file_log}
 
 done
-
+all_ctr=${size}
 echo " results =  ${pit_ctr} : ${all_ctr} " >> ${file_log}
 echo "" >> ${file_log}
 
