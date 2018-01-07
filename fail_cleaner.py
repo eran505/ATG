@@ -266,6 +266,7 @@ def get_all_project(path):
 if __name__ == "__main__":
 
     args = sys.argv
+    args = ['','/home/ise/eran/flaky']
     if len(args) == 2 :
         proj_arr = get_all_project(args[1])
         for p_path in proj_arr:

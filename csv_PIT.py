@@ -618,6 +618,12 @@ def insert_to_big(df,dico_class_df,budget):
 
 
 
+def find_All_dir(root_path_dir):
+    print ""
+    walker = pit_render_test.walker(root_path_dir)
+    list_ALL = walker.walk("commons-math3-3.5-src",False)
+
+
 
 
 def aggregate_time_budget(root_path):
