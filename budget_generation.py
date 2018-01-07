@@ -1,4 +1,7 @@
 import sys, os ,time,csv
+
+from copy import deepcopy
+
 import pit_render_test
 
 
@@ -57,7 +60,7 @@ def get_time_fault_prediction(path,key,value,root,upper_b,lower_b,per_class_b):
     dico = clean_dict(dico,'src\main',14,5)
     class_list = get_all_class(root,6)
     dico = match_dic(class_list,dico)
-    dico,d=boundary_budget_allocation(dico,per_class_b,upper_b,lower_b,'age-in')
+    dico,d=allocate_time_FP(dico,per_class_b,upper_b,lower_b,'age-in')  #######
     return dico,d
 
 
@@ -83,6 +86,53 @@ def boundary_budget_allocation(dico,time_per_k,upper,lower,filtering):
         d[entry] = [ d[entry] , time_b]
         dico[entry] = time_b
     return dico, d
+
+
+
+def allocate_time_FP(dico,time_per_k,upper,lower,filtering):
+    for k in dico.keys():
+        if str(k).__contains__(filtering):
+            del dico[k]
+    total_sum_predection = sum(dico.values())
+    for k in dico.keys():
+        dico[k] = dico[k] / total_sum_predection
+    size_set_classes = len(dico.keys())
+    print "dico size=",size_set_classes
+    Total = size_set_classes * time_per_k
+    print "Total=",Total
+    LB = size_set_classes * lower
+    print "LB=",LB
+    budget_time = Total - LB
+    d_fin={}
+    not_max = {}
+    for k in dico.keys():
+        d_fin[k]=[dico[k],lower]
+        not_max[k] = dico[k]
+    lower_b = lower
+    while( budget_time>0 or len(not_max.keys())==0 ):
+        left_over = budget_time
+        for entry in not_max.keys():
+            time_b = (not_max[entry] * budget_time)
+            if float(time_b) + d_fin[entry][1]   >  float(upper) :
+                time_b = upper - d_fin[entry][1]
+                d_fin[entry][1]+=time_b
+                del not_max[entry]
+                #budget_time+=lower_b
+            else:
+                d_fin[entry][1] += time_b
+            left_over = left_over - time_b
+        budget_time=left_over
+        #lower_b=0
+        total_sum_predection = sum(not_max.values())
+        if total_sum_predection == 0 :
+            break
+        for k in not_max.keys():
+            not_max[k] = not_max[k] / total_sum_predection
+    if len(dico) != len(d_fin):
+        raise Exception("in function (allocate_time_FP) the dico and d_fin is not in the same size")
+    for k in dico:
+        dico[k]=d_fin[k][1]
+    return dico,d_fin
 
 def mkdir_Os(path,name):
     name_r = str(name).replace(' ','_')
@@ -381,8 +431,8 @@ def dict_to_csv(mydict,path):
 
 def init_main():
 
-    #sys.argv=['py',"/home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
-    #      ,"evosuite-1.0.5.jar","/home/eran/programs/EVOSUITE/jar/","/home/eran/Desktop/out/",'exp','10','180','10']
+   # sys.argv=['py',"/home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
+   #       ,"evosuite-1.0.5.jar","/home/ise/eran/evosuite/jar","/home/ise/Desktop/out/",'exp','10','180','180']
     # str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
     # arr_str = str_val.split(" ")
     #sys.argv = arr_str
@@ -445,6 +495,13 @@ def int_exp(args):
     b_klass = int(sys.argv[8])
     rel_path = os.getcwd() + '/'
     fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
+    print sum(fp_budget.values())
+    print len(fp_budget)
+    print len(fp_budget)*b_klass
+    sum_d=0
+    for x in d:
+        sum_d+=d[x][1]
+    print "d sum=",sum_d
     uni_budget = {}
     comp = ["FP","U"]
     target_list = get_all_class_v1(v_path)
