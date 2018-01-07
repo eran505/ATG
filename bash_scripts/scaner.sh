@@ -110,7 +110,7 @@ for ((i=0;i<size;i++)); do
     empty_ctr=0
     full_ctr=0
     pit_size_dir=${#array_pit[@]}
-    for ((j=0;i<pit_size_dir;j++)); do
+    for ((j=0;j<pit_size_dir;j++)); do
    	path_dir=${array_pit[j]}
     if [ -z "$(ls -A ${path_dir})" ]; then
             empty_ctr=$((empty_ctr+1))
