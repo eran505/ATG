@@ -87,12 +87,8 @@ size=${#array_all[@]}
 
 echo "found:${size}"
 for ((i=0;i<size;i++)); do
+    echo "dir_i:${array_all[i]}"
 	dir_i=${array_all[i]}
-	if [ ! -d ${dir_i}"/target" ]; then
-		echo "Need to compile the path no target dir ${dir_i} " >> ${file_log}
-		echo "" >> ${file_log}
-		continue
-	fi
 	# if pti_init is in the dir so del
 	if [ ! -d ${dir_i}"/target/pit-reports" ]; then
 		echo "No PIT outputs ${dir_i} " >> ${file_log}
