@@ -101,7 +101,27 @@ for ((i=0;i<size;i++)); do
 	#num_dir=$(ls -1 | wc -l)
 	#echo " ${num_dir} : ${dir_i} " >> ${file_log}
 	#echo "" >> ${file_log}
-	print_something ${p_path} ${file_log}
+
+	for D in `find ${p_path}  -maxdepth 1  -type d  `
+    do
+        array_pit+=(${D})
+    done
+    empty_ctr=0
+    full_ctr=0
+    cnt=${#array_pit[@]}
+    for ((i=0;i<cnt;i++)); do
+   	path_dir=${array_pit[i]}
+    if [ -z "$(ls -A ${path_dir})" ]; then
+            empty_ctr=$((empty_ctr+1))
+        else
+            full_ctr=$((full_ctr+1))
+    fi
+    done
+
+    echo "all:${cnt}, full:${full_ctr}, empty:${empty_ctr}, PATH:${path_dir}" >> ${file_log}
+    echo "" >> ${file_log}
+
+
 
 done
 all_ctr=${size}
