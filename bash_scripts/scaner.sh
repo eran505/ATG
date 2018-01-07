@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
 
-print_something () {
-echo "in"
-path=$1
-log_file=$2
-for D in `find ${path}  -maxdepth 1  -type d  `
-do
-    array_pit+=(${D})
-done
-empty_ctr=0
-full_ctr=0
-cnt=${#array_pit[@]}
-for ((i=0;i<cnt;i++)); do
-   	path_dir=${array_pit[i]}
-    if [ -z "$(ls -A ${path_dir})" ]; then
-        empty_ctr=$((empty_ctr+1))
-    else
-        full_ctr=$((full_ctr+1))
-fi
-done
-
-echo "all:${cnt}, full:${full_ctr}, empty:${empty_ctr}, PATH:${path_dir}" >> ${log_file}
-echo "" >> ${log_file}
-
-}
+#print_something () {
+#echo "in"
+#path=$1
+#log_file=$2
+#for D in `find ${path}  -maxdepth 1  -type d  `
+#do
+#    array_pit+=(${D})
+#done
+#empty_ctr=0
+#full_ctr=0
+#cnt=${#array_pit[@]}
+#for ((i=0;i<cnt;i++)); do
+#   	path_dir=${array_pit[i]}
+#    if [ -z "$(ls -A ${path_dir})" ]; then
+#        empty_ctr=$((empty_ctr+1))
+#    else
+#        full_ctr=$((full_ctr+1))
+#fi
+#done
+#
+#echo "all:${cnt}, full:${full_ctr}, empty:${empty_ctr}, PATH:${path_dir}" >> ${log_file}
+#echo "" >> ${log_file}
+#
+#}
 
 
 arg_package=${1}
@@ -68,20 +68,18 @@ for ((i=0;i<cnt;i++)); do
     		dir_n=${Dir##*/}
     		if [[ $dir_n == *"ALL"* ]]; then
 
-			#echo ${Dir}"/"
-			if [ ! -d ${Dir}"/commons-math3-3.5-src" ]; then
-		  		echo "No commons-math3-3.5-src in ${Dir}" >> ${file_log}
-				echo "" >> ${file_log}
-				continue
-			fi
+			    if [ ! -d ${Dir}"/commons-math3-3.5-src" ]; then
+		  		    echo "No commons-math3-3.5-src in ${Dir}" >> ${file_log}
+				    echo "" >> ${file_log}
+				    continue
+			    fi
 			array_all+=(${Dir}"/commons-math3-3.5-src/")
-		fi
+		    fi
 
 	done
 done
 
 pit_ctr=0
-
 
 size=${#array_all[@]}
 
@@ -101,28 +99,24 @@ for ((i=0;i<size;i++)); do
 	#num_dir=$(ls -1 | wc -l)
 	#echo " ${num_dir} : ${dir_i} " >> ${file_log}
 	#echo "" >> ${file_log}
-    echo "here"
+
 	for D in `find ${p_path}  -maxdepth 1  -type d  `
     do
-        array_pit+=(${D})
+            array_pit+=(${D})
     done
     empty_ctr=0
     full_ctr=0
-    cnt=${#array_pit[@]}
-    for ((i=0;i<cnt;i++)); do
+    pit_size_dir=${#array_pit[@]}
+    for ((i=0;i<pit_size_dir;i++)); do
    	path_dir=${array_pit[i]}
     if [ -z "$(ls -A ${path_dir})" ]; then
             empty_ctr=$((empty_ctr+1))
         else
             full_ctr=$((full_ctr+1))
     fi
-    
-
+    done
     echo "all:${cnt}, full:${full_ctr}, empty:${empty_ctr}, PATH:${path_dir}" >> ${file_log}
     echo "" >> ${file_log}
-
-
-
 done
 all_ctr=${size}
 echo " results =  ${pit_ctr} : ${all_ctr} " >> ${file_log}
