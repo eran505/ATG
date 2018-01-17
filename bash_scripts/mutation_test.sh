@@ -13,6 +13,11 @@ echo "pwd="${newdir}
 
 
 python ${ATG}pit_render_test.py ${newdir}
+
+if [  -d ${newdir}"pit_test" ]; then
+	rm -r ${newdir}"pit_test"
+fi
+
 mkdir "pit_test"
 cp ${newdir}FP_budget_time.csv ${newdir}pit_test/
 for D in `find ${newdir}  -maxdepth 1  -type d  `
