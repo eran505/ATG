@@ -21,6 +21,7 @@ do
 done
 
 cnt=${#array[@]}
+echo "found: "${cnt}
 for ((i=0;i<cnt;i++)); do
 	path_dir=${array[i]}
 	cp ${ATG}bash_scripts/mutation_test.sh ${path_dir}
