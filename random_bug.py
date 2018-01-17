@@ -10,20 +10,36 @@ class bugger:
     def __init__(self, result_path , pred_path,path_out):
         self.dcit = None
         self.seq = None
+        self.col_name = ["ID,"]
         self.out = path_out
         self.result_path = result_path
         self.pred_path = pred_path
-        self.sort_list()
+        self.read_csv_FP()
         self.seed = rand.randint(1, 99)
         self.random_object = rand.seed(self.seed)
         self.init_rand()
-        self.data_freq = self.group_class()
+        #self.data_freq = self.group_class()
         self.result_data = []
+
+    def pars_csv_by_bugID(self,path):
+        df_bugs = pd.read_csv(path)
+        print list(df_bugs)
+        exit(0)
+
+    def read_csv_FP(self):
+        df_FP = pd.read_csv(self.pred_path,header=None,names=["class","probability"])
+        print list(df_FP )
+        print df_FP[:10]
+        exit(0)
+        print list(df_FP)
+
+
+
 
     def group_class(self):  #TODO: Make ID:class  -> [bugID,FP,UNI]
         csv_file = csv.reader(open(self.result_path, "rb"), delimiter=",")
         ctr =0
-        d={}
+        d_list=[]
         for row in csv_file:
             if row[1] in d :
                 arr = d[row[1]]
@@ -31,7 +47,6 @@ class bugger:
             else:
                 d[row[1]] = [{'fp':row[6],'ID':row[0] , 'uni':row[5] }]
         return d
-
 
 
     def init_rand(self):
@@ -149,9 +164,11 @@ class bugger:
 
 
 def init_main():
+    p_path = '/home/ise/Desktop/result_exp_smart_v1/fin_out/big.csv'
     print "starting.."
-    bugger_obj = bugger('/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/all.csv','/home/eran/thesis/test_gen/experiment/t30_distr/pit_res/time.csv','/home/eran/Desktop/bug30/')
-    bugger_obj.make_bugs(1000,"")
+    bugger_obj = bugger(p_path,'/home/ise/eran/repo/ATG/csv/FP_budget_time.csv','/home/eran/Desktop/')
+    bugger_obj.pars_csv_by_bugID()
+    # bugger_obj.make_bugs(1000,"")
 
 if __name__ == "__main__":
     init_main()
