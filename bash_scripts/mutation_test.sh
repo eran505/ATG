@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ATG=${1}
+ATG="/home/ise/eran/repo/ATG/"
 
 newdir=${PWD}/
 
