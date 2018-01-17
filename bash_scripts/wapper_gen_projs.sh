@@ -7,7 +7,7 @@ path_dir_root=${1}
 
 
 father_dir=${path_dir_root}
-for D in `find ${PWD}  -maxdepth 1  -type d  `
+for D in `find ${father_dir}  -maxdepth 1  -type d  `
 do
 
     dir_name=${D##*/}
