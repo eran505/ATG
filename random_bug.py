@@ -13,32 +13,54 @@ class bugger:
         self.col_name = ["ID,"]
         self.out = path_out
         self.result_path = result_path
+        self.df_FP=None
         self.pred_path = pred_path
         self.read_csv_FP()
         self.seed = rand.randint(1, 99)
         self.random_object = rand.seed(self.seed)
         self.init_rand()
+        self.df_bugs=None
         #self.data_freq = self.group_class()
         self.result_data = []
 
-    def pars_csv_by_bugID(self,path):
-        df_bugs = pd.read_csv(path)
+    def pars_csv_by_bugID(self):
+        df_bugs = pd.read_csv(self.result_path)
         print list(df_bugs)
-        exit(0)
-
+        df_bugs['class'] = df_bugs['ID'].apply(self.get_id)
+        df_bugs = df_bugs.loc[:, ~df_bugs.columns.str.contains('^Unnamed')]
+        print df_bugs.shape
+        df_bugs = df_bugs.merge(self.df_FP,on='class')
+        self.df_bugs = df_bugs
+        #df_bugs.to_csv("/home/eran/Desktop/out/tmp.csv", sep='\t')
+        print df_bugs.shape
+        print list(df_bugs)
     def read_csv_FP(self):
-        df_FP = pd.read_csv(self.pred_path,header=None,names=["class","probability"])
-        print list(df_FP )
-        print df_FP[:10]
-        exit(0)
-        print list(df_FP)
+        self.df_FP=pd.read_csv(self.pred_path,header=None,names=["class","probability"])
+
+    def bug_generator(self,draws=10,rand='FP'):
+        d_choices = self.df_FP['class'].values
+        size_d_choices  = len(d_choices)
+        if rand == 'U':
+            d_probs = np.empty(size_d_choices)
+            val = float(1)/float(size_d_choices)
+            d_probs.fill(val)
+        else:
+            d_probs = self.df_FP['probability'].values
+        res_arr =  np.random.choice(d_choices, draws, p=d_probs)
+        print res_arr
+        return res_arr
 
 
-
-
+    def get_id(self,x):
+        arr=str(x).split(',')
+        if str(arr[0]).__contains__("org"):
+            return arr[0][1:]
+        else:
+            raise Exception("no org.apache.commons.math3.X in the following {}".format(x))
     def group_class(self):  #TODO: Make ID:class  -> [bugID,FP,UNI]
         csv_file = csv.reader(open(self.result_path, "rb"), delimiter=",")
         ctr =0
+        d={}
         d_list=[]
         for row in csv_file:
             if row[1] in d :
@@ -47,6 +69,16 @@ class bugger:
             else:
                 d[row[1]] = [{'fp':row[6],'ID':row[0] , 'uni':row[5] }]
         return d
+
+    def get_bugs_DataFrame(self,arr):
+        cols = list(self.df_bugs)
+        df = pd.DataFrame(columns=cols)
+        for klass in arr:
+            df_part = self.df_bugs.loc[self.df_bugs['class'] == klass]
+           # print df_part['class']
+            size_part_df = len(df_part.index)
+            print size_part_df
+            #TODO:get on bug from the dataframe
 
 
     def init_rand(self):
@@ -164,11 +196,14 @@ class bugger:
 
 
 def init_main():
-    p_path = '/home/ise/Desktop/result_exp_smart_v1/fin_out/big.csv'
+    p_path = '/home/eran/Desktop/out/big.csv'
+    csv_fp_file = '/home/eran/thesis/repo/ATG/csv/FP_budget_time.csv'
+    out_path ='/home/eran/Desktop/out/'
     print "starting.."
-    bugger_obj = bugger(p_path,'/home/ise/eran/repo/ATG/csv/FP_budget_time.csv','/home/eran/Desktop/')
+    bugger_obj = bugger(p_path,csv_fp_file,out_path)
     bugger_obj.pars_csv_by_bugID()
-    # bugger_obj.make_bugs(1000,"")
+    arr= bugger_obj.bug_generator()
+    bugger_obj.get_bugs_DataFrame(arr)
 
 if __name__ == "__main__":
     init_main()
