@@ -70,15 +70,27 @@ class bugger:
                 d[row[1]] = [{'fp':row[6],'ID':row[0] , 'uni':row[5] }]
         return d
 
-    def get_bugs_DataFrame(self,arr):
+    def get_bugs_DataFrame(self,arr,draws=1):
         cols = list(self.df_bugs)
+
         df = pd.DataFrame(columns=cols)
         for klass in arr:
             df_part = self.df_bugs.loc[self.df_bugs['class'] == klass]
            # print df_part['class']
             size_part_df = len(df_part.index)
+            if size_part_df == 0 :
+                print "class not foud {}".format(klass)
+                continue
+            arr_elements = df_part['ID'].values
             print size_part_df
-            #TODO:get on bug from the dataframe
+            np_prob= np.empty(size_part_df)
+            np_prob.fill(float(1)/float(size_part_df))
+            res = np.random.choice(arr_elements, draws, p=np_prob)
+            for x  in res:
+                tmp_df = df_part.loc[df_part['ID'] == x]
+                df = df.append(tmp_df)
+                #print df
+        df.to_csv(self.out+'bugs.csv')
 
 
     def init_rand(self):
@@ -199,11 +211,17 @@ def init_main():
     p_path = '/home/eran/Desktop/out/big.csv'
     csv_fp_file = '/home/eran/thesis/repo/ATG/csv/FP_budget_time.csv'
     out_path ='/home/eran/Desktop/out/'
+
+    p_path = '/home/ise/Desktop/result_exp_smart_v1/fin_out/big.csv'
+    out_path = '/home/ise/Desktop/out/'
+    csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
+
+
     print "starting.."
     bugger_obj = bugger(p_path,csv_fp_file,out_path)
     bugger_obj.pars_csv_by_bugID()
-    arr= bugger_obj.bug_generator()
-    bugger_obj.get_bugs_DataFrame(arr)
+    arr= bugger_obj.bug_generator(2000,'U')
+    bugger_obj.get_bugs_DataFrame(arr,1)
 
 if __name__ == "__main__":
     init_main()

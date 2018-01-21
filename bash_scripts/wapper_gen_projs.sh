@@ -15,7 +15,7 @@ do
 
             ##echo ${D}"/pit_test/"
 	    string=${D}
-	    array+=(${D}"/pit_test/")
+	    array+=(${D})
 	fi
 
 done
