@@ -70,7 +70,7 @@ class bugger:
                 d[row[1]] = [{'fp':row[6],'ID':row[0] , 'uni':row[5] }]
         return d
 
-    def get_bugs_DataFrame(self,arr,draws=1):
+    def get_bugs_DataFrame(self,arr,draws=1,char=''):
         cols = list(self.df_bugs)
 
         df = pd.DataFrame(columns=cols)
@@ -90,8 +90,42 @@ class bugger:
                 tmp_df = df_part.loc[df_part['ID'] == x]
                 df = df.append(tmp_df)
                 #print df
-        df.to_csv(self.out+'bugs.csv')
+        self.get_plot(df,char)
 
+        out_str = "{}bugs_seed_{}_{}.csv".format(self.out,self.seed,char)
+        df.to_csv(out_str)
+
+    def get_plot(self,df,ch):
+        list_val = list(df)
+        list_val_U = [x for x in list_val if str(x).__contains__('_U')]
+        list_val_FP = [x for x in list_val if str(x).__contains__('_FP')]
+        d=[]
+        time_u = []
+        time_fp = []
+        for x in list_val_U:
+            time_val = str(x).split('_')[0]
+            time_u.append(time_val)
+
+        for x in list_val_FP:
+            time_val = str(x).split('_')[0]
+            time_fp.append(time_val)
+
+        all_time = time_u + time_fp
+        all_time = list(set(all_time))
+
+        for t in all_time:
+            val_u = -1.0
+            val_fp = -1.0
+            for col in list_val_U :
+                if str(col).__contains__(t):
+                    val_u = df[col].mean()
+            for col_i in list_val_FP :
+                if str(col_i).__contains__(t):
+                    val_fp = df[col_i].mean()
+            d.append({'time':t, 'FP':val_fp , 'U':val_u})
+        df_finall = pd.DataFrame(d)
+        #df_finall.sort(['time'], inplace=True)
+        df_finall.to_csv(self.out+'seed_{}_res_fin_{}.csv'.format(self.seed,ch))
 
     def init_rand(self):
         self.random_object = rand
@@ -220,8 +254,13 @@ def init_main():
     print "starting.."
     bugger_obj = bugger(p_path,csv_fp_file,out_path)
     bugger_obj.pars_csv_by_bugID()
-    arr= bugger_obj.bug_generator(2000,'U')
-    bugger_obj.get_bugs_DataFrame(arr,1)
+    arr= bugger_obj.bug_generator(5000,'FP')
+    bugger_obj.get_bugs_DataFrame(arr,1,'FP')
+
+    #bugger_obj = bugger(p_path,csv_fp_file,out_path)
+    #bugger_obj.pars_csv_by_bugID()
+    #arr= bugger_obj.bug_generator(5000,'U')
+    #bugger_obj.get_bugs_DataFrame(arr,1,'U')
 
 if __name__ == "__main__":
     init_main()

@@ -103,7 +103,28 @@ def _data_df(list_data,time=''):
 #def del_error_files(path_err):
 #    os.system('rm -r '+path_err)
 
-def merge_df(list_df,bol=True):
+def merge_df(list_df,class_name,bol=True):
+
+    #checking if all the row in the same size ::::
+    arr_size=[]
+    max=0
+    strsize=''
+    for item_df in list_df:
+        x=len(item_df)
+        if x>max:
+            max = x
+        arr_size.append(x)
+        strsize=strsize+"| {} |".format(x)
+    acc = max*len(arr_size)
+    for s in arr_size:
+        acc= acc -s
+    if acc != 0 :
+        print ""
+        with open("/home/ise/Desktop/err.txt", "a") as myfile:
+            myfile.write(class_name+" => "+strsize)
+            myfile.write('\n'*3)
+    ####################33
+
     for df in list_df:
         df.drop_duplicates(keep=False,inplace=True)
     df_all = list_df[0]
@@ -200,8 +221,12 @@ def get_data_df_by_name(list_data):
     df_list=[]
     result = ""
     error_dir=0
+
     names_list=["class","method","line"]
     for item in list_data:
+        name_class = item['name']
+        if str(item['csv']).__contains__('FastMathCalc'):
+            print ""
         if item['csv'] is None:
             continue
         csvs = item['csv']
@@ -215,9 +240,9 @@ def get_data_df_by_name(list_data):
                 continue
             print "df_size = ",df.shape
             df_list.append(df)
-            print 'li: ',list(df)
+            #print 'li: ',list(df)
     if len(df_list) > 0:
-        result = merge_df(df_list,False)
+        result = merge_df(df_list,name_class,False)
     else:
         result =None
     return result
@@ -237,14 +262,20 @@ def get_all_class_by_name(path_root,out_path=None):
     print classes_list
     for class_item in classes_list:
         walker = pit_render_test.walker(path_root+class_item+'/commons-math3-3.5-src/target/pit-reports/')
+        print path_root+class_item+'/commons-math3-3.5-src/target/pit-reports/'
         classes_list = walker.walk('org.apache.commons.math',False)
         d = {}
+        ctr_empty = 0
         for item in classes_list:
+            if str(item).__contains__('FastMathCalc'):
+                print ""
             name = str(item).split('/')[-1]
             if os.path.exists(item+'/mutations.csv'):
                 d[name]=item+'/mutations.csv'
             else:
+                ctr_empty = ctr_empty + 1
                 d[name]=None
+        print "empty:=",ctr_empty
         dict_package_prefix[class_item] = d
     dico = merge_dict_by_class(dict_package_prefix)
     res_dataframe={}
@@ -798,6 +829,9 @@ if __name__ == "__main__":
     #                        {'csv':'/home/eran/Desktop/xxx/mutations_u1.csv','mode':'U','budget':10,"it":1},
     #                        {'csv': '/home/eran/Desktop/xxx/mutations_u2.csv', 'mode': 'U', 'budget': 10, "it": 2}])
     #exit()/home/ise/eran/new_exp/12_06_15_24_59_t=30_/pit_test/out
+
+    get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
+    exit()
     arr=sys.argv
     arr = ['py','arg','/home/ise/eran/new_exp/']
     if len(arr) == 2:
