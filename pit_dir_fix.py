@@ -100,5 +100,5 @@ if __name__ == "__main__":
     #pp_path = '/home/ise/Desktop/test_50/pit_test/ALL_FP__t=50_it=1/commons-math3-3.5-src/target/pit-reports/'
     #get_all_bugs_dir(pp_path)
     args = sys.argv
-    args = ["","/home/ise/Desktop/new_exp"]
+  #  args = ["","/home/ise/Desktop/new_exp"]
     get_all_pit_dir_exp(args[1])
