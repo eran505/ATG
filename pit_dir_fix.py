@@ -2,7 +2,7 @@ from pit_render_test import walker
 import os,csv
 import shutil
 import pickle
-
+import sys
 
 
 def get_all_bugs_dir(pit_dir_path):
@@ -27,8 +27,8 @@ def get_all_bugs_dir(pit_dir_path):
         else:
             empty_dir.append([dir,name_class_dir])
     fix_error_list(bugs_dir,script_py,'bug_dir')
-    fix_error_list(empty_csv, script_py,'empty_csv')
-    fix_error_list(empty_dir, script_py,'empty_dir')
+   # fix_error_list(empty_csv, script_py,'empty_csv')
+   # fix_error_list(empty_dir, script_py,'empty_dir')
 
 
 def extract_script(p):
@@ -91,11 +91,14 @@ def is_empty_dir(path):
 
 def get_all_pit_dir_exp(root_exp):
     obj = walker(root=root_exp)
-    all_pp = obj.walk('/commons-math3-3.5-src/target/pit-reports',False)
+    all_pp = obj.walk('pit-reports',False)
     for p in all_pp:
         get_all_bugs_dir(p)
 
 
 if __name__ == "__main__":
-    pp_path = '/home/ise/Desktop/test_50/pit_test/ALL_FP__t=50_it=1/commons-math3-3.5-src/target/pit-reports/'
-    get_all_bugs_dir(pp_path)
+    #pp_path = '/home/ise/Desktop/test_50/pit_test/ALL_FP__t=50_it=1/commons-math3-3.5-src/target/pit-reports/'
+    #get_all_bugs_dir(pp_path)
+    args = sys.argv
+    args = ["","/home/ise/Desktop/new_exp"]
+    get_all_pit_dir_exp(args[1])
