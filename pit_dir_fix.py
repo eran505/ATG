@@ -3,6 +3,7 @@ import os,csv
 import shutil
 import pickle
 import sys
+from time import gmtime, strftime
 
 
 def get_all_bugs_dir(pit_dir_path):
@@ -54,12 +55,15 @@ def fix_error_list(list_err_dir,root_dir,name_file):
 def log_to_dir(root_path,li,name_file):
     if os.path.isdir(root_path+'/logs') is False:
         os.mkdir(root_path+'/logs')
-    with open(root_path+"/logs/{}.txt".format(name_file), "w") as output:
+    with open(root_path+"/logs/{}_{}.txt".format(name_file,get_date()), "w") as output:
         output.write(str(li))
-    with open(root_path+"/logs/{}_object.txt".format(name_file), 'wb') as fp:
+    with open(root_path+"/logs/{}_object_{}.txt".format(name_file,get_date()), 'wb') as fp:
         pickle.dump(li, fp)
 
 
+def get_date():
+    d_date = strftime("%m_%d_%H_%M", gmtime())  ##"%Y-%m-%d %H:%M:%S"
+    return str(d_date)
 
 def del_dir(path):
     shutil.rmtree(path)
@@ -95,7 +99,29 @@ def get_all_pit_dir_exp(root_exp):
         get_all_bugs_dir(p)
 
 
+import pandas as pd
+def tmper():
+    p = '/home/ise/Desktop/big.csv'
+    df = pd.read_csv(p)
+    x = list(df)
+    x = x [1:-1]
+    for col in x:
+        size = float(len(df[col]))
+        is_empty = float(df[col].isnull().sum())
+        precentage = is_empty/size
+        full = float(df[col].count())
+        p_full = (full/size)*100
+        precentage_empty= precentage*100
+        print "name: {}".format(col)
+        print "empty: ", precentage_empty
+        print "full: ",p_full
+        b = p_full+precentage_empty
+        print "both",b
+        print "-"*27
+    exit()
+
 if __name__ == "__main__":
+    #tmper()
     #pp_path = '/home/ise/Desktop/test_50/pit_test/ALL_FP__t=50_it=1/commons-math3-3.5-src/target/pit-reports/'
     #get_all_bugs_dir(pp_path)
     args = sys.argv
