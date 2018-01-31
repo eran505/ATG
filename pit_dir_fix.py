@@ -27,9 +27,8 @@ def get_all_bugs_dir(pit_dir_path):
         else:
             empty_dir.append([dir,name_class_dir])
     fix_error_list(bugs_dir,script_py,'bug_dir')
-   # fix_error_list(empty_csv, script_py,'empty_csv')
-   # fix_error_list(empty_dir, script_py,'empty_dir')
-
+    fix_error_list(empty_csv, script_py,'empty_csv')
+    fix_error_list(empty_dir, script_py,'empty_dir')
 
 def extract_script(p):
     arr = str(p).split('/')

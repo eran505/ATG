@@ -830,8 +830,8 @@ if __name__ == "__main__":
     #                        {'csv': '/home/eran/Desktop/xxx/mutations_u2.csv', 'mode': 'U', 'budget': 10, "it": 2}])
     #exit()/home/ise/eran/new_exp/12_06_15_24_59_t=30_/pit_test/out
 
-    get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
-    exit()
+    #get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
+    #exit()
     arr=sys.argv
     arr = ['py','arg','/home/ise/eran/new_exp/']
     if len(arr) == 2:
