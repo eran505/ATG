@@ -120,9 +120,9 @@ def merge_df(list_df,class_name,bol=True):
         acc= acc -s
     if acc != 0 :
         print ""
-        with open("/home/ise/Desktop/err.txt", "a") as myfile:
+        with open("/home/ise/err.txt", "a") as myfile:
             myfile.write(class_name+" => "+strsize)
-            myfile.write('\n'*3)
+            myfile.write('\n'*1)
     ####################33
 
     for df in list_df:
