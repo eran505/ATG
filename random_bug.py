@@ -246,16 +246,16 @@ def init_main():
     csv_fp_file = '/home/eran/thesis/repo/ATG/csv/FP_budget_time.csv'
     out_path ='/home/eran/Desktop/out/'
 
-    p_path = '/home/ise/Desktop/result_exp_smart_v1/fin_out/big.csv'
-    out_path = '/home/ise/Desktop/out/'
+    p_path = '/home/ise/Desktop/smart_out/big.csv'
+    out_path = '/home/ise/Desktop/smart_out/'
     csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
 
 
     print "starting.."
     bugger_obj = bugger(p_path,csv_fp_file,out_path)
     bugger_obj.pars_csv_by_bugID()
-    arr= bugger_obj.bug_generator(5000,'FP')
-    bugger_obj.get_bugs_DataFrame(arr,1,'FP')
+    arr= bugger_obj.bug_generator(5000,'U')
+    bugger_obj.get_bugs_DataFrame(arr,1,'U')
 
     #bugger_obj = bugger(p_path,csv_fp_file,out_path)
     #bugger_obj.pars_csv_by_bugID()
