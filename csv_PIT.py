@@ -833,7 +833,7 @@ if __name__ == "__main__":
     #get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
     #exit()
     arr=sys.argv
-    arr = ['py','arg','/home/ise/eran/new_exp/']
+    #arr = ['py','arg','/home/ise/eran/new_exp/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
