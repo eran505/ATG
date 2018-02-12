@@ -224,7 +224,7 @@ def get_all_class(root,end) :
 
 def get_all_command(budget_time,seed,mem=1000):
     commands=[]
-    search = int(budget_time)/2
+    search = int(budget_time)
     const_factor = 5
     half_budget =  int(budget_time)/2
     x_budget = half_budget/const_factor
@@ -240,8 +240,9 @@ def get_all_command(budget_time,seed,mem=1000):
     commands.append("-Dshow_progress=false")
     commands.append("-Dtest_comments=false")
     commands.append("-Dconfiguration_id=%s" %seed)
+    #commands.append("-Dsandbox=false") #TODO:???? (Execute tests in a sandbox environment)
 
-    return " ".join(str(i) for i in commands )
+    return " ".join(str(i) for i in commands)
 
 
     commands.append("-Dreuse_leftover_time=true")
@@ -436,10 +437,11 @@ def init_main():
 
    # sys.argv=['py',"/home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/"  #fraction #distribution
    #       ,"evosuite-1.0.5.jar","/home/ise/eran/evosuite/jar","/home/ise/Desktop/out/",'exp','10','180','180']
-    # str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
-    # arr_str = str_val.split(" ")
+    #str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
+    #arr_str = str_val.split(" ")
     #sys.argv = arr_str
-    #string_command = 'py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/eran/exp_little/02_12_13_07_52_t=10_/ exp 0 300 10'
+   # string_command = '/home/ise/eran/repo/ATG/budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/eran/exp_little/02_12_15_52_36_t=2_/ exp 1 300 1'
+    #string_command = 'py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/eran/exp_little/02_12_13_07_52_t=10_/ U 1 300 10'
     #string_command_arr = string_command.split(' ')
     #sys.argv = string_command_arr   #TODO: remove it !!!!!!
     if len(sys.argv) < 3 :
@@ -502,10 +504,11 @@ def int_exp(args):
     rel_path = os.getcwd() + '/'
     fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
     uni_budget = {}
-    comp = ["FP","U"]
+    #comp = ["FP","U"] TODO: Origanl
+    comp = ["U"]
     target_list = get_all_class_v1(v_path)
     dict_to_csv(d, v_dis_path)
-    for i in range(2):
+    for i in range(3): #TODO : change it back to two (2)
         seed = time.strftime('%s')[-5:]
         for parm in comp:
             localtime = time.asctime(time.localtime(time.time()))
@@ -620,7 +623,6 @@ def get_bug_object(bug_obj):
 
 
 if __name__ == "__main__":
-
     init_main()
 
 
