@@ -22,7 +22,17 @@ class bugger:
         self.df_bugs=None
         #self.data_freq = self.group_class()
         self.result_data = []
-
+        self.err_not_found= {}
+    def touch_file(self,path_out,total,ch):
+        with open('{}err_not_found_{}.txt'.format(path_out,ch), 'wb') as fp:
+            summ=0
+            for k, v in self.err_not_found.items():
+                fp.write(str(k) + ' >>> ' + str(v) + '\n\n')
+                summ+=v
+            fp.write("sum_not found = {}".format(summ) + '\n\n')
+            fp.write("total= {}".format(total) + '\n\n')
+            fp.write("parentage = {}".format(float(summ)/float(total)) + '\n\n')
+            fp.close()
     def pars_csv_by_bugID(self):
         df_bugs = pd.read_csv(self.result_path)
         print list(df_bugs)
@@ -70,7 +80,7 @@ class bugger:
                 d[row[1]] = [{'fp':row[6],'ID':row[0] , 'uni':row[5] }]
         return d
 
-    def get_bugs_DataFrame(self,arr,draws=1,char=''):
+    def get_bugs_DataFrame(self,arr,draws=1,char='',tot=0):
         cols = list(self.df_bugs)
 
         df = pd.DataFrame(columns=cols)
@@ -80,6 +90,10 @@ class bugger:
             size_part_df = len(df_part.index)
             if size_part_df == 0 :
                 print "class not foud {}".format(klass)
+                if klass in self.err_not_found:
+                    self.err_not_found[klass] +=1
+                else:
+                    self.err_not_found[klass] = 1
                 continue
             arr_elements = df_part['ID'].values
             print size_part_df
@@ -94,6 +108,8 @@ class bugger:
 
         out_str = "{}bugs_seed_{}_{}.csv".format(self.out,self.seed,char)
         df.to_csv(out_str)
+
+        self.touch_file(self.out,tot,char)
 
     def get_plot(self,df,ch):
         list_val = list(df)
@@ -242,20 +258,22 @@ class bugger:
 
 
 def init_main():
-    p_path = '/home/eran/Desktop/out/big.csv'
-    csv_fp_file = '/home/eran/thesis/repo/ATG/csv/FP_budget_time.csv'
-    out_path ='/home/eran/Desktop/out/'
-
-    p_path = '/home/ise/Desktop/smart_out/big.csv'
-    out_path = '/home/ise/Desktop/smart_out/'
+    p_path = '/home/ise/Desktop/map_out/v1/big.csv'
+    out_path = '/home/ise/Desktop/map_out/v1/bug/'
     csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
+
+    #p_path = '/home/ise/Desktop/smart_out/v1/big.csv'
+    #out_path = '/home/ise/Desktop/smart_out/v1/bug/'
+    #csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
 
 
     print "starting.."
+    num=20000
+    mod = 'FP'
     bugger_obj = bugger(p_path,csv_fp_file,out_path)
     bugger_obj.pars_csv_by_bugID()
-    arr= bugger_obj.bug_generator(5000,'U')
-    bugger_obj.get_bugs_DataFrame(arr,1,'U')
+    arr= bugger_obj.bug_generator(num,mod)
+    bugger_obj.get_bugs_DataFrame(arr,1,mod,num)
 
     #bugger_obj = bugger(p_path,csv_fp_file,out_path)
     #bugger_obj.pars_csv_by_bugID()

@@ -410,12 +410,15 @@ Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals
                 time_budget = int(round(value_time))
             else:
                 time_budget= lower_b
+                print "[Warning] the {} did not get any budget time in the FP mode".format(test)
         all_time = get_all_command(time_budget,seed)
         all_p=all_time +" "+ all_p
         command = evo_string + " -class " +test+" -projectCP "+pre+criterion+all_p
         print (command)
         all_command = all_command +'\n'*2 + command
-        os.system(command)
+        file_name_class = str(test)
+        str_log = "{} >> {}log_evo/{}.txt 2>&1".format(command,dis_path,file_name_class)
+        os.system(str_log)
     if os.path.exists(dis_path + 'statistics.csv'):
         remove_dot_csv(dis_path + 'statistics.csv')
     text_file = open(dis_path + "command.txt", "w")
@@ -436,6 +439,9 @@ def init_main():
     # str_val = "py /home/eranhe/eran/math/commons-math3-3.5-src/src/main/java/org/apache/commons/math3/ml/distance evosuite-1.0.5.jar /home/eranhe/eran/evosuite/jar/ /home/eran/Desktop/ exp 30 180 50"
     # arr_str = str_val.split(" ")
     #sys.argv = arr_str
+    #string_command = 'py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/fraction/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/eran/exp_little/02_12_13_07_52_t=10_/ exp 0 300 10'
+    #string_command_arr = string_command.split(' ')
+    #sys.argv = string_command_arr   #TODO: remove it !!!!!!
     if len(sys.argv) < 3 :
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
         exit(1)
@@ -507,6 +513,11 @@ def int_exp(args):
             full_dis = mkdir_Os(v_dis_path, dir_name )
             if full_dis == 'null':
                 print('cant make dir')
+                exit(1)
+            #make a log dir
+            is_log = mkdir_Os(full_dis, 'log_evo' )
+            if is_log == 'null':
+                print('cant make dir log')
                 exit(1)
             if str(parm)== 'FP':
                 single_call_EvoSuite(v_evo_name, v_evo_path, target_list, fp_budget, full_dis,lower_b,seed,b_klass)
@@ -609,10 +620,8 @@ def get_bug_object(bug_obj):
 
 
 if __name__ == "__main__":
+
     init_main()
-
-
-
 
 
 
