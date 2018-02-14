@@ -28,9 +28,6 @@ cur_dir=${PWD}/
 echo "pwd = "${cur_dir}
 #string_dir="ALL_"${name_arg}
 
-ATG="/home/eran/thesis/repo/ATG/"
-Mathjar="/home/eran/thesis/zips/commons-math3-3.5-src.tar.gz"
-
 if [[ $cur_dir == *"ise"* ]]; then
     ATG="/home/ise/eran/repo/ATG/"
     Mathjar="/home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz"
@@ -49,6 +46,6 @@ cp -ar ${ATG}pti_init.py ${relative_path}
 cd ${relative_path}
 mvn -fn install
 mkdir target/log_pit/
-python pti_init.py
+#python pti_init.py
 
 echo "done"

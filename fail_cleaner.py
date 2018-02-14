@@ -13,35 +13,74 @@ class Cleaner:
         self.clean_error = Clean_Error
         self.test_dir = test_out
         self.const_src_test = "src/test/java/"
+        self.log_unexpected = ""
+        self.file_unexpected =""
+        self.logs = ''
+        self.max = 4
+
+    def mkdir_logs(self):
+
+        dir_path = ''
+        if self.mvn_path[-1] == '/':
+            dir_path=self.mvn_path+"logS/"
+        else:
+            dir_path = self.mvn_path + "/logS/"
+        if os.path.isdir(dir_path):
+            self.logs = dir_path
+        else:
+            os.system("mkdir {}".format(dir_path))
+            self.logs = dir_path
+        if os.path.isdir(dir_path+"unexpected/"):
+            self.log_unexpected = dir_path+"unexpected/"
+        else:
+            os.system("mkdir {}".format(dir_path+"unexpected/"))
+            self.log_unexpected = dir_path+"unexpected/"
+        self.file_unexpected = "unexpected_{}.txt".format(self.get_time())
+        os.system("touch {}{}".format(self.log_unexpected,self.file_unexpected))
 
 
+    def get_time(self):
+        localtime = time.asctime(time.localtime(time.time()))
+        localtime_arr = str(localtime).split()
+        localtime_arr = localtime_arr[1:]
+        localtime = "_".join(localtime_arr)
+        localtime = str(localtime).replace(':',"")
+        print localtime
+        return str(localtime)
 
     def fit(self):
-        localtime = time.asctime(time.localtime(time.time()))
-        localtime_str = str(localtime)
+        self.mkdir_logs()
         print "*"*70 + "New" + "*"*70
         print "mvn_path = {}".format(self.mvn_path)
-        arr = self.get_outputs_test(True)
-        res = []
-        if arr is None:
-            print "no path found arr in function fit"
-            return
-        set_arr =set(arr)
-        print "set_len:",len(set_arr)
-        print "arr_len:",len(arr)
-        arr = list(set_arr)
-        for xml in arr :
-            f,e,all = self.pars_xml(xml)
-            res += all
-        text_file = open(self.mvn_path+"clear_{0}_.txt".format(localtime_str), "w")
-        for item in res:
-            text_file.write("%s\n" % item)
-        text_file.close()
-        print "mvn clean test "
-        os.chdir(self.mvn_path)
-        os.system("mvn clean test >> out_test.txt  2>&1 ")
-
-
+        for i in range(self.max):
+            print "mvn clean test "
+            os.chdir(self.mvn_path)
+            command = "mvn clean test >> {}out_test_{}.txt  2>&1 ".format(self.logs,self.get_time())
+            print command
+            os.system(command)
+            arr = self.get_outputs_test(False)
+            res = []
+            if arr is None:
+                print "no path found arr in function fit"
+                return
+            set_arr =set(arr)
+            print "set_len:",len(set_arr)
+            print "arr_len:",len(arr)
+            arr = list(set_arr)
+            for xml in arr :
+                f,e,all = self.pars_xml(xml)
+                res += all
+            text_file = open(self.logs+"clear_{0}_.txt".format(self.get_time()), "w")
+            if len(res) == 0 :
+                text_file.write("%s\n" % "{}")
+                return
+            for item in res:
+                text_file.write("%s\n" % item)
+            text_file.close()
+            if i == self.max-1:
+                text_file = open(self.logs + "BUG_{0}_.txt".format(self.get_time()), "w")
+                text_file.write("%s\n" % "BUG")
+                text_file.close()
 
 
     def mod_path(self,path):
@@ -89,7 +128,8 @@ class Cleaner:
         err={}
         fail={}
         all = []
-
+        if str(path_file).__contains__('mbeddedRungeKuttaIntegrator'):
+            print ""
         root_node = xml.etree.ElementTree.parse(path_file).getroot()
         val,bol = self.intTryParse(root_node.attrib['errors'])
         if bol is False:
@@ -139,6 +179,12 @@ class Cleaner:
                 print "[Error] the file: {} is not exists in the filesystem".format(scaff_path)
             exit(-1)
 
+    def unexpected_del(self,p):
+        with open('{}{}'.format(self.log_unexpected,self.file_unexpected), 'a') as f:
+            f.write("file={} date={}\n".format(p,self.get_time()))
+        self._del_class(p)
+
+
     def _fix_del(self,p,lis_del):
         list_to_remove=[]
         ctr = 0
@@ -151,8 +197,10 @@ class Cleaner:
                     self._del_class(p)
                     return
                 else :
+
                     print "[Error] cant parss in fix the test case {} , in {}".format(it, p)
-                    exit()
+                    self.unexpected_del(p)
+                    return
             to_del.append(val)
         size = 0
         counter=-1
@@ -265,8 +313,8 @@ def get_all_project(path):
 
 if __name__ == "__main__":
 
+#    args = sys.argv
     args = sys.argv
-    args = ['','/home/ise/eran/flaky']
     if len(args) == 2 :
         proj_arr = get_all_project(args[1])
         for p_path in proj_arr:
