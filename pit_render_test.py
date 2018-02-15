@@ -80,7 +80,7 @@ def fix_bug_tests(root):
         text_file.close()
     print "done !"
 
-def path_to_package_v11(first,path,cut):
+def path_to_package(first,path,cut):
     arr=[]
     dim=0
     while(path.find(first,dim) != -1):
