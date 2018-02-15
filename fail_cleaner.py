@@ -303,7 +303,6 @@ class Cleaner:
                     input = item['bug']
                 self._fix_del(p,input)
 
-
 import sys
 
 def get_all_project(path):

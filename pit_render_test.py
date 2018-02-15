@@ -80,6 +80,17 @@ def fix_bug_tests(root):
         text_file.close()
     print "done !"
 
+def path_to_package_v11(first,path,cut):
+    arr=[]
+    dim=0
+    while(path.find(first,dim) != -1):
+        arr.append(path.find(first,dim))
+        dim = path.find(first,dim) + len(first)
+    if len(arr) != 1 :
+        raise Exception('confilcet in path to package :' ,path, "with the key:",first  )
+    packa = path[arr[0]:]
+    packa =str(packa).replace("/",'.')
+    return  packa[:cut]
 
 def main(sys):
     if len(sys.argv) > 1 :
