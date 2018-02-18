@@ -119,12 +119,16 @@ def time_budget_analysis(path_root):
         os.system("mkdir {}".format(p_path+"stat/"))
     log_path = "{}stat/".format(p_path)
     for i_path in res_scanner:
+        if str(i_path).__contains__("ALL_U") is False:
+            continue
         name_i = get_name_path(i_path,-2)
         javas_path="{}/src/main/java/org/".format(i_path)
         classes_path = "{}/target/classes/org/".format(i_path)
         tests_path = "{}/src/test/java/org/".format(i_path)
         df_i = missing_class_gen(root_class=classes_path, root_test=tests_path, java_src=javas_path,log=log_path,name=name_i)
         list_d.append(df_i)
+    if len(list_d) == 0:
+        return {}
     res = merge_df(list_d,log_path)
     return res
 
@@ -192,7 +196,7 @@ def get_name_path(v_path,index):
 import sys
 if __name__ == "__main__":
     args = sys.argv
-    #func_start(args[1])
-    func_start('/home/ise/eran/exp_little/')
+    func_start(args[1])
+   # func_start('/home/ise/eran/exp_little/')
 
 
