@@ -101,7 +101,7 @@ def get_all_pit_dir_exp(root_exp):
 
 import pandas as pd
 def tmper():
-    p = '/home/ise/Desktop/map_out/v1/big.csv'
+    p = '/home/ise/eran/exp_little/fin_out/big.csv'
     df = pd.read_csv(p)
     x = list(df)
     x = x [1:-1]

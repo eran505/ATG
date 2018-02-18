@@ -162,6 +162,8 @@ def merge_df(list_d,log_path_dir):
         d_big[entry]['var'] = np.var(arr)
         d_big[entry]['mean'] = np.mean(arr)
     df = pd.DataFrame(d_big.values())
+    good_bye_list = ['arr']
+    df.drop(good_bye_list, axis=1, inplace=True)
     df.to_csv("{}FinStat_Size_{}_.csv".format(log_path_dir,size))
     return d_big
 
@@ -173,8 +175,10 @@ def get_name_path(v_path,index):
     arr = str(v_path).split('/')
     return arr[index]
 
-
+import sys
 if __name__ == "__main__":
-    func_start('/home/ise/eran/exp_little/')
+    args = sys.argv
+    func_start(args[1])
+    #func_start('/home/ise/eran/exp_little/')
 
 

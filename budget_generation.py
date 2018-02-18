@@ -504,8 +504,8 @@ def int_exp(args):
     rel_path = os.getcwd() + '/'
     fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
     uni_budget = {}
-    #comp = ["FP","U"] TODO: Origanl
-    comp = ["U"]
+    comp = ["FP","U"]
+    #comp = ["U"]
     target_list = get_all_class_v1(v_path)
     dict_to_csv(d, v_dis_path)
     for i in range(3): #TODO : change it back to two (2)
