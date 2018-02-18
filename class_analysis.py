@@ -101,10 +101,14 @@ def look_at_test(classes,tests,d):
 
 def func_start(main_root):
     scan_obj = pt.walk(main_root,"t=",False,0)
+    li=[]
     for x in scan_obj:
         print x
-        time_budget_analysis(x)
-
+        li.append(time_budget_analysis(x))
+    df = pd.DataFrame(li)
+    if main_root[-1] !='/':
+        main_root = main_root+'/'
+    df.to_csv(main_root+"class_analysis.csv")
 def time_budget_analysis(path_root):
     list_d = []
     res_scanner = pt.walk(path_root, "commons-math3-3.5-src", False)
@@ -121,7 +125,8 @@ def time_budget_analysis(path_root):
         tests_path = "{}/src/test/java/org/".format(i_path)
         df_i = missing_class_gen(root_class=classes_path, root_test=tests_path, java_src=javas_path,log=log_path,name=name_i)
         list_d.append(df_i)
-    merge_df(list_d,log_path)
+    res = merge_df(list_d,log_path)
+    return res
 
 
 
@@ -162,14 +167,23 @@ def merge_df(list_d,log_path_dir):
         d_big[entry]['var'] = np.var(arr)
         d_big[entry]['mean'] = np.mean(arr)
     df = pd.DataFrame(d_big.values())
+    df['empty_Avg_OutOfGenerated'] = df['empty_test']/df['test']
+    df['no_test_Avg'] = df['no_test']/(df['test']+df['no_test'])
     good_bye_list = ['arr']
     df.drop(good_bye_list, axis=1, inplace=True)
     df.to_csv("{}FinStat_Size_{}_.csv".format(log_path_dir,size))
-    return d_big
+    numeric_clmns = df.dtypes[df.dtypes != "object"].index
+    d_sum_fin={"num_classes":df['class'].count(),'size_dir':size,'time_budget':extract_time(log_path_dir)}
+    for col in numeric_clmns :
+        d_sum_fin[col]=df[col].sum()
+    return d_sum_fin
 
 
-
-
+def extract_time(string_path):
+    arr_tmp = str(string_path).split('_t=')
+    time = str(arr_tmp[1]).split('_')[0]
+    print "T={} P={}".format(time,string_path)
+    return time
 
 def get_name_path(v_path,index):
     arr = str(v_path).split('/')
@@ -178,7 +192,7 @@ def get_name_path(v_path,index):
 import sys
 if __name__ == "__main__":
     args = sys.argv
-    func_start(args[1])
-    #func_start('/home/ise/eran/exp_little/')
+    #func_start(args[1])
+    func_start('/home/ise/eran/exp_little/')
 
 
