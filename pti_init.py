@@ -318,7 +318,7 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
         exit(0)
     print 'class=',len(list_calss)
     print 'test=',len(list_test)
-    dico = pair_test_class11(list_test,list_calss)
+    dico = pair_test_class11(list_test,list_calss) #TODO: fix this function it need to itreat firt on the classes and than on the Tests
     r = tree_build(dico) ###########################
     javas,tests,packages = get_java_and_test(dico)
     #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
