@@ -89,5 +89,4 @@ python ${ATG}fail_cleaner.py ${root_dir}
 cd ${root_dir}
 bash fixer.sh
 python ${ATG}pit_dir_fix.py ${root_dir}
-python ${ATG}csv_PIT.py arg ${root_dir}
 echo "END !!"
