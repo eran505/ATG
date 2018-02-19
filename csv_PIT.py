@@ -5,6 +5,24 @@ import csv
 
 
 import pit_render_test
+globvar_path = 0
+
+def set_globvar_path(string_path):
+    if string_path != string_path[-1]:
+        string_path = string_path  +'/'
+    global globvar
+    globvar = string_path
+
+
+def get_globvar_path():
+    return globvar
+
+def crate_file():
+    print ""
+    pp = get_globvar_path()
+    with open("{}err.txt".format(pp), "w") as myfile:
+        myfile.write('\n')
+        myfile.close()
 
 arr_sign = [ 'KILLED' , 'NO_COVERAGE' ,'SURVIVED' ,'TIMED_OUT' , 'RUN_ERROR' ]
 
@@ -103,9 +121,10 @@ def _data_df(list_data,time=''):
 #def del_error_files(path_err):
 #    os.system('rm -r '+path_err)
 
-def merge_df(list_df,class_name,bol=True):
+def merge_df(list_df,class_name,bol=True,path=""):
 
     #checking if all the row in the same size ::::
+    pp=get_globvar_path()
     arr_size=[]
     max=0
     strsize=''
@@ -120,7 +139,7 @@ def merge_df(list_df,class_name,bol=True):
         acc= acc -s
     if acc != 0 :
         print ""
-        with open("/home/ise/err.txt", "a") as myfile:
+        with open("{}err.txt".format(pp), "a") as myfile:
             myfile.write(class_name+" => "+strsize)
             myfile.write('\n'*1)
     ####################33
@@ -658,6 +677,8 @@ def find_All_dir(root_path_dir):
 
 
 def aggregate_time_budget(root_path):
+    set_globvar_path(root_path)
+    crate_file()
     dict_package_prefix = dict()
     walker = pit_render_test.walker(root_path)
     classes_list = walker.walk('_t=', False, 0)
@@ -687,30 +708,14 @@ def aggregate_time_budget(root_path):
         insert_to_big(df_big_d,tmp_dico, d[classes_list[i][:-4]] )
         #merge_df_sum_by_class(tmp_dico,list_end,d[classes_list[i][:-4]])
     df_big = pd.DataFrame(df_big_d.values())
-    list_colo = list(df_big)
-    _list10 = [x for x in list_colo if str(x).__contains__("10") ]
-    _list30 = [x for x in list_colo if str(x).__contains__("30") ]
-    _list60 = [x for x in list_colo if str(x).__contains__("60") ]
-    _list90 = [x for x in list_colo if str(x).__contains__("90") ]
-    _df10 = df_big.copy(deep=True)
-    _df30 = df_big.copy(deep=True)
-    _df60 = df_big.copy(deep=True)
-    _df90 = df_big.copy(deep=True)
-    for col0 in _list10:
-        _df10 = _df10[np.isfinite(_df10[col0])]
-    for col1 in _list30:
-        _df30 = _df30[np.isfinite(_df30[col1])]
-    for col2 in _list60:
-        _df60 = _df60[np.isfinite(_df60[col2])]
-    for col3 in _list90:
-        _df90 = _df90[np.isfinite(_df90[col3])]
-
+    #list_colo = list(df_big)
+    #_list10 = [x for x in list_colo if str(x).__contains__("10") ]
+    #_df10 = df_big.copy(deep=True)
+    #for col0 in _list10:
+    #    _df10 = _df10[np.isfinite(_df10[col0])]
     path_out = mkdir_os('fin_out',root_path)
     write_to_csv(path_out+'big.csv',df_big)
-    write_to_csv(path_out + 'df10.csv', _df10)
-    write_to_csv(path_out + 'df30.csv', _df30)
-    write_to_csv(path_out + 'df60.csv', _df60)
-    write_to_csv(path_out + 'df90.csv', _df90)
+    #write_to_csv(path_out + 'df10.csv', _df10)
     #for key_class in list_end :
     #    write_to_csv(path_out+key_class+'.csv',list_end[key_class])
     #return list_end
