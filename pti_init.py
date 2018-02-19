@@ -72,6 +72,17 @@ def path_to_package(path,begin):
             res=res + '.'+split_me[i]
     return  res[1:]
 
+def path_to_package_v2(first,path,cut):
+    arr=[]
+    dim=0
+    while(path.find(first,dim) != -1):
+        arr.append(path.find(first,dim))
+        dim = path.find(first,dim) + len(first)
+    if len(arr) != 1 :
+        raise Exception('confilcet in path to package :' ,path, "with the key:",first  )
+    packa = path[arr[0]:]
+    packa =str(packa).replace("/",'.')
+    return  packa[:cut]
 
 def walk(root) :
     size=0
@@ -79,7 +90,7 @@ def walk(root) :
     for path, subdirs, files in os.walk(root):
         for name in files:
             #print os.path.join(path, name)
-            if name.__contains__("scaffolding") is False:
+            if ( name.__contains__("scaffolding") or name.__contains__("$") ) is False:
                     size+=1
                     class_list.append([str(path),str(name)])
     #print "size=",size
@@ -167,7 +178,35 @@ def pair_test_class11(list_tests,list_class):
             if str_class == str_test :
                 dict[path_to_package(str(node_class[0])+'/'+str(node_class[1]),'org')] = [str(node_class[0])+'/'+str(node_class[1]),str(node_test[0])+'/'+str(node_test[1]) ]
                 break
+
     return dict
+
+def pair_test_class_v1(list_tests,list_classes):
+    dict_res={}
+    for node_class in list_classes:
+        if str(node_class[1]).__contains__('.class') is False:
+            print node_class[1]
+            continue
+        str_class = str(node_class[0] + '/' + node_class[1])
+        str_class = str_class.split('/org/')[1][:-6]
+        prefix_package = path_to_package_v2('org',str(node_class[0])+'/'+str(node_class[1]),-6)
+        if prefix_package in dict_res :
+            raise Exception("[Error] there is two classes with the same name (prefix package) --> {}".format(prefix_package))
+        else:
+            dict_res[prefix_package]=[str(node_class[0])+'/'+str(node_class[1]),"None"]
+    for node_test in list_tests:
+        if str(node_test[1]).__contains__('.class') is False:
+            print node_test[1]
+            continue
+        str_test = str(node_test[0] + '/' + node_test[1])
+        str_test = str_test.split('/org/')[1][:-12]
+        prefix_package = path_to_package_v2('org',str(node_test[0])+'/'+str(node_test[1]),-13)
+        if prefix_package in dict_res :
+            dict_res[prefix_package][1] = str(node_test[0])+'/'+str(node_test[1])
+        else:
+            raise Exception("[Error] there is no matching .class for the test --> {}".format(prefix_package))
+    return dict_res
+
 
 def tree_build(dico):
     root = Tree()
@@ -318,7 +357,8 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
         exit(0)
     print 'class=',len(list_calss)
     print 'test=',len(list_test)
-    dico = pair_test_class11(list_test,list_calss) #TODO: fix this function it need to itreat firt on the classes and than on the Tests
+    #dico = pair_test_class11(list_test,list_calss) #TODO: fix this function it need to itret first on the classes and than on the Tests
+    dico = pair_test_class_v1(list_test, list_calss)
     r = tree_build(dico) ###########################
     javas,tests,packages = get_java_and_test(dico)
     #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
@@ -336,6 +376,16 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
         value_target = transform_data(dico_son_val)
         tag_key, tag_val = make_pom_package({key:str(key)+'_ESTest'})
         tag_c,tag_t = make_pom_package(value_target)
+
+
+        if str(tag_t).__contains__('None'):
+            print "tag_t:\n {}".format(tag_t)
+            print "----" * 20
+        if str(tag_key).__contains__('None'):
+            print "tag_key:\n {}".format(tag_key)
+            print "----" * 20
+
+        continue
         modf_pom(pom_path,tag_key,tag_t)
         #print "tag_class= ",tag_key
         #print "tag_test= ",tag_t
@@ -450,12 +500,15 @@ def main_in():
 
 def main_func(arg=None):
     proj_path= os.getcwd()+'/'
+    proj_path = '/home/ise/eran/exp_little/02_13_17_13_55_t=2_/pit_test/ALL_U_t=2_it=1_/commons-math3-3.5-src/'
     print proj_path
    # proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
     classes_pth=proj_path+'src/main/java/org/'
     tests_path=proj_path+'src/test/java/org/'
-    rec_package_test(pom_path,classes_pth,tests_path,arg)
+    compile_path=proj_path+'target/classes/org'
+    compile_test_path = proj_path+'target/test-classes/org'
+    rec_package_test(pom_path,compile_path,compile_test_path,arg)
     #package_test(pom_path,classes_pth,tests_path)
 
 def fixer():
