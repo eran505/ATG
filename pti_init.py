@@ -347,8 +347,22 @@ def log_dir(path):
     if bol is False:
         os.system("mkdir {}".format(path))
 
+
+def fix_class_not_generate(path_dir,dico):
+    print "len before:{}".format(len(dico))
+    list_log = walk(path_dir)
+    d={}
+    for log in list_log:
+        ky = log[1][:-4]
+        if ky in dico:
+            del dico[ky]
+    print "len after:{}".format(len(dico))
+    return dico
+
+
 def rec_package_test(pom_path,class_path,test_path,arg=None):
     proj_path_log = os.getcwd()+"/target/log_pit"
+    ##proj_path_log = pom_path[:-8]+"/target/log_pit"
     log_dir(proj_path_log)
     list_calss=walk(class_path)
     list_test = walk(test_path)
@@ -359,6 +373,7 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
     print 'test=',len(list_test)
     #dico = pair_test_class11(list_test,list_calss) #TODO: fix this function it need to itret first on the classes and than on the Tests
     dico = pair_test_class_v1(list_test, list_calss)
+    fix_class_not_generate(proj_path_log,dico)
     r = tree_build(dico) ###########################
     javas,tests,packages = get_java_and_test(dico)
     #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
@@ -500,7 +515,7 @@ def main_in():
 
 def main_func(arg=None):
     proj_path= os.getcwd()+'/'
-   # proj_path = '/home/ise/Desktop/testing/02_21_11_33_39_t=2_/pit_test/ALL_U_t=2_it=1_/commons-math3-3.5-src/'
+   ## proj_path = '/home/ise/eran/exp_little/02_12_18_22_51_t=1_/pit_test/ALL_U_t=1_it=0_/commons-math3-3.5-src/'
     print proj_path
    # proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
