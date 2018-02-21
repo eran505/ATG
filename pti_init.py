@@ -385,7 +385,7 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
             print "tag_key:\n {}".format(tag_key)
             print "----" * 20
 
-        continue
+
         modf_pom(pom_path,tag_key,tag_t)
         #print "tag_class= ",tag_key
         #print "tag_test= ",tag_t
@@ -500,7 +500,7 @@ def main_in():
 
 def main_func(arg=None):
     proj_path= os.getcwd()+'/'
-    #proj_path = '/home/ise/eran/exp_little/02_13_17_13_55_t=2_/pit_test/ALL_U_t=2_it=1_/commons-math3-3.5-src/'
+   # proj_path = '/home/ise/Desktop/testing/02_21_11_33_39_t=2_/pit_test/ALL_U_t=2_it=1_/commons-math3-3.5-src/'
     print proj_path
    # proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'

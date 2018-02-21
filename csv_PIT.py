@@ -8,7 +8,7 @@ import pit_render_test
 globvar_path = 0
 
 def set_globvar_path(string_path):
-    if string_path != string_path[-1]:
+    if '/' != string_path[-1]:
         string_path = string_path  +'/'
     global globvar
     globvar = string_path
@@ -21,7 +21,7 @@ def crate_file():
     print ""
     pp = get_globvar_path()
     with open("{}err.txt".format(pp), "w") as myfile:
-        myfile.write('\n')
+        myfile.write('----csv_PIT Error logs ----\n\n')
         myfile.close()
 
 arr_sign = [ 'KILLED' , 'NO_COVERAGE' ,'SURVIVED' ,'TIMED_OUT' , 'RUN_ERROR' ]
@@ -838,7 +838,7 @@ if __name__ == "__main__":
     #get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
     #exit()
     arr=sys.argv
-    #arr = ['py','arg','/home/ise/eran/new_exp/']
+   # arr = ['py','arg','/home/ise/Desktop/t_3/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
