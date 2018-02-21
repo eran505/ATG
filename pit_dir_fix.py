@@ -28,8 +28,8 @@ def get_all_bugs_dir(pit_dir_path):
         else:
             empty_dir.append([dir,name_class_dir])
     fix_error_list(bugs_dir,script_py,'bug_dir')
-    #fix_error_list(empty_csv, script_py,'empty_csv')
-    #fix_error_list(empty_dir, script_py,'empty_dir')
+    fix_error_list(empty_csv, script_py,'empty_csv')
+    fix_error_list(empty_dir, script_py,'empty_dir')
 
 def extract_script(p):
     arr = str(p).split('/')
@@ -45,7 +45,7 @@ def extract_script(p):
 def fix_error_list(list_err_dir,root_dir,name_file):
     log_to_dir(root_dir,list_err_dir,name_file)
     for item in list_err_dir: #pti_init.py
-        del_dir(item[0])
+        del_dir(item[0],item[1],root_dir+"/target/log_pit/")
         print "class: ",item[1]
         os.chdir(root_dir)
         py_script =root_dir+'/pti_init.py'
@@ -65,8 +65,12 @@ def get_date():
     d_date = strftime("%m_%d_%H_%M", gmtime())  ##"%Y-%m-%d %H:%M:%S"
     return str(d_date)
 
-def del_dir(path):
-    shutil.rmtree(path)
+def del_dir(dir_path,class_name,log_dir):
+    shutil.rmtree(dir_path)
+    log_file = log_dir+class_name+".txt"
+    bol = os.path.isfile(log_file)
+    if bol:
+        os.system("rm {}".format(log_file))
     return True
 
 
@@ -126,5 +130,5 @@ if __name__ == "__main__":
     #get_all_bugs_dir(pp_path)
     args = sys.argv
 
-    #args = ["","/home/ise/Desktop/new_exp"]
+    args = ["","/home/ise/eran/exp_little/02_12_18_22_51_t=1_/"]
     get_all_pit_dir_exp(args[1])

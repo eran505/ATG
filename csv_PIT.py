@@ -286,8 +286,6 @@ def get_all_class_by_name(path_root,out_path=None):
         d = {}
         ctr_empty = 0
         for item in classes_list:
-            if str(item).__contains__('FastMathCalc'):
-                print ""
             name = str(item).split('/')[-1]
             if os.path.exists(item+'/mutations.csv'):
                 d[name]=item+'/mutations.csv'
@@ -683,6 +681,7 @@ def aggregate_time_budget(root_path):
     walker = pit_render_test.walker(root_path)
     classes_list = walker.walk('_t=', False, 0)
     classes_list = [x+'/pit_test/' for x in classes_list]
+    classes_list = walker.walk('pit_test', False, 3) #TODO: remove this line
     print classes_list
     time = ''
     d={}
@@ -838,7 +837,7 @@ if __name__ == "__main__":
     #get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
     #exit()
     arr=sys.argv
-   # arr = ['py','arg','/home/ise/Desktop/t_3/']
+    arr = ['py','arg','/home/ise/eran/exp_little/02_12_18_22_51_t=1_/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
