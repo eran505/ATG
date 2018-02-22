@@ -99,8 +99,11 @@ def is_empty_dir(path):
 def get_all_pit_dir_exp(root_exp):
     obj = walker(root=root_exp)
     all_pp = obj.walk('pit-reports',False)
+    if len(all_pp)==0:
+        print "No dir pit-report dir in the following path : {}".format(root_exp)
     for p in all_pp:
         get_all_bugs_dir(p)
+
 
 
 import pandas as pd

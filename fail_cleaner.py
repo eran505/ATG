@@ -307,6 +307,8 @@ import sys
 
 def get_all_project(path):
     projes = pit_render_test.walk(path,"commons-math3-3.5-src",False)
+    if len(projes) == 0:
+        print "no project in the following path : {}".format(path)
     return projes
 
 
