@@ -360,7 +360,7 @@ def fix_class_not_generate(path_dir,dico):
     return dico
 
 
-def rec_package_test(pom_path,class_path,test_path,arg=None):
+def rec_package_test(pom_path,class_path,test_path,arg=None,arg_2=None):
     proj_path = os.getcwd()
     proj_path_log = proj_path+"/target/log_pit"
     log_dir(proj_path_log)
@@ -381,13 +381,22 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
         str_arg = str(arg).replace(' ','')
         if str_arg=='rev':
             rev=True
+    if arg_2 is not None:
+        str_arg = str(arg_2).replace(' ','')
+        if str_arg=='rev':
+            rev=True
     ctr = len(dico)
     for key,value in dico.iteritems():
         print "class left: ",ctr
         ctr-=1
-        if arg is not None and rev is False:
-            if isPrefix(arg,key) is False:
-                continue
+        if arg_2 is None:
+            if arg is not None and rev is False:
+                if isPrefix(arg,key) is False:
+                    continue
+        else:
+            if arg is not None:
+                if isPrefix(arg, key) is False:
+                    continue
         dico_son_val= get_class_tree(r, key)
         value_target = transform_data(dico_son_val)
         tag_key, tag_val = make_pom_package({key:str(key)+'_ESTest'})
@@ -508,7 +517,7 @@ def main_in():
     tests_path = proj_path + 'src/test/java/org/'
     main_one_by_one(pom_path,classes_pth,tests_path)
 
-def main_func(arg=None):
+def main_func(arg=None,arg_2=None):
     proj_path= os.getcwd()+'/'
    ### proj_path = '/home/ise/eran/flaky/commons-math3-3.5-src/'
     print proj_path
@@ -518,7 +527,7 @@ def main_func(arg=None):
     tests_path=proj_path+'src/test/java/org/'
     compile_path=proj_path+'target/classes/org'
     compile_test_path = proj_path+'target/test-classes/org'
-    rec_package_test(pom_path,compile_path,compile_test_path,arg)
+    rec_package_test(pom_path,compile_path,compile_test_path,arg,arg_2)
     #package_test(pom_path,classes_pth,tests_path)
 
 def fixer():
@@ -564,6 +573,7 @@ def clean_empty_dir(path):
 if __name__ == "__main__":
     #os.chdir("/home/ise/eran/flaky/commons-math3-3.5-src/")
     args = sys.argv
+    #args =['py','rev']
     print args
     if len(args)==1:
         main_func()
@@ -572,6 +582,8 @@ if __name__ == "__main__":
             main_func(args[1])
         else:
             main_func()
+    elif len(args)==3:
+        main_func(args[1],args[2])
     else:
         print "fixer"
         fixer()
