@@ -675,13 +675,14 @@ def find_All_dir(root_path_dir):
 
 
 def aggregate_time_budget(root_path):
+    print "in"
     set_globvar_path(root_path)
     crate_file()
     dict_package_prefix = dict()
     walker = pit_render_test.walker(root_path)
     classes_list = walker.walk('_t=', False, 0)
     classes_list = [x+'/pit_test/' for x in classes_list]
-    classes_list = walker.walk('pit_test', False, 3) #TODO: remove this line
+   ### classes_list = walker.walk('pit_test', False, 3) #TODO: remove this line
     print classes_list
     time = ''
     d={}
@@ -837,13 +838,13 @@ if __name__ == "__main__":
     #get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
     #exit()
     arr=sys.argv
-    arr = ['py','arg','/home/ise/eran/exp_little/02_12_18_22_51_t=1_/']
+    ##arr = ['py','arg','/home/ise/eran/exp/']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
             exit(0)
         exit(0)
-    #arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
+    ###arr_p = "py all /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/ALL_FP__t=70_it=0/ /home/ise/eran/idel/geometry_pac/09_28_20_01_35_t=70_/pit_test/report_pit/"
     #arr= arr_p.split(" ")
     main_pars(arr)
 

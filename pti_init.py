@@ -361,8 +361,8 @@ def fix_class_not_generate(path_dir,dico):
 
 
 def rec_package_test(pom_path,class_path,test_path,arg=None):
-    proj_path_log = os.getcwd()+"/target/log_pit"
-    ##proj_path_log = pom_path[:-8]+"/target/log_pit"
+    proj_path = os.getcwd()
+    proj_path_log = proj_path+"/target/log_pit"
     log_dir(proj_path_log)
     list_calss=walk(class_path)
     list_test = walk(test_path)
@@ -371,39 +371,34 @@ def rec_package_test(pom_path,class_path,test_path,arg=None):
         exit(0)
     print 'class=',len(list_calss)
     print 'test=',len(list_test)
-    #dico = pair_test_class11(list_test,list_calss) #TODO: fix this function it need to itret first on the classes and than on the Tests
+    #dico = pair_test_class11(list_test,list_calss)
     dico = pair_test_class_v1(list_test, list_calss)
     fix_class_not_generate(proj_path_log,dico)
     r = tree_build(dico) ###########################
     javas,tests,packages = get_java_and_test(dico)
-    #dico_son_val = get_class_tree(r, 'org.apache.commons.math3.fraction.FractionField')
-    #exit()
+    rev = False #reverse var that indict that the each test is analysis on a package of classes
+    if arg is not None:
+        str_arg = str(arg).replace(' ','')
+        if str_arg=='rev':
+            rev=True
     ctr = len(dico)
     for key,value in dico.iteritems():
         print "class left: ",ctr
         ctr-=1
-        #if not ( str(key).__contains__('org.apache.commons.math3.linear') or str(key).__contains__('org.apache.commons.math3.util') )  :
-        #    continue
-        if arg is not None:
+        if arg is not None and rev is False:
             if isPrefix(arg,key) is False:
                 continue
         dico_son_val= get_class_tree(r, key)
         value_target = transform_data(dico_son_val)
         tag_key, tag_val = make_pom_package({key:str(key)+'_ESTest'})
-        tag_c,tag_t = make_pom_package(value_target)
+        tag_c, tag_t = make_pom_package(value_target)
 
+        if rev:
+            print "--rev--"
+            modf_pom(pom_path, tag_c, tag_val)
+        else:
+            modf_pom(pom_path, tag_key, tag_t)
 
-        if str(tag_t).__contains__('None'):
-            print "tag_t:\n {}".format(tag_t)
-            print "----" * 20
-        if str(tag_key).__contains__('None'):
-            print "tag_key:\n {}".format(tag_key)
-            print "----" * 20
-
-
-        modf_pom(pom_path,tag_key,tag_t)
-        #print "tag_class= ",tag_key
-        #print "tag_test= ",tag_t
         command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
         #command =" mvn org.pitest:pitest-maven:mutationCoverage "
         os.system(command_v1)
@@ -515,7 +510,7 @@ def main_in():
 
 def main_func(arg=None):
     proj_path= os.getcwd()+'/'
-   ## proj_path = '/home/ise/eran/exp_little/02_12_18_22_51_t=1_/pit_test/ALL_U_t=1_it=0_/commons-math3-3.5-src/'
+   ### proj_path = '/home/ise/eran/flaky/commons-math3-3.5-src/'
     print proj_path
    # proj_path = '/home/eran/thesis/test_gen/experiment/commons-math3-3.5-src/'
     pom_path = proj_path+'pom.xml'
@@ -567,11 +562,13 @@ def clean_empty_dir(path):
 
     #proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
 if __name__ == "__main__":
+    #os.chdir("/home/ise/eran/flaky/commons-math3-3.5-src/")
     args = sys.argv
+    print args
     if len(args)==1:
         main_func()
     elif len(args)==2:
-        if len(args[1])>3:
+        if len(args[1])>2:
             main_func(args[1])
         else:
             main_func()
