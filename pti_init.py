@@ -185,7 +185,7 @@ def pair_test_class_v1(list_tests,list_classes):
     dict_res={}
     for node_class in list_classes:
         if str(node_class[1]).__contains__('.class') is False:
-            print node_class[1]
+           # print node_class[1]
             continue
         str_class = str(node_class[0] + '/' + node_class[1])
         str_class = str_class.split('/org/')[1][:-6]
@@ -196,7 +196,7 @@ def pair_test_class_v1(list_tests,list_classes):
             dict_res[prefix_package]=[str(node_class[0])+'/'+str(node_class[1]),"None"]
     for node_test in list_tests:
         if str(node_test[1]).__contains__('.class') is False:
-            print node_test[1]
+            #print node_test[1]
             continue
         str_test = str(node_test[0] + '/' + node_test[1])
         str_test = str_test.split('/org/')[1][:-12]
@@ -361,7 +361,7 @@ def fix_class_not_generate(path_dir,dico):
 
 
 def rec_package_test(pom_path,class_path,test_path,arg=None,arg_2=None):
-    proj_path = os.getcwd()
+    proj_path = pom_path[:-8]
     proj_path_log = proj_path+"/target/log_pit"
     log_dir(proj_path_log)
     list_calss=walk(class_path)
@@ -373,9 +373,8 @@ def rec_package_test(pom_path,class_path,test_path,arg=None,arg_2=None):
     print 'test=',len(list_test)
     #dico = pair_test_class11(list_test,list_calss)
     dico = pair_test_class_v1(list_test, list_calss)
-    fix_class_not_generate(proj_path_log,dico)
-    r = tree_build(dico) ###########################
-    javas,tests,packages = get_java_and_test(dico)
+    r = tree_build(dico)
+    ########################################################## fix_class_not_generate(proj_path_log,dico)
     rev = False #reverse var that indict that the each test is analysis on a package of classes
     if arg is not None:
         str_arg = str(arg).replace(' ','')
@@ -518,6 +517,7 @@ def main_in():
     main_one_by_one(pom_path,classes_pth,tests_path)
 
 def main_func(arg=None,arg_2=None):
+    #os.chdir('/home/ise/eran/exp_all/12_14_03_29_42_t=45_/pit_test/ALL_U__t=45_it=0/commons-math3-3.5-src')
     proj_path= os.getcwd()+'/'
    ### proj_path = '/home/ise/eran/flaky/commons-math3-3.5-src/'
     print proj_path
@@ -573,7 +573,7 @@ def clean_empty_dir(path):
 if __name__ == "__main__":
     #os.chdir("/home/ise/eran/flaky/commons-math3-3.5-src/")
     args = sys.argv
-    #args =['py','rev']
+    #args =['py','org.apache.commons.math3.optim.PointVectorValuePair','rev']
     print args
     if len(args)==1:
         main_func()
@@ -587,5 +587,4 @@ if __name__ == "__main__":
     else:
         print "fixer"
         fixer()
-#main_all()
 

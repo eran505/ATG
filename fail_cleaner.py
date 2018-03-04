@@ -316,6 +316,7 @@ if __name__ == "__main__":
 
 #    args = sys.argv
     args = sys.argv
+    args = ['','/home/ise/eran/exp_all/12_14_03_29_42_t=45_']
     if len(args) == 2 :
         proj_arr = get_all_project(args[1])
         for p_path in proj_arr:
