@@ -27,9 +27,9 @@ def get_all_bugs_dir(pit_dir_path,arg):
                 bugs_dir.append([dir,name_class_dir])
         else:
             empty_dir.append([dir,name_class_dir])
-    fix_error_list(bugs_dir,script_py,'bug_dir',arg)
+   # fix_error_list(bugs_dir,script_py,'bug_dir',arg)
     fix_error_list(empty_csv, script_py,'empty_csv',arg)
-    fix_error_list(empty_dir, script_py,'empty_dir',arg)
+   # fix_error_list(empty_dir, script_py,'empty_dir',arg)
 
 def extract_script(p):
     arr = str(p).split('/')
@@ -73,6 +73,8 @@ def del_dir(dir_path,class_name,log_dir):
     bol = os.path.isfile(log_file)
     if bol:
         os.system("rm {}".format(log_file))
+    else:
+        raise Exception("[Error] cant find the PIT log of class {} ".format(class_name))
     return True
 
 
@@ -134,6 +136,7 @@ if __name__ == "__main__":
     #pp_path = '/home/ise/Desktop/test_50/pit_test/ALL_FP__t=50_it=1/commons-math3-3.5-src/target/pit-reports/'
     #get_all_bugs_dir(pp_path)
     args = sys.argv
+    args = ['','/home/ise/eran/rev/','rev']
     if len(args)==2:
         get_all_pit_dir_exp(args[1])
     elif len(args)==3:

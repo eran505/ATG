@@ -17,10 +17,10 @@ def set_globvar_path(string_path):
 def get_globvar_path():
     return globvar
 
-def crate_file():
+def crate_file(name='err'):
     print ""
     pp = get_globvar_path()
-    with open("{}err.txt".format(pp), "w") as myfile:
+    with open("{}{}.txt".format(pp,name), "w") as myfile:
         myfile.write('----csv_PIT Error logs ----\n\n')
         myfile.close()
 
@@ -281,7 +281,7 @@ def get_all_class_by_name(path_root,out_path=None):
     print classes_list
     for class_item in classes_list:
         walker = pit_render_test.walker(path_root+class_item+'/commons-math3-3.5-src/target/pit-reports/')
-        print path_root+class_item+'/commons-math3-3.5-src/target/pit-reports/'
+        #print path_root+class_item+'/commons-math3-3.5-src/target/pit-reports/'
         classes_list = walker.walk('org.apache.commons.math',False)
         d = {}
         ctr_empty = 0
@@ -783,6 +783,8 @@ def main_pars(arr):
             dico = init_clac(  arr[2] ,arr[3],'org.apache.commons.math3.linear.PreconditionedIterativeLinearSolver')
         elif mod == 'arg':
             aggregate_time_budget(arr[2])
+        elif mod == 'rev':
+            rev_func(arr[2])
         elif mod =='class':
             if len(arr) > 3 :
                 dico = get_all_class_by_name(  arr[2] , arr[3])
@@ -826,6 +828,35 @@ def get_data_df_by_name_v1(list_data):
         result =None
     return result
 
+
+
+def rev_func(root_path):
+    '''
+    :param root_path: the path for the rev project
+    :return: file.csv
+    '''
+    set_globvar_path(root_path)
+    crate_file('rev_err')
+    walker = pit_render_test.walker(root_path)
+    classes_list = walker.walk('_t=', False, 0)
+    classes_list = [x + '/pit_test/' for x in classes_list]
+    ### classes_list = walker.walk('pit_test', False, 3) #TODO: remove this line
+    print classes_list
+    time = ''
+    d = {}
+    last = len("/pit_test/") + 1
+    for p_path in classes_list:
+        y = str(p_path).find("t=")
+        if y > 0:
+            time = p_path[y + 2:-last]
+            d[p_path] = time
+        else:
+            d[p_path] = None
+        get_all_class_by_name(p_path)
+    print ""
+
+
+
 #####################
 
 if __name__ == "__main__":
@@ -838,7 +869,7 @@ if __name__ == "__main__":
     #get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
     #exit()
     arr=sys.argv
-    ##arr = ['py','arg','/home/ise/eran/exp/']
+    arr = ['py','rev','/home/ise/eran/rev']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
