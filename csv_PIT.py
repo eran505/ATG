@@ -835,6 +835,7 @@ def rev_func(root_path):
     :param root_path: the path for the rev project
     :return: file.csv
     '''
+    out_P = mkdir_system(root_path,'table_out',False)
     set_globvar_path(root_path)
     crate_file('rev_err')
     walker = pit_render_test.walker(root_path)
@@ -852,10 +853,71 @@ def rev_func(root_path):
             d[p_path] = time
         else:
             d[p_path] = None
-        get_all_class_by_name(p_path)
-    print ""
+        #get_all_class_by_name(p_path)
+    df_dico = summarize_rev(classes_list,d,out_P)
+    df_dico_fp = summarize_rev(classes_list,d,out_P,mod='FP')
+
+def mkdir_system(path_root,name,is_del=True):
+    if path_root[-1]!='/':
+        path_root=path_root+'/'
+    if os.path.isdir("{}{}".format(path_root,name)):
+        if is_del:
+            os.system('rm -r {}{}'.format(path_root,name))
+        else:
+            print "{}{} is already exist".format(path_root,name)
+            return '{}{}'.format(path_root, name)
+    os.system('mkdir {}{}'.format(path_root,name))
+    return '{}{}'.format(path_root,name)
 
 
+def summarize_rev(classes_list,d,out_p,on_key='KILLED',mod='U'):
+    on_key_U = '{}_AVG_U'.format(on_key)
+    on_key_FP = '{}_AVG_FP'.format(on_key)
+    classes_list = [x + 'out/' for x in classes_list]
+    for item in classes_list:
+        dict_prefix = {}
+        walker = pit_render_test.walker(item)
+        csv_list = walker.walk('.csv')
+        size_ctr = len(csv_list)
+        df_table = pd.DataFrame(columns=['class', 'mutation-type','method','line'])
+        if mod=='U':
+            out_dir = mkdir_system(out_p,'Uni')
+        elif mod =='FP':
+            out_dir = mkdir_system(out_p, 'FP')
+        else:
+            raise Exception('[Error] in csv_PIT args=rev , the mode parameter is wrong can be FP/U --> {}'.format(mod))
+        for file_csv in csv_list:
+            print size_ctr
+            size_ctr -= 1
+            col_filed = ['class', 'mutation-type', 'method', 'line']
+            tmp_arr = str(file_csv).split('/')
+            item_name = tmp_arr[-1][:-4]
+            prefix = str(item_name).split('.')[:-1]
+            prefix = '.'.join(prefix)
+            if prefix not in dict_prefix:
+                dict_prefix[prefix] = df_table.copy(deep=True)
+            matrix = dict_prefix[prefix]
+            df_item = pd.read_csv(file_csv)
+            if mod == 'U':
+                if on_key_U in df_item:
+                    col_filed.append(on_key_U)
+                df_item = df_item[col_filed]
+                matrix = pd.merge(matrix, df_item, how='outer', on=['class', 'mutation-type', 'method', 'line'])
+                if on_key_U in col_filed:
+                    matrix.rename(columns={on_key_U: '{}_ESTest_U'.format(item_name)}, inplace=True)
+            elif mod=='FP':
+                if on_key_FP in df_item:
+                    col_filed.append(on_key_FP)
+                df_item = df_item[col_filed]
+                matrix = pd.merge(matrix, df_item, how='outer', on=['class', 'mutation-type', 'method', 'line'])
+                if on_key_FP in col_filed:
+                    matrix.rename(columns={on_key_FP: '{}_ESTest_FP'.format(item_name)}, inplace=True)
+            dict_prefix[prefix] = matrix
+            if size_ctr == 1:
+                for key_i in dict_prefix.keys():
+                    df_tmp = dict_prefix[key_i]
+                    df_tmp.to_csv('{}/{}__T_{}_.csv'.format(out_dir,key_i,mod))
+    return dict_prefix
 
 #####################
 
@@ -869,7 +931,7 @@ if __name__ == "__main__":
     #get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
     #exit()
     arr=sys.argv
-    arr = ['py','rev','/home/ise/eran/rev']
+    arr = ['py','rev','/home/ise/eran/exp_rev']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
