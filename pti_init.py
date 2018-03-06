@@ -412,9 +412,27 @@ def rec_package_test(pom_path,class_path,test_path,arg=None,arg_2=None):
         os.system(command_v1)
         proj_path1 = os.getcwd()
         arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
+        d_dis=''
         if len(arr) > 0:
-            str2 = 'mv '+arr[0]+" "+proj_path1+"/target/pit-reports/"+key
+            if len(arr) > 1:
+                d_dis =get_min_dir(arr)
+            else:
+                d_dis=arr[0]
+            str2 = 'mv '+d_dis+" "+proj_path1+"/target/pit-reports/"+key
             os.system(str2)
+
+def get_min_dir(list_dirs):
+    min='9'*15
+    min_path=None
+    for x in list_dirs:
+        arr_i = str(x).split('/')
+        num_str = arr_i[-1]
+        if min > num_str:
+            min=num_str
+            min_path=x
+    if min_path is None:
+        raise Exception("[Error] more than one dir but the path is None --> {}".format(list_dirs))
+    return min_path
 
 def package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
@@ -571,7 +589,7 @@ def clean_empty_dir(path):
 
     #proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
 if __name__ == "__main__":
-    #os.chdir("/home/ise/eran/flaky/commons-math3-3.5-src/")
+    #os.chdir("/home/ise/eran/ALL_U_t=30_it=0_/commons-math3-3.5-src")
     args = sys.argv
     #args =['py','org.apache.commons.math3.optim.PointVectorValuePair','rev']
     print args
