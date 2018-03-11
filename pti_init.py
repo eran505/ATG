@@ -589,9 +589,9 @@ def clean_empty_dir(path):
 
     #proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
 if __name__ == "__main__":
-    #os.chdir("/home/ise/eran/ALL_U_t=30_it=0_/commons-math3-3.5-src")
+    os.chdir("/home/ise/eran/rev/02_26_13_27_45_t=30_/pit_test/ALL_U_t=30_it=0_/commons-math3-3.5-src")
     args = sys.argv
-    #args =['py','org.apache.commons.math3.optim.PointVectorValuePair','rev']
+    args =['py','rev']
     print args
     if len(args)==1:
         main_func()

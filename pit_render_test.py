@@ -97,6 +97,19 @@ def main(sys):
         root = sys.argv[1]
         fix_bug_tests(root)
 
+def mkdir_system(path_root,name,is_del=True):
+    if path_root is None:
+        raise Exception("[Error] passing a None path --> {}".format(path_root))
+    if path_root[-1]!='/':
+        path_root=path_root+'/'
+    if os.path.isdir("{}{}".format(path_root,name)):
+        if is_del:
+            os.system('rm -r {}{}'.format(path_root,name))
+        else:
+            print "{}{} is already exist".format(path_root,name)
+            return '{}{}'.format(path_root, name)
+    os.system('mkdir {}{}'.format(path_root,name))
+    return '{}{}'.format(path_root,name)
 
 if __name__ == "__main__":
     main(sys)
