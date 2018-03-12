@@ -311,16 +311,31 @@ def get_all_project(path):
         print "no project in the following path : {}".format(path)
     return projes
 
+def get_all_project_D4J(path):
+    projes_bug = pit_render_test.walk(path,"buggy",False)
+    projes_fix = pit_render_test.walk(path,"fixed",False)
+    projes = projes_fix + projes_bug
+    if len(projes) == 0:
+        print "no project in the following path : {}".format(path)
+    return projes
+
+
 
 if __name__ == "__main__":
 
 #    args = sys.argv
     args = sys.argv
-    args = ['','/home/ise/eran/exp_all/12_14_03_29_42_t=45_']
+   ## args = ['','/home/ise/Desktop/defect4j_exmple/','D4J']
     if len(args) == 2 :
         proj_arr = get_all_project(args[1])
         for p_path in proj_arr:
             obj = Cleaner(p_path)
             obj.fit()
+    elif len(args)==3:
+        proj_arr = get_all_project_D4J(args[1])
+        for p_path in proj_arr:
+            obj = Cleaner(p_path)
+            obj.fit()
+
     else:
         print "No Path was given !!"

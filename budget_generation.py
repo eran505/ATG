@@ -1,7 +1,7 @@
 import sys, os ,time,csv
 
 from copy import deepcopy
-
+import pit_render_test as pt
 import pit_render_test
 
 
@@ -508,7 +508,7 @@ def int_exp(args):
  #   comp = ["U"] #TODO : change it back
     target_list = get_all_class_v1(v_path)
     dict_to_csv(d, v_dis_path)
-    for i in range(1): #TODO : change it back to two (2)
+    for i in range(2): #TODO : change it back to two (2)
         seed = time.strftime('%s')[-5:]
         for parm in comp:
             localtime = time.asctime(time.localtime(time.time()))
@@ -530,9 +530,31 @@ def int_exp(args):
 
 
 
+def Defect4J_analysis(obj_BUG):
+    print ""
+    min_time=1
+    max_time=100
+    buggy_path = str(obj_BUG.root) + "buggy/target/classes/"
+    fixed_path = str(obj_BUG.root) + "fixed/target/classes/"
+    target_class_list = obj_BUG.modified_class
+    path_evo = '/home/ise/eran/evosuite/jar/'
+    evo_version = 'evosuite-1.0.5.jar'
+    time_list = 5
+    out_dir = pt.mkdir_system(obj_BUG.root, 'Evo_Test', False)
+    modified_class_paths = []
+    modified_package_path=[]
+    for p_path in obj_BUG.modified_class:
+        modified_class_paths.append(str(p_path).replace(".","/"))
+    for pac_path in obj_BUG.infected_packages:
+        modified_package_path.append(str(pac_path).replace(".", "/"))
+    for package in modified_package_path:
+        sys.argv=['',"{}{}".format(fixed_path,package),evo_version,path_evo,out_dir,'exp',max_time,min_time,time_list]
+        int_exp(sys.argv)
+    #TODO: finsh this fucnction make sure that after running the test the run on the fix version and the buggy version
+    
+
 def regression_testing_handler(bug_obj): #params [ -buggy_path  -fixed_path -[U/F/O/A] -path_csv_FP -mode -output_path -evo_version -evo_path -time_budget -Lower_b -Up_b  ]
     print "[regression]"
-
     #args=["",'A',str(rel_path)+"csv/Most_out_files.csv"
     #    ,'/home/eran/Desktop/defect4j_exmple/out/',"evosuite-1.0.5.jar", "/home/eran/programs/EVOSUITE/jar/",'100' , '30', '180']
     #buggy_path = args[1]
