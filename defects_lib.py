@@ -5,19 +5,24 @@ import subprocess
 project_dict = {}
 root_dir = '~/'
 import shutil
+import pit_render_test as pt
 from contextlib import contextmanager
 import budget_generation as bg
 
 
 class Bug_4j:
 
-    def __init__(self, pro_name,bug_id,info_args,root_dir,defect4j_root="/home/ise/programs/defects4j/framework/bin/defects4j"):
+    def __init__(self, pro_name,bug_id,info_args,root_dir,
+                 defect4j_root="/home/ise/programs/defects4j/framework/bin/defects4j"
+                 ,csv_path ='/home/ise/eran/repo/ATG/csv',b_mod='class'):
         os.system('export PATH=$PATH:/home/ise/programs/defects4j/framework/bin')
         self.root = root_dir
         self.p_name = pro_name
         self.id = bug_id
+        self.mod=b_mod
         self.info=info_args
         self.defects4j = defect4j_root
+        self.csvFP = csv_path
         self.modified_class=[]
         self.infected_packages = []
         self.contractor()
@@ -128,6 +133,31 @@ class Bug_4j:
                     self.modified_class.append(y1)
             for item in self.modified_class :
                 print item
+    def modfiy_pom(self,p_path):
+        bugg_path = "{}buggy".format(self.root)
+        fixed_path = "{}fixed".format(self.root)
+        if os.path.isfile("{}/pom.xml".format(bugg_path)):
+            os.system('rm {}'.format("{}/pom.xml".format(fixed_path)))
+            os.system('cp /home/ise/eran/repo/ATG/D4J/pom.xml {}'.format(bugg_path))
+        if os.path.isfile("{}/pom.xml".format(fixed_path)):
+            os.system('rm {}'.format("{}/pom.xml".format(fixed_path)))
+            os.system('cp /home/ise/eran/repo/ATG/D4J/pom.xml {}'.format(fixed_path))
+
+    def analysis_test(self):
+        print ""
+        if os.path.isdir('{}/Evo_Test') is False:
+            print "No dir Evo_Test {}".format(self.root)
+            exit(-1)
+        evo_test_dir= pt.walk('{}Evo_Test')
+        path_dir_buggy = "{}buggy/src/test/".format(self.root)
+        project_buggy = "{}buggy/".format(self.root)
+        self.modfiy_pom(project_buggy+'pom.xml')
+        for test_dir in evo_test_dir:
+            pass
+
+    #TODO: see if the change pom is working and transfor each tset to the buggy and fixed
+
+
 
 
 def before_op():
@@ -140,12 +170,16 @@ def before_op():
 
 
 
+
 def main_bugger(info,proj,idBug,out_path): #[ Evo_path , evo_version , mode , out_path , budget_time , upper , lowe ,
     print "starting.."
     bug22 = Bug_4j(proj,idBug,info,out_path)
     val = bug22.get_data()
     if val == 0:
         bg.Defect4J_analysis(bug22)
+        #TODO: the FP time budget is wrong need to re-calcuate in respect to all the project
+        print "Done Gen Tests"
+        #bug22.analysis_test()
     else:
         print "Error val={0} in project {2} BUG {1}".format(val,idBug,proj)
 def main_wrapper():
@@ -164,6 +198,7 @@ def main_wrapper():
             print('cant make dir')
             exit(1)
         main_bugger(args,proj_name,i,full_dis)
+        break
 
 
 def pars_parms():
@@ -172,6 +207,9 @@ def pars_parms():
         return []
     args = sys.argv
     return args
+
+
+
 
 
 if __name__ == "__main__":

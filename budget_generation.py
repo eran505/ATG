@@ -326,6 +326,14 @@ def get_all_class_v1(root) :
             if name.__contains__("$") is False:
                 size+=1
                 class_list.append([str(path),str(name)])
+    if len(class_list) == 0:
+        path_class = "{}.class".format(root)
+        if os.path.isfile(path_class):
+            arr = str(path_class).split('/')
+            name_class = str(arr[-1]) + '.class'
+            arr = arr[:-1]
+            path_class = '/'.join(arr)
+            class_list.append([path_class,name_class])
     return class_list
 
 '''
@@ -502,10 +510,13 @@ def int_exp(args):
     lower_b = int(sys.argv[6])
     b_klass = int(sys.argv[8])
     rel_path = os.getcwd() + '/'
-    fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
+    if sys.argv[5]!='exp':
+        fp_budget, d = get_time_fault_prediction('{}/Most_out_files.csv'.format(sys.argv[5]), 'FileName', 'prediction',
+                                                 v_path, upper_b, lower_b, b_klass)
+    else:
+        fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
     uni_budget = {}
     comp = ["FP","U"]
- #   comp = ["U"] #TODO : change it back
     target_list = get_all_class_v1(v_path)
     dict_to_csv(d, v_dis_path)
     for i in range(2): #TODO : change it back to two (2)
@@ -536,22 +547,33 @@ def Defect4J_analysis(obj_BUG):
     max_time=100
     buggy_path = str(obj_BUG.root) + "buggy/target/classes/"
     fixed_path = str(obj_BUG.root) + "fixed/target/classes/"
+    path_FP_CSV = str(obj_BUG.csvFP)
     target_class_list = obj_BUG.modified_class
     path_evo = '/home/ise/eran/evosuite/jar/'
     evo_version = 'evosuite-1.0.5.jar'
     time_list = 5
     out_dir = pt.mkdir_system(obj_BUG.root, 'Evo_Test', False)
+    out_dir = out_dir +'/'
     modified_class_paths = []
     modified_package_path=[]
+
     for p_path in obj_BUG.modified_class:
         modified_class_paths.append(str(p_path).replace(".","/"))
     for pac_path in obj_BUG.infected_packages:
         modified_package_path.append(str(pac_path).replace(".", "/"))
-    for package in modified_package_path:
-        sys.argv=['',"{}{}".format(fixed_path,package),evo_version,path_evo,out_dir,'exp',max_time,min_time,time_list]
-        int_exp(sys.argv)
+
+    if obj_BUG.mod =='class':
+        for klass in modified_class_paths:
+            sys.argv = ['', "{}{}".format(fixed_path, klass), evo_version, path_evo, out_dir, path_FP_CSV, max_time,
+                        min_time, time_list]
+            int_exp(sys.argv)
+    elif obj_BUG.mod =='package':
+        for package in modified_package_path:
+            sys.argv=['',"{}{}".format(fixed_path,package),evo_version,path_evo,out_dir,path_FP_CSV,max_time,min_time,time_list]
+            int_exp(sys.argv)
+
     #TODO: finsh this fucnction make sure that after running the test the run on the fix version and the buggy version
-    
+
 
 def regression_testing_handler(bug_obj): #params [ -buggy_path  -fixed_path -[U/F/O/A] -path_csv_FP -mode -output_path -evo_version -evo_path -time_budget -Lower_b -Up_b  ]
     print "[regression]"
