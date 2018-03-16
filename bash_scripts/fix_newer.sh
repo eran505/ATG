@@ -88,5 +88,4 @@ python ${ATG}pit_render_test.py ${root_dir}
 python ${ATG}fail_cleaner.py ${root_dir}
 cd ${root_dir}
 bash fixer.sh
-python ${ATG}pit_dir_fix.py ${root_dir}
 echo "END !!"

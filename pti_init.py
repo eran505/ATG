@@ -361,6 +361,7 @@ def fix_class_not_generate(path_dir,dico):
 
 
 def rec_package_test(pom_path,class_path,test_path,arg=None,arg_2=None):
+    list_dir_pit={}
     proj_path = pom_path[:-8]
     proj_path_log = proj_path+"/target/log_pit"
     log_dir(proj_path_log)
@@ -408,18 +409,32 @@ def rec_package_test(pom_path,class_path,test_path,arg=None,arg_2=None):
             modf_pom(pom_path, tag_key, tag_t)
 
         command_v1 = " mvn org.pitest:pitest-maven:mutationCoverage >> target/log_pit/{0}.txt 2>&1 ".format(key)
-        #command =" mvn org.pitest:pitest-maven:mutationCoverage "
         os.system(command_v1)
-        proj_path1 = os.getcwd()
-        arr= walking(proj_path1+'/target/pit-reports/','2',False,0)
-        d_dis=''
+        arr= walking(proj_path+'/target/pit-reports/','201',False,0)
         if len(arr) > 0:
             if len(arr) > 1:
                 d_dis =get_min_dir(arr)
             else:
                 d_dis=arr[0]
-            str2 = 'mv '+d_dis+" "+proj_path1+"/target/pit-reports/"+key
+            str2 = 'mv '+d_dis+" "+proj_path+"/target/pit-reports/"+key
+            list_dir_pit[key] = {"arr": arr,"command":str2}
             os.system(str2)
+        else:
+            list_dir_pit[key] = {"arr":None,"command":None}
+    write_log_dict(list_dir_pit,proj_path)
+
+import pickle
+def write_log_dict(dico,path):
+    ppath = path
+    if path[-1] =='/':
+        ppath= path[:-1]
+    with open("{}/dictPIT.pickle".format(ppath), "wb") as fp:
+        pickle.dump(dico, fp)
+    str_string = ''
+    for key in dico:
+        str_string=str_string+'key:{} # arr:{} # comm:{} \n '.format(key,dico[key]['arr'],dico[key]['command'])
+    with open("{}/log_pit_dict.txt".format(ppath), "w") as f:
+        f.write(str(str_string)+"\n")
 
 def get_min_dir(list_dirs):
     min='9'*15
@@ -585,14 +600,18 @@ def clean_empty_dir(path):
             full.append(dir)
     return empty,full
 
+def funcme(p):
+    with open(p, "rb") as fp:  # Unpickling
+        b = pickle.load(fp)
+    print b
+    exit()
 
 
     #proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
 if __name__ == "__main__":
-    os.chdir("/home/ise/eran/rev/02_26_13_27_45_t=30_/pit_test/ALL_U_t=30_it=0_/commons-math3-3.5-src")
+    #os.chdir("/home/ise/eran/rev/02_26_13_27_45_t=30_/pit_test/ALL_U_t=30_it=0_/commons-math3-3.5-src")
     args = sys.argv
-    args =['py','rev']
-    print args
+    #args =['py','rev']
     if len(args)==1:
         main_func()
     elif len(args)==2:

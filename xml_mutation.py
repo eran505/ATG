@@ -28,12 +28,21 @@ def flush_csv(out_path_dir, xml_df, name_file):
 def get_all_xml(path,root_path_project):
     d_class={}
     err={}
+    err_name={}
     out_path_dir = mkdir_system(path,'class',is_del=False)
     list_xml=pit_render_test.walk(root_path_project,'mutations.xml')
     if list_xml is None:
         print "[Error] no mutations xmls found in the following path --> {}".format(root_path_project)
         return {}
+    all = len(list_xml)
+    #x_list =[]
+    #for x in list_xml:
+    #    if str(x).__contains__('SphericalCoordinat'):
+    #        x_list.append(x)
+    #list_xml= x_list
     for x_xml in list_xml:
+        print all
+        all=all-1
         if len(x_xml)<1:
             continue
         name_file = str(x_xml).split('/')[-2]
@@ -41,10 +50,12 @@ def get_all_xml(path,root_path_project):
         xml_df,test_name = pars_xml_to_csv(x_xml)
         if test_name is not None and test_name != name_file:
             print "[Error] {} != {}".format(name_file,test_name)
+            err_name[test_name] = name_file
             err[test_name]=xml_df
             continue
         flush_csv(out_path_dir,xml_df,name_file)
         d_class[name_file]=xml_df
+    print err_name
     for key in  err.keys():
         xml_df = err[key]
         name_file = key
@@ -156,10 +167,19 @@ def main_func(root_p):
     out_path_dir = mkdir_system(root_p,'csvs',is_del=False)
     dict_classes = get_all_xml(out_path_dir,root_p)
     rev_analysis_by_package(out_path_dir,d_class=dict_classes)
+    #rev_analysis_by_package(out_path_dir,data_path='/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/class')
+
 
 def get_projects(p_root_path):
     list_project = pit_render_test.walk(p_root_path,'commons-math3-3.5-src',False)
+    #list_project = ['/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src','/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src']
     for x in list_project:
         main_func(x)
+
+import sys
 if __name__ == "__main__":
-    get_projects('/home/ise/eran/xml/')
+    args = sys.argv
+    if len(args)>2:
+        get_projects(args[1])
+    else:
+        get_projects('/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_') #/home/ise/eran/xml/

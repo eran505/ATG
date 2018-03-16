@@ -158,8 +158,6 @@ class Bug_4j:
     #TODO: see if the change pom is working and transfor each tset to the buggy and fixed
 
 
-
-
 def before_op():
     project_dict['Chart'] = {'project_name':"JFreechart", "num_bugs":26}
     project_dict['Closure'] = {'project_name':"Closure compiler", "num_bugs":133}

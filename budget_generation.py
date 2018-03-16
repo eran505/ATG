@@ -502,6 +502,9 @@ def init_main():
 
 def int_exp(args):
     print 'exp...'
+    it = 2
+    comp = ["FP","U"]
+    comp = ["FP"] #TODO: FIX IT BY REMOVING THIS LINE !!
     v_path = sys.argv[1]  # target = /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org
     v_evo_name = sys.argv[2]  #evo_version = evosuite-1.0.5.jar
     v_evo_path = sys.argv[3] #evo_path  = /home/eran/programs/EVOSUITE/jar
@@ -509,6 +512,10 @@ def int_exp(args):
     upper_b = int(sys.argv[7])
     lower_b = int(sys.argv[6])
     b_klass = int(sys.argv[8])
+    if len(sys.argv)>9:
+        it = int(sys.argv[9])
+        comp=[]
+        comp.append(str(sys.argv[10]))
     rel_path = os.getcwd() + '/'
     if sys.argv[5]!='exp':
         fp_budget, d = get_time_fault_prediction('{}/Most_out_files.csv'.format(sys.argv[5]), 'FileName', 'prediction',
@@ -516,10 +523,9 @@ def int_exp(args):
     else:
         fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
     uni_budget = {}
-    comp = ["FP","U"]
     target_list = get_all_class_v1(v_path)
     dict_to_csv(d, v_dis_path)
-    for i in range(2): #TODO : change it back to two (2)
+    for i in range(it): #TODO : change it back to two (2)
         seed = time.strftime('%s')[-5:]
         for parm in comp:
             localtime = time.asctime(time.localtime(time.time()))

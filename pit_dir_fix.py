@@ -170,7 +170,7 @@ if __name__ == "__main__":
     #pp_path = '/home/ise/Desktop/test_50/pit_test/ALL_FP__t=50_it=1/commons-math3-3.5-src/target/pit-reports/'
     #get_all_bugs_dir(pp_path)
     args = sys.argv
-    args = ['','/home/ise/eran/xml/02_23_17_34_26_t=60_','rev']
+    #args = ['','/home/ise/eran/xml/02_23_17_34_26_t=60_','rev']
     if len(args)==2:
         get_all_pit_dir_exp(args[1])
     elif len(args)==3:

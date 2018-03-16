@@ -243,6 +243,8 @@ def load__data(root_data):
     list_files = pt.walk(root_data,'.csv')
     d_dico={}
     for item_csv in list_files:
+        if str(item_csv).__contains__('org.apache.commons.math3.genetics') is False:
+            pass
         prefix_name = str(item_csv).split('/')[-1][:-4]
         d_dico[prefix_name]=pd.read_csv(item_csv)
     return d_dico
@@ -257,13 +259,15 @@ def get_top_k(df,col_name,k=5):
     if col_name == 'random':
         size = len(df)
         if k >= size:
-            return df_cut
+            return df
         try:
             values = random.sample(range(1, size), k)
             df_cut = df.iloc[values,:]
         except ValueError:
             print('Sample size exceeded population size.')
             exit(-1)
+    if df_cut is None:
+        raise Exception("the df cut is None")
     return df_cut
 
 def main_loader(fp_path,info_path,uni_path):
@@ -291,21 +295,38 @@ def project_name(path):
 
 def matrix_analysis(root_path_project, root_stat,k=3,on='FP',out='/home/ise/eran/oout'):
     df_sum=[]
-    d_fp = load__data(root_path_project)
-    name_project =  project_name(root_path_project)
-    out_path = pt.mkdir_system(out,name_project,False)
-    df_stat = pd.read_csv(root_stat)
-    diced_to_prefix(df_stat,d_fp)
+    d_fp = load__data(root_path_project) # load all the package of the prefix packages
+    name_project =  project_name(root_path_project)  # get the project name
+    out_path = pt.mkdir_system(out,name_project,False) # create dir for the output
+    df_stat = pd.read_csv(root_stat)  # load the stat DataFrame
+    diced_to_prefix(df_stat,d_fp) # make packages stat dict
     for ky in d_fp.keys():
+        xx = list(d_fp['org.apache.commons.math3.genetics']) #org.apache.commons.math3.genetics.Population
+        if 'org.apache.commons.math3.genetics.Population' not in xx:
+            pass
+        print '--------------------------on={}---------------------------'.format(on)
+        print "name----->name_project: {}".format(name_project)
+        print "KEY : {}".format(ky)
         df_filter = df_stat.loc[df_stat['prefix'] == ky]
+        package_size = len(df_filter)
+        df_filter = df_filter.loc[df_filter['test'] == 1]
+        package_size_actual_test = len(df_filter)
+        df_filter = df_filter.loc[df_filter['pit'] == 1]
+        package_size_actual_pit = len(df_filter)
         if len(df_filter) > k:
             #print "ky: {} len: {}".format(ky,len(df_filter))
             df_cut = get_top_k(df_filter,on,k)
         else:
             df_cut = df_filter
         target_list=['ID']
+        if df_cut is None: #TODO:FIX IT !!!!!
+            raise Exception("[Error] the df cut is empyt == None")
         target_list.extend(df_cut['class'].tolist())
+        print "df_CUT\n\t{}".format(list(df_cut))
         package_df = d_fp[ky]
+        print list(package_df)
+        if 'org.apache.commons.math3.genetics.Population' in target_list or 'org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem' in target_list:
+            print ""
         res_package_df = package_df[target_list]
         size_bug = len(res_package_df)
         print 'size_bug: ',size_bug
@@ -322,6 +343,10 @@ def matrix_analysis(root_path_project, root_stat,k=3,on='FP',out='/home/ise/eran
                 d_res = mereg_dico(d,out_pit)
                 tmp_d[ky] = d_res
         tmp_d[ky]['package']=ky
+        tmp_d[ky]['all_mutation'] = size_bug
+        tmp_d[ky]['package_class_size'] = package_size
+        tmp_d[ky]['package_size_actual_test'] = package_size_actual_test
+        tmp_d[ky]['package_size_actual_pit'] = package_size_actual_pit
         df_sum.append(tmp_d[ky])
         del tmp_d[ky]
     df = pd.DataFrame(df_sum)
@@ -344,13 +369,13 @@ def aggregation_res_matrix(path_dir):
         df = pd.read_csv(file_i,index_col=0)
         col_list = list(df)
         col_list.remove('package')
-        df['sum_all'] = df[col_list].sum(axis=1)
         sum_kill = df['KILLED'].sum()
-        sum_all = df['sum_all'].sum()
+        sum_all = df['all_mutation'].sum()
         d.append({'criterion':criterion,'dir':dir_name,'K':k_num,'kill':sum_kill,'all_bug':sum_all})
     df_all = pd.DataFrame(d)
     df_all.sort_values(by=['K'],inplace=True)
     df_all.to_csv("{}/sum.csv".format(path_dir),index=False)
+
 def mereg_dico(d1,d2):
     print type(d1)
     print 'd1: ',d1
@@ -371,18 +396,25 @@ def mereg_dico(d1,d2):
 import sys
 if __name__ == "__main__":
     #func_start('/home/ise/eran/xml/')
-    aggregation_res_matrix('/home/ise/eran/oout')
-    exit()
+    #aggregation_res_matrix('/home/ise/eran/oout')
+    #exit()
     p_stat_U ='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat/ALL_U_t=30_it=0_.csv'
     p_stat_FP='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat/ALL_FP_t=30_it=0_.csv'
     p_prefix_csv_Fp = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_FP_t=30_it=0_/commons-math3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_U_t=30_it=0_/commons-math3-3.5-src/csvs/package'
 
+    #p_stat_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat/ALL_U_t=60_it=0_.csv'
+    #p_stat_FP = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat/ALL_FP_t=60_it=0_.csv'
+    #p_prefix_csv_Fp = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src/csvs/package'
+    #p_prefix_csv_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/package'
 
     arr_on=['random','loc_class','FP']
     for x in arr_on:
-        matrix_analysis(p_prefix_csv_U,p_stat_U,on=x,k=6)
-        matrix_analysis(p_prefix_csv_Fp, p_stat_FP, on=x, k=6)
+        for k_val in [1,3,8,14,30,100]:
+            matrix_analysis(p_prefix_csv_U,p_stat_U,on=x,k=k_val)
+            matrix_analysis(p_prefix_csv_Fp, p_stat_FP, on=x, k=k_val)
+    aggregation_res_matrix('/home/ise/eran/oout')
+
     #args = sys.argv
     #func_start(args[1])
 
