@@ -1,5 +1,5 @@
 
-import  os,copy
+import  os,copy,csv
 import sys,time
 import subprocess
 project_dict = {}
@@ -208,8 +208,39 @@ def pars_parms():
 
 
 
+def cal_fp_allocation_budget(package_name,FP_csv_path):
+    dict_fp = csv_to_dict(FP_csv_path)
+    
+    return dict_fp
+
+
+def csv_to_dict(path,key_name='FileName',val_name='prediction',delimiter='org',prefix_str='src\\main\\java\\',filter_out='package-info'):
+    dico = {}
+    with open(path) as csvfile:
+        reader1 = csv.DictReader(csvfile)
+        for row in reader1:
+            val_i = row[val_name]
+            key_i = row[key_name]
+            if str(key_i).startswith(prefix_str) is False:
+                continue
+            #key_i= key_i.replace('\\','.')
+            xs = str(key_i).split('\\')
+            indexes = [i for i, x in enumerate(xs) if x == delimiter]
+            if len(indexes ) == 0:
+                raise Exception('cant find the delimiter in the path: \n {} \n deli={}'.format(row[key_name],delimiter))
+            xs = xs[indexes[-1]:]
+            key_i = '.'.join(xs)
+            key_i = key_i [:-5] #to remove the .java from the prefix packages
+            if str(key_i).__contains__(filter_out):
+                continue
+            dico[key_i] = val_i
+
+    return dico
+
 
 
 if __name__ == "__main__":
-    before_op()
-    main_wrapper()
+    d = cal_fp_allocation_budget('org.apache.commons.math3.analysis.function','/home/eran/thesis/repo/ATG/csv/Most_out_files.csv')
+    print d
+    #before_op()
+    #main_wrapper()
