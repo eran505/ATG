@@ -319,7 +319,10 @@ def get_all_project_D4J(path):
         print "no project in the following path : {}".format(path)
     return projes
 
-
+def cleaning(p_path):
+    print 'path: ',p_path
+    obj = Cleaner(p_path)
+    obj.fit()
 
 if __name__ == "__main__":
 

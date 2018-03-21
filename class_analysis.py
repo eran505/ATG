@@ -9,13 +9,51 @@ import subprocess
 import pit_render_test as pt
 
 
+
 def get_class_size(root_path):
     walker_obj = pt.walk(root_path,"")
 
+
+def miss_target_pit(path_PIT,dico):
+    d={}
+    list_class_dir = pt.walk(path_PIT, '',False)
+    for dir in list_class_dir:
+        empty = 0
+        name = str(dir).split('/')[-1]
+        files = pt.walk(dir,'mutations')
+        if len(files)==1:
+            if os.stat(files[0]).st_size < 1:
+                empty=1
+            suffix = files[0][-3:]
+            if suffix == 'xml':
+                d[name]= {'xml':1,'csv':0,'empty':empty}
+            elif suffix =='csv':
+                d[name] = {'xml': 0, 'csv': 1,'empty':empty}
+            else:
+                raise Exception('unreconzie suffix: (path)= {}'.format(files[0]))
+        elif len(files)>1:
+            raise Exception('more than on Mutations.xml/Mutations.csv in dir: {}'.format(dir))
+        else:
+            d[name] = {'xml': 0, 'csv': 0,'empty':empty}
+    for ky in dico.keys():
+        if ky in d:
+            dico[ky]['pit_xml']=d[ky]['xml']
+            dico[ky]['pit_csv'] = d[ky]['csv']
+            dico[ky]['pit_empty_file'] = d[ky]['empty']
+        else:
+            print 'in'
+            dico[ky]['pit_xml'] = 0
+            dico[ky]['pit_csv'] = 0
+            dico[ky]['pit_empty_file'] = -1
+
+
 def miss_PIT(path_PIT,dico):
     d={}
+    if os.path.isdir(path_PIT) is False:
+        return
     #path_PIT = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_FP_t=30_it=0_/commons-math3-3.5-src/csvs/class'
     list_class_csv = pt.walk(path_PIT,'.csv')
+
     for csv in list_class_csv:
         name = str(csv).split('/')[-1][:-4]
         if os.stat(csv).st_size == 0:
@@ -30,7 +68,7 @@ def miss_PIT(path_PIT,dico):
             dico[ky]['pit'] = 0
 
 
-def missing_class_gen(root_class,root_test,java_src,log,pit=None,name='tmp'):
+def missing_class_gen(root_class,root_test,java_src,log,pit=None,name='tmp',pit2=None):
     # full path for the test and the .class files
     scanner_class = pt.walk(root_class,".class")
     scanner_java = pt.walk(java_src,".java")
@@ -44,6 +82,8 @@ def missing_class_gen(root_class,root_test,java_src,log,pit=None,name='tmp'):
     look_at_test(scanner_java,scanner_tests,d)
     if pit is not None:
         miss_PIT(pit,d)
+    if pit2 is not None:
+        miss_target_pit(pit2,d)
     dff =  make_df(d,log,name)
     return d
 
@@ -165,7 +205,8 @@ def time_budget_analysis(path_root):
         classes_path = "{}/target/classes/org/".format(i_path)
         tests_path = "{}/src/test/java/org/".format(i_path)
         pit_path = "{}/csvs/class".format(i_path)
-        df_i = missing_class_gen(root_class=classes_path, root_test=tests_path, java_src=javas_path,log=log_path,name=name_i,pit=pit_path)
+        pit_path2 = "{}/target/pit-reports/".format(i_path)
+        df_i = missing_class_gen(root_class=classes_path, root_test=tests_path, java_src=javas_path,log=log_path,name=name_i,pit=pit_path,pit2=pit_path2)
         list_d.append(df_i)
     if len(list_d) == 0:
         return {}
@@ -393,9 +434,56 @@ def mereg_dico(d1,d2):
     return d3
 
 
+
+
+
+def sum_all_stat_dir(p_path):
+    new_df_list=[]
+    list_col=['Empty_test_case','FP','empty_test','java(.class)','no_test','pit','test','no_test_Avg']
+    all_dir = pt.walk(p_path,'stat',False)
+    for dir in all_dir:
+        name = str(dir).split('/')[-2]
+        print 'name=',name
+        if len(name.split('_') ) < 5 :
+            continue
+        print dir
+        time = name.split('_')[5]
+        time = time[2:]
+        fin_file = pt.walk(dir,'FinStat')
+        if len(fin_file)==1:
+            tmp_name = str(fin_file[0]).split('/')[-1]
+            size_project = tmp_name.split('_')[2]
+            size_project =int(size_project)
+            d = {}
+            df = pd.read_csv(fin_file[0],index_col=0)
+            df['avg__empty'] = df['empty_test']/size_project
+            list_col.extend(['avg__empty'])
+            list_numric = list(df._get_numeric_data())
+            list_numric = [x for x in list_numric if x in list_col]
+
+            d['time']=time
+            d['name']=name
+            d['size_project']=size_project
+            d['size'] = len(df)
+            for x in list_numric:
+                d[x]=df[x].sum()
+            new_df_list.append(d)
+        if len(fin_file)>1 :
+            print fin_file
+    df = pd.DataFrame(new_df_list)
+    df.to_csv("{}sumup_stat.csv".format(p_path))
+
 import sys
+
 if __name__ == "__main__":
-    #func_start('/home/ise/eran/xml/')
+    #sum_all_stat_dir('/home/ise/eran/exp_all/')
+    pp = '/home/ise/tran'
+    if len(sys.argv)>1:
+        pp=sys.argv[1]
+    #xml_path = '/home/ise/eran/xml/'
+    func_start(pp)
+    exit()
+#    exit()
     #aggregation_res_matrix('/home/ise/eran/oout')
     #exit()
     p_stat_U ='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat/ALL_U_t=30_it=0_.csv'
@@ -408,9 +496,10 @@ if __name__ == "__main__":
     #p_prefix_csv_Fp = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src/csvs/package'
     #p_prefix_csv_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/package'
 
+
     arr_on=['random','loc_class','FP']
     for x in arr_on:
-        for k_val in [1,3,8,14,30,100]:
+        for k_val in [1,3,8,10,30,100,1000]:
             matrix_analysis(p_prefix_csv_U,p_stat_U,on=x,k=k_val)
             matrix_analysis(p_prefix_csv_Fp, p_stat_FP, on=x, k=k_val)
     aggregation_res_matrix('/home/ise/eran/oout')

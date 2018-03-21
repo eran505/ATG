@@ -502,9 +502,8 @@ def init_main():
 
 def int_exp(args):
     print 'exp...'
-    it = 2
+    it = 1 #TODO : change it back to two (2)
     comp = ["FP","U"]
-    comp = ["FP"] #TODO: FIX IT BY REMOVING THIS LINE !!
     v_path = sys.argv[1]  # target = /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org
     v_evo_name = sys.argv[2]  #evo_version = evosuite-1.0.5.jar
     v_evo_path = sys.argv[3] #evo_path  = /home/eran/programs/EVOSUITE/jar
@@ -512,20 +511,20 @@ def int_exp(args):
     upper_b = int(sys.argv[7])
     lower_b = int(sys.argv[6])
     b_klass = int(sys.argv[8])
-    if len(sys.argv)>9:
+    if len(sys.argv)>9 and sys.argv[5]=='exp' :
         it = int(sys.argv[9])
         comp=[]
         comp.append(str(sys.argv[10]))
     rel_path = os.getcwd() + '/'
-    if sys.argv[5]!='exp':
-        fp_budget, d = get_time_fault_prediction('{}/Most_out_files.csv'.format(sys.argv[5]), 'FileName', 'prediction',
-                                                 v_path, upper_b, lower_b, b_klass)
+    if sys.argv[5]=='d4j':
+        fp_budget = sys.argv[9]
     else:
         fp_budget, d = get_time_fault_prediction(str(rel_path)+'csv/Most_out_files.csv', 'FileName', 'prediction', v_path,upper_b,lower_b,b_klass)
+        dict_to_csv(d, v_dis_path)
     uni_budget = {}
     target_list = get_all_class_v1(v_path)
-    dict_to_csv(d, v_dis_path)
-    for i in range(it): #TODO : change it back to two (2)
+
+    for i in range(it):
         seed = time.strftime('%s')[-5:]
         for parm in comp:
             localtime = time.asctime(time.localtime(time.time()))
@@ -557,12 +556,12 @@ def Defect4J_analysis(obj_BUG):
     target_class_list = obj_BUG.modified_class
     path_evo = '/home/ise/eran/evosuite/jar/'
     evo_version = 'evosuite-1.0.5.jar'
-    time_list = 5
+    time_list = obj_BUG.k_budget
     out_dir = pt.mkdir_system(obj_BUG.root, 'Evo_Test', False)
     out_dir = out_dir +'/'
     modified_class_paths = []
     modified_package_path=[]
-
+    d_fp = obj_BUG.fp_dico
     for p_path in obj_BUG.modified_class:
         modified_class_paths.append(str(p_path).replace(".","/"))
     for pac_path in obj_BUG.infected_packages:
@@ -570,12 +569,12 @@ def Defect4J_analysis(obj_BUG):
 
     if obj_BUG.mod =='class':
         for klass in modified_class_paths:
-            sys.argv = ['', "{}{}".format(fixed_path, klass), evo_version, path_evo, out_dir, path_FP_CSV, max_time,
-                        min_time, time_list]
+            sys.argv = ['', "{}{}".format(fixed_path, klass), evo_version, path_evo, out_dir, 'd4j', max_time,
+                        min_time, time_list,d_fp]
             int_exp(sys.argv)
     elif obj_BUG.mod =='package':
         for package in modified_package_path:
-            sys.argv=['',"{}{}".format(fixed_path,package),evo_version,path_evo,out_dir,path_FP_CSV,max_time,min_time,time_list]
+            sys.argv=['',"{}{}".format(fixed_path,package),evo_version,path_evo,out_dir,'d4j',max_time,min_time,time_list,d_fp]
             int_exp(sys.argv)
 
     #TODO: finsh this fucnction make sure that after running the test the run on the fix version and the buggy version

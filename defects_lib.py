@@ -2,24 +2,29 @@
 import  os,copy,csv
 import sys,time
 import subprocess
-project_dict = {}
-root_dir = '~/'
 import shutil
 import pit_render_test as pt
 from contextlib import contextmanager
 import budget_generation as bg
+import fail_cleaner as fc
+
+project_dict = {}
+root_dir = '~/'
+
 
 
 class Bug_4j:
-
+    #b_mod = 'class' / 'package' , to kill the bug
     def __init__(self, pro_name,bug_id,info_args,root_dir,
                  defect4j_root="/home/ise/programs/defects4j/framework/bin/defects4j"
-                 ,csv_path ='/home/ise/eran/repo/ATG/csv',b_mod='class'):
+                 ,csv_path ='/home/ise/eran/repo/ATG/csv/Most_out_files.csv',b_mod='package'):
         os.system('export PATH=$PATH:/home/ise/programs/defects4j/framework/bin')
         self.root = root_dir
         self.p_name = pro_name
         self.id = bug_id
+        self.k_budget=None
         self.mod=b_mod
+        self.fp_dico = None
         self.info=info_args
         self.defects4j = defect4j_root
         self.csvFP = csv_path
@@ -110,7 +115,7 @@ class Bug_4j:
         if os.path.isdir(self.root) == False :
             raise Exception("cant find the path {0}".format(self.root))
         dir_d4j = ["fixed","buggy"]
-        #dir_d4j = [] #-----------------------------------Remove------------------------------------------------------
+        #dir_d4j = [] #--------Remove---
         for item in dir_d4j :
             if os.path.isdir(self.root+item):
                 shutil.rmtree(self.root+item)
@@ -133,28 +138,66 @@ class Bug_4j:
                     self.modified_class.append(y1)
             for item in self.modified_class :
                 print item
-    def modfiy_pom(self,p_path):
+    def modfiy_pom(self):
         bugg_path = "{}buggy".format(self.root)
         fixed_path = "{}fixed".format(self.root)
         if os.path.isfile("{}/pom.xml".format(bugg_path)):
-            os.system('rm {}'.format("{}/pom.xml".format(fixed_path)))
+            os.system('rm {}'.format("{}/pom.xml".format(bugg_path)))
             os.system('cp /home/ise/eran/repo/ATG/D4J/pom.xml {}'.format(bugg_path))
         if os.path.isfile("{}/pom.xml".format(fixed_path)):
             os.system('rm {}'.format("{}/pom.xml".format(fixed_path)))
             os.system('cp /home/ise/eran/repo/ATG/D4J/pom.xml {}'.format(fixed_path))
 
-    def analysis_test(self):
+    def analysis_test(self,dir='buggy',dir_out='results'): #TODO:hendel the folder with the different time budgets
         print ""
-        if os.path.isdir('{}/Evo_Test') is False:
+        res_path = pt.mkdir_system(self.root,dir_out,False)
+
+        if os.path.isdir('{}/Evo_Test'.format(self.root)) is False:
             print "No dir Evo_Test {}".format(self.root)
             exit(-1)
-        evo_test_dir= pt.walk('{}Evo_Test')
-        path_dir_buggy = "{}buggy/src/test/".format(self.root)
-        project_buggy = "{}buggy/".format(self.root)
-        self.modfiy_pom(project_buggy+'pom.xml')
+        evo_test_dir= pt.walk('{}Evo_Test'.format(self.root),'exp',False)
+        path_dir = "{}{}/src/test/".format(self.root,dir)
+        project_dir= "{}{}/".format(self.root,dir)
+        command_rm = "rm -r {}src/test/*".format(project_dir)
+        os.system(command_rm)
+        pt.mkdir_system('{}src/test/'.format(project_dir),'java')
         for test_dir in evo_test_dir:
-            pass
+            arr_path = str(test_dir).split('/')[-1]
+            name_arr = str(arr_path).split('_')
+            name = "Res_{}_{}_{}_".format(name_arr[0],name_arr[-2],name_arr[-1])
+            command_cp = 'cp -r {}/org {}src/test/java/'.format(test_dir,project_dir)
+            os.system(command_cp)
+            os.chdir(project_dir)
+            if dir == 'fixed':
+                fc.cleaning(project_dir)
+                command_rm= "rm -r {}/org/".format(test_dir)
+                os.system(command_rm)
+                command_mv = "mv {}src/test/java/org/ {}/".format(project_dir, test_dir)
+                os.system(command_mv)
+                continue
+            os.system('mvn clean test')
+            os.system('mv {}target/surefire-reports {}{}/{}'.format(project_dir,self.root,dir_out,name))
+            command_rm ="rm -r {}src/test/java/*".format(project_dir)
+            os.system(command_rm)
 
+    def clean_flaky_test(self):
+        self.modfiy_pom()
+        self.analysis_test(dir='fixed',dir_out='flaky')
+
+
+
+
+
+    def get_fp_budget(self,b_per_class):
+        list_packages = self.infected_packages
+        dico,project_allocation = cal_fp_allocation_budget(list_packages,self.csvFP,"{}fixed/target/classes/org/".format(self.root),b_per_class)
+        root_cur = self.root
+        if root_cur[-1] !='/':
+            root_cur = root_cur+'/'
+        with open('{}{}_b={}_.csv'.format(self.root, 'FP_Allocation',b_per_class), 'w') as f:
+            f.write('{0},{1},{2}\n'.format('class', 'probability_fp', 'time_budget'))
+            [f.write('{0},{1},{2}\n'.format(key, value[0], value[1])) for key, value in project_allocation.items()]
+        self.fp_dico = dico
     #TODO: see if the change pom is working and transfor each tset to the buggy and fixed
 
 
@@ -171,13 +214,16 @@ def before_op():
 
 def main_bugger(info,proj,idBug,out_path): #[ Evo_path , evo_version , mode , out_path , budget_time , upper , lowe ,
     print "starting.."
+    time_budget=[1,5,10]
     bug22 = Bug_4j(proj,idBug,info,out_path)
     val = bug22.get_data()
     if val == 0:
-        bg.Defect4J_analysis(bug22)
-        #TODO: the FP time budget is wrong need to re-calcuate in respect to all the project
-        print "Done Gen Tests"
-        #bug22.analysis_test()
+        for time in time_budget:
+            bug22.k_budget=time
+            bug22.get_fp_budget(time)
+            bg.Defect4J_analysis(bug22)
+        bug22.clean_flaky_test()
+        bug22.analysis_test()
     else:
         print "Error val={0} in project {2} BUG {1}".format(val,idBug,proj)
 def main_wrapper():
@@ -196,7 +242,7 @@ def main_wrapper():
             print('cant make dir')
             exit(1)
         main_bugger(args,proj_name,i,full_dis)
-        break
+
 
 
 def pars_parms():
@@ -206,13 +252,80 @@ def pars_parms():
     args = sys.argv
     return args
 
+def mereg_dicos(dico,list_klass,delimiter='org'):
+    '''
+    Make sure that the FP dict is contains only class with in the project.
+    '''
+    new_d ={}
+    for klass in list_klass:
+        xs = str(klass).split('/')
+        indexes = [i for i, x in enumerate(xs) if x == delimiter]
+        if len(indexes) == 0:
+            raise Exception('cant find the delimiter in the path: \n {} \n deli={}'.format(klass, delimiter))
+        xs = xs[indexes[-1]:]
+        klass_i = '.'.join(xs)
+        klass_i= klass_i[:-6]  # to remove the .java from the prefix packages
+        if klass_i in dico:
+            new_d[klass_i] = dico[klass_i]
+        else:
+            print klass_i
+    return new_d
 
 
-def cal_fp_allocation_budget(package_name,FP_csv_path):
+
+
+
+def cal_fp_allocation_budget(package_name_list,FP_csv_path,root_classes,t_budget):
+    all_classes = pt.walk(root_classes,'.class')
     dict_fp = csv_to_dict(FP_csv_path)
-    
-    return dict_fp
+    mereg_dicos(dict_fp,all_classes)
+    dico,d_project_fp= allocate_time_FP(dict_fp,time_per_k=t_budget)
+    res_dico={}
+    for key_i in dico.keys():
+        for package_name in package_name_list:
+            if str(key_i).lower().startswith(str(package_name).lower()):
+                res_dico[key_i]=dico[key_i]
+    return res_dico,d_project_fp
 
+def allocate_time_FP(dico,time_per_k,upper=120,lower=1):
+    total_sum_predection = sum(dico.values())
+    for k in dico.keys():
+        dico[k] = dico[k] / total_sum_predection
+    size_set_classes = len(dico.keys())
+    print "dico size=",size_set_classes
+    Total = size_set_classes * time_per_k
+    print "Total=",Total
+    LB = size_set_classes * lower
+    print "LB=",LB
+    budget_time = Total - LB
+    d_fin={}
+    not_max = {}
+    for k in dico.keys():
+        d_fin[k]=[dico[k],lower]
+        not_max[k] = dico[k]
+    lower_b = lower
+    while( budget_time>0 or len(not_max.keys())==0 ):
+        left_over = budget_time
+        for entry in not_max.keys():
+            time_b = (not_max[entry] * budget_time)
+            if float(time_b) + d_fin[entry][1]   >  float(upper) :
+                time_b = upper - d_fin[entry][1]
+                d_fin[entry][1]+=time_b
+                del not_max[entry]
+            else:
+                d_fin[entry][1] += time_b
+            left_over = left_over - time_b
+        budget_time=left_over
+        total_sum_predection = sum(not_max.values())
+        if total_sum_predection == 0 :
+            break
+        for k in not_max.keys():
+            not_max[k] = not_max[k] / total_sum_predection
+    if len(dico) != len(d_fin):
+        raise Exception("in function (allocate_time_FP) the dico and d_fin is not in the same size")
+    for k in dico:
+        dico[k]=d_fin[k][1]
+    return dico,d_fin
 
 def csv_to_dict(path,key_name='FileName',val_name='prediction',delimiter='org',prefix_str='src\\main\\java\\',filter_out='package-info'):
     dico = {}
@@ -221,6 +334,7 @@ def csv_to_dict(path,key_name='FileName',val_name='prediction',delimiter='org',p
         for row in reader1:
             val_i = row[val_name]
             key_i = row[key_name]
+
             if str(key_i).startswith(prefix_str) is False:
                 continue
             #key_i= key_i.replace('\\','.')
@@ -233,14 +347,13 @@ def csv_to_dict(path,key_name='FileName',val_name='prediction',delimiter='org',p
             key_i = key_i [:-5] #to remove the .java from the prefix packages
             if str(key_i).__contains__(filter_out):
                 continue
-            dico[key_i] = val_i
-
+            key_i = str(key_i).replace('math3','math') #TODO: FIX IT # because the fp is on common math 3+ need to remove the math3. form the prefix paac
+            dico[key_i] = float(val_i)
     return dico
 
 
 
+
 if __name__ == "__main__":
-    d = cal_fp_allocation_budget('org.apache.commons.math3.analysis.function','/home/eran/thesis/repo/ATG/csv/Most_out_files.csv')
-    print d
-    #before_op()
-    #main_wrapper()
+    before_op()
+    main_wrapper()

@@ -86,6 +86,10 @@ def del_dir(dir_path,class_name,log_dir):
         raise Exception("[Error] cant find the PIT log of class {} ".format(class_name))
     return True
 
+def fix_by_stat(root_dir,arg=None): ##item ['dir_path','name_class']
+    if os.path.isdir(root_dir) is False:
+        print "the root dir is invalid :{}".format(root_dir)
+        return
 
 
 def get_class_name_csv(csv_p):
