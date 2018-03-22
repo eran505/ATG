@@ -25,7 +25,7 @@ def flush_csv(out_path_dir, xml_df, name_file):
         return
     xml_df.to_csv("{}/{}.csv".format(out_path_dir,name_file))
 
-def get_all_xml(path,root_path_project):
+def get_all_xml(path,root_path_project,mod):
     d_class={}
     err={}
     err_name={}
@@ -47,7 +47,11 @@ def get_all_xml(path,root_path_project):
             continue
         name_file = str(x_xml).split('/')[-2]
         #print "name: ",name_file
-        xml_df,test_name = pars_xml_to_csv(x_xml)
+        xml_df,test_name = pars_xml_to_csv(x_xml,mod)
+        if xml_df is None:
+            #d_class[name_file] = None
+            print "empty xml file in class: {}".format(name_file)
+            continue
         if test_name is not None and test_name != name_file:
             print "[Error] {} != {}".format(name_file,test_name)
             err_name[test_name] = name_file
@@ -67,7 +71,7 @@ def get_all_xml(path,root_path_project):
 def rm_file(path):
     os.system('rm {}'.format(path))
 
-def pars_xml_to_csv(path_xml):
+def pars_xml_to_csv(path_xml,mod):
     test_name =None
     list_xml=[] #the dict that will become to DataFrame
     if os.path.isfile(path_xml) is False:
@@ -80,7 +84,7 @@ def pars_xml_to_csv(path_xml):
         message = template.format(type(e).__name__, e.args)
         print (message)
         rm_file(path_xml)
-        return None
+        return None,None
 
     ctr=0
     hash = hashlib.sha1()
@@ -103,10 +107,15 @@ def pars_xml_to_csv(path_xml):
             str_hash+=str(d_i[c])
         hash.update(str_hash)
         d_i['ID'] = hash.hexdigest()
-
         test_name_tmp = d_i['killingTest']
-        if test_name_tmp is not None and test_name is None:
-            test_name = str(test_name_tmp).split('_ESTest')[0]
+        if mod == 'rev':
+            if test_name_tmp is not None and test_name is None:
+                test_name = str(test_name_tmp).split('_ESTest')[0]
+        else:
+            test_name_tmp = d_i['mutatedClass']
+            if test_name_tmp is not None and test_name is None:
+                if str(test_name_tmp).startswith('org.'):
+                    test_name = str(test_name_tmp)
         list_xml.append(d_i)
     df=pd.DataFrame(list_xml)
     return df,test_name
@@ -163,23 +172,90 @@ def merge_dfs(dico,out_path):
     for ky_i in d_fin.keys():
         flush_csv(out_path,d_fin[ky_i],ky_i)
 
-def main_func(root_p):
-    out_path_dir = mkdir_system(root_p,'csvs',is_del=False)
-    dict_classes = get_all_xml(out_path_dir,root_p)
-    rev_analysis_by_package(out_path_dir,d_class=dict_classes)
+def main_func(root_p,mod):
+    out_path_dir = mkdir_system(root_p,'csvs',is_del=True)
+    dict_classes = get_all_xml(out_path_dir,root_p,mod)
+    if mod == 'rev':
+        rev_analysis_by_package(out_path_dir,d_class=dict_classes)
+    else:
+        wrapper_class_analysis(root_p)
     #rev_analysis_by_package(out_path_dir,data_path='/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/class')
 
-
-def get_projects(p_root_path):
+def get_projects(p_root_path,mod='rev'):
     list_project = pit_render_test.walk(p_root_path,'commons-math3-3.5-src',False)
     #list_project = ['/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src','/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src']
     for x in list_project:
-        main_func(x)
+        main_func(x,mod)
+
+def merge_all_csvs(root_path):
+    print ''
+    csvs_class=pit_render_test.walk(root_path,'csvs',False)
+    dico_paths={}
+    for item_p in csvs_class:
+        if item_p[-1] == '/':
+            item_p=item_p[:-1]
+        if os.path.isdir("{}/class".format(item_p)) is False:
+            print "[Error]  {}/class is not exist".format(item_p)
+            continue
+        classes_name=pit_render_test.walk("{}/class".format(item_p),'.csv')
+        for klass in classes_name:
+            name = str(klass).split('/')[-1][:-4]
+            if name not in dico_paths:
+                dico_paths[name]=[]
+            dico_paths[name].append(klass)
+    return dico_paths
+
+def read_and_mereg(dico,out_path):
+    col=['ID','status']
+    out_dir = pit_render_test.mkdir_system(out_path,'out_xml',True)
+    for ky in dico:
+        list_df=[]
+        for p_csv in dico[ky]:
+            name_col = None
+            for x in str(p_csv).split('/'):
+                if str(x).__contains__('ALL'):
+                    name_col=x
+                    break
+            if name_col is None:
+                str_err = "[Error] something wrong with the path {} no ALL dir ".format(p_csv)
+                raise Exception("{}".format(str_err))
+            df = pd.read_csv(p_csv,index_col=0)
+            df=df[col]
+            df.rename(columns={'status': '{}'.format(name_col)}, inplace=True)
+            list_df.append(df)
+        if len(list_df)>0:
+            m_df = list_df[0]
+            for item in list_df[1:]:
+                m_df=pd.merge(m_df,item,on=['ID'])
+        print "ky:{} size_df:{}".format(ky,m_df.shape)
+        #m_df['killed'] = m_df.apply(sublst, axis=1)
+        target = [x for x in list(m_df) if str(x).__contains__('ALL')]
+        ##print target
+        size_target = len(target)
+        m_df['kill'] = m_df[target].apply(lambda row: my_test(row,target), axis=1)
+        m_df['AVG_kill'] = m_df['kill']/size_target
+        flush_csv(out_dir,m_df,ky)
+
+def my_test(row,tar):
+    kill =0
+    for x in tar:
+        if str(row[x]) == 'KILLED':
+            kill+=1
+    return kill
+
+
+def wrapper_class_analysis(root_path):
+    list_p = pit_render_test.walk(root_path,'t=',False)
+    for p in list_p:
+        dico = merge_all_csvs(p)
+        read_and_mereg(dico,root_path)
 
 import sys
 if __name__ == "__main__":
+    #wrapper_class_analysis('/home/ise/tran/02_12_18_26_28_t=9_')
     args = sys.argv
     if len(args)>2:
         get_projects(args[1])
     else:
-        get_projects('/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_') #/home/ise/eran/xml/
+        get_projects('/home/ise/tran/','reg') #/home/ise/eran/xml/
+        pass

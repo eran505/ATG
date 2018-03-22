@@ -44,7 +44,7 @@ def miss_target_pit(path_PIT,dico):
             print 'in'
             dico[ky]['pit_xml'] = 0
             dico[ky]['pit_csv'] = 0
-            dico[ky]['pit_empty_file'] = -1
+            dico[ky]['pit_empty_file'] = 0
 
 
 def miss_PIT(path_PIT,dico):
@@ -232,7 +232,7 @@ def merge_df(list_d,log_path_dir):
                 for filed_i in dico[ky]:
                     if filed_i == 'class' or filed_i=='FP':
                         continue
-                    if filed_i in d_big:
+                    if filed_i in d_big[ky]:
                         d_big[ky][filed_i]+=dico[ky][filed_i]
                     else:
                         d_big[ky][filed_i] = dico[ky][filed_i]
@@ -477,11 +477,12 @@ import sys
 
 if __name__ == "__main__":
     #sum_all_stat_dir('/home/ise/eran/exp_all/')
-    pp = '/home/ise/tran'
+
+    #pp = '/home/ise/tran/'
     if len(sys.argv)>1:
         pp=sys.argv[1]
-    #xml_path = '/home/ise/eran/xml/'
-    func_start(pp)
+        func_start(pp)
+        sum_all_stat_dir(pp)
     exit()
 #    exit()
     #aggregation_res_matrix('/home/ise/eran/oout')
