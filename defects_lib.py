@@ -50,8 +50,17 @@ class Bug_4j:
         dirs=['buggy','fixed']
         for d in dirs:
             rel_p = 'src/test/org'
-            dir_rm='{}{}/{}'.format(path,d,rel_p)
-            os.system('rm -r {}'.format(dir_rm))
+            rel_p_only_test = 'src/test'
+            dir_org='{}{}/{}'.format(path,d,rel_p)
+            dir_test = '{}{}/{}'.format(path,d,rel_p_only_test)
+            if os.path.isdir(dir_org):
+                os.system('rm -r {}'.format(dir_org))
+            elif os.path.isdir(dir_test):
+                os.system('rm -r {}/* '.format(dir_test))
+            else:
+                print "[Error] no Test dir : {}".format(dir_test)
+
+
 
     def correspond_package(self):
         for klass in self.modified_class :
@@ -74,12 +83,16 @@ class Bug_4j:
         print "compiling..."
         path_p='{}fixed'.format(self.root)
         os.chdir(path_p)
-        sig_f = self.init_shell_script('mvn install')
+        os.system('mkdir log_dir')
+        sig_f = self.init_shell_script('mvn install >> log_dir/mvn_install_command.txt 2>&1')
         path_p = '{}buggy'.format(self.root)
         os.chdir(path_p)
-        sig_b = self.init_shell_script('mvn install')
-        if sig_b == 1 or sig_f == 1:
+        os.system('mkdir log_dir')
+        sig_b = self.init_shell_script('mvn install >> log_dir/mvn_install_command.txt 2>&1')
+        if sig_b == 1:
             return 1
+        elif sig_f == 1:
+            return -1
         return 0
     def compile_data(self):
         if self.p_name == 'Math':
@@ -136,6 +149,7 @@ class Bug_4j:
             for y1 in y:
                 if len(y1)>1:
                     self.modified_class.append(y1)
+            print "______modified_class_______"
             for item in self.modified_class :
                 print item
     def modfiy_pom(self):
@@ -198,8 +212,6 @@ class Bug_4j:
             f.write('{0},{1},{2}\n'.format('class', 'probability_fp', 'time_budget'))
             [f.write('{0},{1},{2}\n'.format(key, value[0], value[1])) for key, value in project_allocation.items()]
         self.fp_dico = dico
-    #TODO: see if the change pom is working and transfor each tset to the buggy and fixed
-
 
 def before_op():
     project_dict['Chart'] = {'project_name':"JFreechart", "num_bugs":26}
@@ -214,7 +226,7 @@ def before_op():
 
 def main_bugger(info,proj,idBug,out_path): #[ Evo_path , evo_version , mode , out_path , budget_time , upper , lowe ,
     print "starting.."
-    time_budget=[1,5,10]
+    time_budget=[2] #10 , 5, 1
     bug22 = Bug_4j(proj,idBug,info,out_path)
     val = bug22.get_data()
     if val == 0:
@@ -233,7 +245,10 @@ def main_wrapper():
     proj_name = args[1]
     path_original = copy.deepcopy(args[4])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
-    for i in range(92,num_of_bugs):
+    for i in range(1,num_of_bugs):
+        print "*"*50
+        print "project:{} | i={} ".format(proj_name,i)
+        print "*" * 50
         localtime = time.asctime(time.localtime(time.time()))
         localtime = str(localtime).replace(":","_")
         dir_name = "P_{0}_B_{1}_{2}".format(proj_name,str(i) ,str(localtime) )
@@ -256,6 +271,7 @@ def mereg_dicos(dico,list_klass,delimiter='org'):
     '''
     Make sure that the FP dict is contains only class with in the project.
     '''
+    ctr_in = 0
     new_d ={}
     for klass in list_klass:
         xs = str(klass).split('/')
@@ -264,11 +280,13 @@ def mereg_dicos(dico,list_klass,delimiter='org'):
             raise Exception('cant find the delimiter in the path: \n {} \n deli={}'.format(klass, delimiter))
         xs = xs[indexes[-1]:]
         klass_i = '.'.join(xs)
-        klass_i= klass_i[:-6]  # to remove the .java from the prefix packages
+        klass_i= klass_i[:-6]  # to remove the .class from the prefix packages
         if klass_i in dico:
             new_d[klass_i] = dico[klass_i]
+            ctr_in+=1
         else:
             print klass_i
+    print "merg {} classes out of {}".format(ctr_in,len(list_klass))
     return new_d
 
 
@@ -277,7 +295,11 @@ def mereg_dicos(dico,list_klass,delimiter='org'):
 
 def cal_fp_allocation_budget(package_name_list,FP_csv_path,root_classes,t_budget):
     all_classes = pt.walk(root_classes,'.class')
-    dict_fp = csv_to_dict(FP_csv_path)
+    if os.path.isdir("{}apache/commons/math3".format(root_classes)):
+        bol_math3 = True
+    else:
+        bol_math3 = False
+    dict_fp = csv_to_dict(FP_csv_path,math3=bol_math3)
     mereg_dicos(dict_fp,all_classes)
     dico,d_project_fp= allocate_time_FP(dict_fp,time_per_k=t_budget)
     res_dico={}
@@ -327,7 +349,7 @@ def allocate_time_FP(dico,time_per_k,upper=120,lower=1):
         dico[k]=d_fin[k][1]
     return dico,d_fin
 
-def csv_to_dict(path,key_name='FileName',val_name='prediction',delimiter='org',prefix_str='src\\main\\java\\',filter_out='package-info'):
+def csv_to_dict(path,key_name='FileName',val_name='prediction',delimiter='org',prefix_str='src\\main\\java\\',filter_out='package-info',math3=True):
     dico = {}
     with open(path) as csvfile:
         reader1 = csv.DictReader(csvfile)
@@ -347,7 +369,8 @@ def csv_to_dict(path,key_name='FileName',val_name='prediction',delimiter='org',p
             key_i = key_i [:-5] #to remove the .java from the prefix packages
             if str(key_i).__contains__(filter_out):
                 continue
-            key_i = str(key_i).replace('math3','math') #TODO: FIX IT # because the fp is on common math 3+ need to remove the math3. form the prefix paac
+            if math3 is False:
+                key_i = str(key_i).replace('math3','math') #TODO: FIX IT # because the fp is on common math 3+ need to remove the math3. form the prefix paac
             dico[key_i] = float(val_i)
     return dico
 
