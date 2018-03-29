@@ -23,13 +23,19 @@ def mkdir_system(path_root,name,is_del=True):
 def flush_csv(out_path_dir, xml_df, name_file):
     if xml_df is None:
         return
+    ##print "{}/{}.csv".format(out_path_dir, name_file)
     xml_df.to_csv("{}/{}.csv".format(out_path_dir,name_file))
 
 def get_all_xml(path,root_path_project,mod):
     d_class={}
+    print "-"*30
+    print path
+    cols=['ID','mutatedClass']
     err={}
+    index_df=pd.DataFrame(columns=cols)
     err_name={}
-    out_path_dir = mkdir_system(path,'class',is_del=False)
+    out_path_dir = mkdir_system(path,'class',is_del=True)
+    out_path_index = mkdir_system(path, 'index', is_del=True)
     list_xml=pit_render_test.walk(root_path_project,'mutations.xml')
     if list_xml is None:
         print "[Error] no mutations xmls found in the following path --> {}".format(root_path_project)
@@ -40,6 +46,7 @@ def get_all_xml(path,root_path_project,mod):
     #    if str(x).__contains__('SphericalCoordinat'):
     #        x_list.append(x)
     #list_xml= x_list
+
     for x_xml in list_xml:
         print all
         all=all-1
@@ -48,10 +55,14 @@ def get_all_xml(path,root_path_project,mod):
         name_file = str(x_xml).split('/')[-2]
         #print "name: ",name_file
         xml_df,test_name = pars_xml_to_csv(x_xml,mod)
+
+        #bulid the index data-frame
+
         if xml_df is None:
             #d_class[name_file] = None
             print "empty xml file in class: {}".format(name_file)
             continue
+        index_df = pd.concat([xml_df[cols],index_df])
         if test_name is not None and test_name != name_file:
             print "[Error] {} != {}".format(name_file,test_name)
             err_name[test_name] = name_file
@@ -65,6 +76,7 @@ def get_all_xml(path,root_path_project,mod):
         name_file = key
         flush_csv(out_path_dir,xml_df,name_file)
         d_class[name_file]=xml_df
+    flush_csv(out_path_index,index_df,'index_er')
     return d_class
 
 
@@ -184,8 +196,12 @@ def main_func(root_p,mod):
 def get_projects(p_root_path,mod='rev'):
     list_project = pit_render_test.walk(p_root_path,'commons-math3-3.5-src',False)
     #list_project = ['/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src','/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src']
+    #list_project=[x for x in list_project if str(x).__contains__('t=20')]
     for x in list_project:
         main_func(x,mod)
+    if mod!='rev':
+        make_big_csv(p_root_path)
+        add_all_big(p_root_path)
 
 def merge_all_csvs(root_path):
     print ''
@@ -215,6 +231,7 @@ def read_and_mereg(dico,out_path):
             for x in str(p_csv).split('/'):
                 if str(x).__contains__('ALL'):
                     name_col=x
+                    time_b = str(x).split('_')[-3]
                     break
             if name_col is None:
                 str_err = "[Error] something wrong with the path {} no ALL dir ".format(p_csv)
@@ -229,12 +246,101 @@ def read_and_mereg(dico,out_path):
                 m_df=pd.merge(m_df,item,on=['ID'])
         print "ky:{} size_df:{}".format(ky,m_df.shape)
         #m_df['killed'] = m_df.apply(sublst, axis=1)
-        target = [x for x in list(m_df) if str(x).__contains__('ALL')]
+        target_fp = [x for x in list(m_df) if str(x).__contains__('FP')]
+        target_u = [x for x in list(m_df) if str(x).__contains__('U')]
         ##print target
-        size_target = len(target)
-        m_df['kill'] = m_df[target].apply(lambda row: my_test(row,target), axis=1)
-        m_df['AVG_kill'] = m_df['kill']/size_target
+        aggregation(m_df,target_fp,'FP',time_b)
+        aggregation(m_df, target_u,'U',time_b)
         flush_csv(out_dir,m_df,ky)
+
+def aggregation(m_df,cols,mode,time_budget):
+    size_target = len(cols)
+    m_df['{}_KILL_Sum_{}'.format(time_budget,mode)] = m_df[cols].apply(lambda row: my_test(row, cols), axis=1)
+    m_df['{}_KILL_Avg_{}'.format(time_budget,mode)] = m_df['{}_KILL_Sum_{}'.format(time_budget,mode)] / size_target
+
+def make_big_csv(root_p):
+    list_p = pit_render_test.walk(root_p,'out_xml',False)
+    for p in list_p:
+        print p
+        cols = ['ID', 'KILL_Avg_FP', 'KILL_Sum_FP', 'KILL_Avg_U', 'KILL_Sum_U' ]
+        time_b = str(p).split('/')[-2].split('_')[-2]
+        for j in range(1,len(cols)):
+            cols[j]="{}_{}".format(time_b,cols[j])
+        acc = 0
+        name = str(p).split('/')[-2].split('_')[-2]
+        csv_lists= pit_render_test.walk(p,'.csv')
+        big_df = pd.DataFrame(columns=cols)
+        p = p[:-8]
+        for csv_item in csv_lists:
+            print "csv_item =",csv_item
+            df = pd.read_csv(csv_item,index_col=0)
+            df=df[cols]
+            acc+=int(len(df))
+            big_df = pd.concat([big_df,df])
+            if acc != int(len(big_df)):
+                print "acc: {} big: {}".format(acc,int(len(big_df)))
+            #print "[Good] big_df size: ", len(big_df)
+            flush_csv(p,big_df,'big_df_{}'.format(name))
+        print 'done'
+
+
+def add_all_big(root_p):
+    list_p = pit_render_test.walk(root_p,'big_df')
+    if len(list_p) > 0 :
+        big_df_all = pd.read_csv(list_p[0],index_col=0)
+    else:
+        print "didnt find any big_df Dataframe in path:{}".format(root_p)
+    for p in list_p[1:]:
+        df = pd.read_csv(p,index_col=0)
+        big_df_all = pd.merge(big_df_all,df,on=['ID'],how='outer')
+        print "all_df: {}".format(len(big_df_all))
+    avg_col = ['ID']
+    list_cols = list(big_df_all)
+    list_cols = [x for x in list_cols if str(x).__contains__('Avg')]
+    avg_col.extend(list_cols )
+    df_avg = big_df_all[avg_col]
+    make_graph(df_avg,avg_col,root_p)
+    flush_csv(root_p, df_avg, 'big_AVG_df')
+    flush_csv(root_p,big_df_all,'big_all_df')
+
+
+
+def make_graph(df,cols,out,action='mean'):
+    list_d=[]
+    d_fp = {}
+    d_u={}
+    all_d={}
+    for x in cols:
+        if x =='ID':
+            continue
+        mode =  str(x).split('_')[-1]
+        name_budget = str(x).split('_')[0].split('=')[1]
+        if mode == 'FP':
+            if action == 'mean':
+                d_fp[name_budget]=df[x].mean()
+            elif action == 'miss':
+                d_u[name_budget] = df[x].isnull().sum()
+        elif mode=='U':
+            if action == 'mean':
+                d_u[name_budget] = df[x].mean()
+            elif action == 'miss':
+                d_u[name_budget] = df[x].isnull().sum()
+        else:
+            print mode
+    for ky in d_fp.keys():
+        all_d[ky]={'time_budget':ky,'FP':d_fp[ky]}
+    for key in d_u.keys():
+        if key in all_d:
+            all_d[key]['U']=d_u[key]
+        else:
+            all_d[key]={'time_budget':key,'FP':0,'U':d_u[key]}
+    for k in all_d:
+        list_d.append(all_d[k])
+    df_sum = pd.DataFrame(list_d)
+    df_sum.sort_values(by=['time_budget'],inplace=True)
+    flush_csv(out, df_sum, 'sum_df_{}'.format(action))
+
+
 
 def my_test(row,tar):
     kill =0
@@ -243,16 +349,68 @@ def my_test(row,tar):
             kill+=1
     return kill
 
-
 def wrapper_class_analysis(root_path):
+    size_p = len(str(root_path).split('/'))
     list_p = pit_render_test.walk(root_path,'t=',False)
+    list_p = [x for x in list_p if len(str(x).split('/'))<size_p+1 ]
+    #list_p = [x for x in list_p if str(x).__contains__('=20_')  ]
     for p in list_p:
+        print p
         dico = merge_all_csvs(p)
-        read_and_mereg(dico,root_path)
+        read_and_mereg(dico,p)
+
+
+def packages_agg(path,df_index):
+    out_path  = '/'.join(str(path).split('/')[:-1])
+    df = pd.read_csv(path,index_col=0)
+    res_df = pd.merge(df,df_index,on=['ID'],how='outer')
+    res_df['package'] = res_df['class'].apply(lambda x: '.'.join(str(x).split('.')[:-1]))
+    res_df_sum = res_df.groupby(['package']).sum()
+    res_df_miss = res_df.groupby(['package']).apply(lambda x: x.notnull().sum())
+    res_df_mean = res_df.groupby(['package']).mean()
+    dir_out = pit_render_test.mkdir_system(out_path,'package_agg',True)
+    flush_csv(dir_out,res_df_miss,'df_miss')
+    flush_csv(dir_out, res_df_mean, 'df_mean')
+    flush_csv(dir_out, res_df_sum, 'df_sum')
+
+
+def get_ID_index_table(root_path):
+    res = pit_render_test.walk(root_path,'index_er')
+    index_df = pd.DataFrame(columns=['ID','mutatedClass'])
+    if len(res)>0:
+        index_df = pd.read_csv(res[0],index_col=0)
+        print "size:{}".format(len(index_df))
+    for csv_p in res[1:]:
+        df=pd.read_csv(csv_p,index_col=0)
+        index_df = pd.merge(index_df,df,on=['ID','mutatedClass'],how='outer')
+        print "size:{}".format(len(index_df))
+    index_df.rename(columns={'mutatedClass': '{}'.format('class')}, inplace=True)
+    flush_csv(root_path,index_df,'indexer')
+    return index_df
+
+def packager(path_big,path_index): # make agg for packages TODO: fix the missing value DataFrame
+    '''
+     this function is analysis the data by packages
+
+    :param path_big: the path to the big.csv file
+    :param path_index: the path to the indexer.csv or path to the dir where all the index file are
+    :return: csv file
+    '''
+    if path_index[-3:] == 'csv':
+        df_index = pd.read_csv(path_index,index_col=0)
+    else:
+        df_index=get_ID_index_table(path_index)
+    packages_agg(path_big,df_index)
+
 
 import sys
 if __name__ == "__main__":
-    #wrapper_class_analysis('/home/ise/tran/02_12_18_26_28_t=9_')
+    #my_p = '//home/ise/tran/02_17_02_51_04_t=4_'
+    tran_p = '/home/ise/tran/'
+    #wrapper_class_analysis(tran_p)
+    make_big_csv(tran_p)
+    add_all_big(tran_p)
+    #exit()
     args = sys.argv
     if len(args)>2:
         get_projects(args[1])

@@ -432,7 +432,7 @@ def write_log_dict(dico,path):
         pickle.dump(dico, fp)
     str_string = ''
     for key in dico:
-        str_string=str_string+'key:{} # arr:{} # comm:{} \n '.format(key,dico[key]['arr'],dico[key]['command'])
+        str_string=str_string+'key:{} # arr:{} # comm:{} \n\n '.format(key,dico[key]['arr'],dico[key]['command'])
     with open("{}/log_pit_dict.txt".format(ppath), "w") as f:
         f.write(str(str_string)+"\n")
 

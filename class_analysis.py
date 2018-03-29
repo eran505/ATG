@@ -178,45 +178,58 @@ def look_at_test(classes,tests,d):
             continue
 
 
-def func_start(main_root):
+def func_start(main_root,mode='reg'):
     scan_obj = pt.walk(main_root,"t=",False,0)
     li=[]
     for x in scan_obj:
         print x
-        li.append(time_budget_analysis(x))
+        li.append(time_budget_analysis(x,mode))
     df = pd.DataFrame(li)
     if main_root[-1] !='/':
         main_root = main_root+'/'
     df.to_csv(main_root+"class_analysis.csv")
-def time_budget_analysis(path_root):
-    list_d = []
+def time_budget_analysis(path_root,mode):
+    list_fp = []
+    list_u =[]
     res_scanner = pt.walk(path_root, "commons-math3-3.5-src", False)
     p_path = path_root
     if p_path[-1] != '/':
         p_path= p_path+'/'
-    if os.path.isdir("{}stat/".format(p_path)) is False :
-        os.system("mkdir {}".format(p_path+"stat/"))
-    log_path = "{}stat/".format(p_path)
+    if os.path.isdir("{}stat_r/".format(p_path)):
+        os.system("rm -r {}".format(p_path + "stat_r/"))
+    os.system("mkdir {}".format(p_path + "stat_r/"))
+    log_path = "{}stat_r/".format(p_path)
     for i_path in res_scanner:
         #if str(i_path).__contains__("ALL_U") is False:
         #    continue
         name_i = get_name_path(i_path,-2)
+        allocation_mode = str(name_i).split('_')[1]
+        time_budget = str(name_i).split('_')[2][2:]
+
         javas_path="{}/src/main/java/org/".format(i_path)
         classes_path = "{}/target/classes/org/".format(i_path)
         tests_path = "{}/src/test/java/org/".format(i_path)
-        pit_path = "{}/csvs/class".format(i_path)
-        pit_path2 = "{}/target/pit-reports/".format(i_path)
+        pit_path2=None
+        pit_path=None
+        if mode == 'rev':
+            pit_path = "{}/csvs/class".format(i_path)
+        else:
+            pit_path2 = "{}/target/pit-reports/".format(i_path)
         df_i = missing_class_gen(root_class=classes_path, root_test=tests_path, java_src=javas_path,log=log_path,name=name_i,pit=pit_path,pit2=pit_path2)
-        list_d.append(df_i)
-    if len(list_d) == 0:
-        return {}
-    res = merge_df(list_d,log_path)
-    return res
+        if allocation_mode =='FP':
+            list_fp.append(df_i)
+        elif allocation_mode == 'U':
+            list_u.append(df_i)
+        else:
+            raise Exception('No allocation mode is known in name:{} \n path:{}'.format(name_i,i_path))
+    if len(list_u) > 0:
+        merge_df(list_u,log_path,'u')
+    if len(list_fp) > 0:
+        merge_df(list_fp, log_path,'fp')
+    return None
 
 
-
-
-def merge_df(list_d,log_path_dir):
+def merge_df(list_d,log_path_dir,allocation_mode):
     size = len(list_d)
     d_big ={}
     for dico in list_d:
@@ -259,7 +272,7 @@ def merge_df(list_d,log_path_dir):
     df['no_test_Avg'] = df['no_test']/(df['test']+df['no_test'])
     good_bye_list = ['arr']
     df.drop(good_bye_list, axis=1, inplace=True)
-    df.to_csv("{}FinStat_Size_{}_.csv".format(log_path_dir,size))
+    df.to_csv("{}FinStat_{}_Size_{}_.csv".format(log_path_dir,allocation_mode,size))
     numeric_clmns = df.dtypes[df.dtypes != "object"].index
     d_sum_fin={"num_classes":df['class'].count(),'size_dir':size,'time_budget':extract_time(log_path_dir)}
     for col in numeric_clmns :
@@ -342,9 +355,6 @@ def matrix_analysis(root_path_project, root_stat,k=3,on='FP',out='/home/ise/eran
     df_stat = pd.read_csv(root_stat)  # load the stat DataFrame
     diced_to_prefix(df_stat,d_fp) # make packages stat dict
     for ky in d_fp.keys():
-        xx = list(d_fp['org.apache.commons.math3.genetics']) #org.apache.commons.math3.genetics.Population
-        if 'org.apache.commons.math3.genetics.Population' not in xx:
-            pass
         print '--------------------------on={}---------------------------'.format(on)
         print "name----->name_project: {}".format(name_project)
         print "KEY : {}".format(ky)
@@ -354,6 +364,8 @@ def matrix_analysis(root_path_project, root_stat,k=3,on='FP',out='/home/ise/eran
         package_size_actual_test = len(df_filter)
         df_filter = df_filter.loc[df_filter['pit'] == 1]
         package_size_actual_pit = len(df_filter)
+        print list(df_filter)
+        loc = df_filter['loc_TEST'].sum()
         if len(df_filter) > k:
             #print "ky: {} len: {}".format(ky,len(df_filter))
             df_cut = get_top_k(df_filter,on,k)
@@ -361,13 +373,11 @@ def matrix_analysis(root_path_project, root_stat,k=3,on='FP',out='/home/ise/eran
             df_cut = df_filter
         target_list=['ID']
         if df_cut is None: #TODO:FIX IT !!!!!
-            raise Exception("[Error] the df cut is empyt == None")
+            raise Exception("[Error] the df cut is empty == None")
         target_list.extend(df_cut['class'].tolist())
         print "df_CUT\n\t{}".format(list(df_cut))
         package_df = d_fp[ky]
         print list(package_df)
-        if 'org.apache.commons.math3.genetics.Population' in target_list or 'org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem' in target_list:
-            print ""
         res_package_df = package_df[target_list]
         size_bug = len(res_package_df)
         print 'size_bug: ',size_bug
@@ -384,6 +394,7 @@ def matrix_analysis(root_path_project, root_stat,k=3,on='FP',out='/home/ise/eran
                 d_res = mereg_dico(d,out_pit)
                 tmp_d[ky] = d_res
         tmp_d[ky]['package']=ky
+        tmp_d[ky]['Test_LOC'] = loc
         tmp_d[ky]['all_mutation'] = size_bug
         tmp_d[ky]['package_class_size'] = package_size
         tmp_d[ky]['package_size_actual_test'] = package_size_actual_test
@@ -434,76 +445,194 @@ def mereg_dico(d1,d2):
     return d3
 
 
+def statistic_by_packaging(p_path):
+    '''
+    make a static over all packages in the given project
 
+    :param p_path:
+    :return:
+    '''
+    new_df_list=[]
+    all_dir = pt.walk(p_path,'stat_r',False)
+    for dir in all_dir:
+        pass
 
+def sum_all_stat_dir(p_path,mod='fp'):
 
-def sum_all_stat_dir(p_path):
     new_df_list=[]
     list_col=['Empty_test_case','FP','empty_test','java(.class)','no_test','pit','test','no_test_Avg']
-    all_dir = pt.walk(p_path,'stat',False)
+    all_dir = pt.walk(p_path,'stat_r',False)
     for dir in all_dir:
         name = str(dir).split('/')[-2]
         print 'name=',name
         if len(name.split('_') ) < 5 :
             continue
-        print dir
         time = name.split('_')[5]
         time = time[2:]
-        fin_file = pt.walk(dir,'FinStat')
-        if len(fin_file)==1:
-            tmp_name = str(fin_file[0]).split('/')[-1]
-            size_project = tmp_name.split('_')[2]
-            size_project =int(size_project)
+        all_csvs = pt.walk(dir,'Fin')
+        all_csvs = [x for x in all_csvs if str(x).split('/')[-1].__contains__('_{}_'.format(mod))]
+        if len(all_csvs) > 1:
+            raise Exception("Two file Fin in dir:{} mode allocation={}".format(dir,mod))
+        for csv_item in all_csvs:
+            name_file = str(csv_item).split('/')[-1][:-4]
+            mode = name_file.split('_')[1]
+            size_dirs =name_file.split('_')[3]
+            size_project =int(size_dirs)
             d = {}
-            df = pd.read_csv(fin_file[0],index_col=0)
+            df = pd.read_csv(csv_item,index_col=0)
             df['avg__empty'] = df['empty_test']/size_project
             list_col.extend(['avg__empty'])
             list_numric = list(df._get_numeric_data())
             list_numric = [x for x in list_numric if x in list_col]
-
+            d['dirs']=size_dirs
             d['time']=time
+            d['allocation_mode'] = mode
             d['name']=name
             d['size_project']=size_project
             d['size'] = len(df)
             for x in list_numric:
                 d[x]=df[x].sum()
             new_df_list.append(d)
-        if len(fin_file)>1 :
-            print fin_file
     df = pd.DataFrame(new_df_list)
-    df.to_csv("{}sumup_stat.csv".format(p_path))
+    df['time']=df['time'].apply(int)
+    df = df.set_index(df['time'])
+    df.drop('time', axis=1, inplace=True)
+    df.sort_index(inplace=True)
+    if p_path[-1] == '/':
+        df.to_csv("{}fin_{}_stat.csv".format(p_path,mod))
+    else:
+        df.to_csv("{}/fin_{}_stat.csv".format(p_path,mod))
+
+
+def merge_by_packages_Roni(dir_root,out_path):
+    '''
+    this function output a matrix with the columns target_col for each file configurations in the time_FP and time_U
+    :param dir_root:
+    :param out_path:
+    :return:
+    '''
+    print ""
+    d = []
+    name = dir_root.split('/')[-1]
+    target_cols = ['KILLED', 'all_mutation', 'package','Test_LOC', 'package_class_size', 'package_size_actual_pit','package_size_actual_test','criterion','allocation_mode','K','time_budget']
+    list_files = pt.walk(dir_root, '.csv')
+    all_dfs = None
+    for file_i in list_files:
+        name_file = str(file_i).split('/')[-1][:-4]
+        arr = name_file.split('_')
+        k=arr[2]
+        criterion =arr[-1]
+        if str(name_file).__contains__('sum'):
+            continue
+        dir_name = str(file_i).split('/')[-2]
+        arr = dir_name.split('_')
+        allocation_mode = arr[1]
+        time_budget = arr[2][2:]
+        df = pd.read_csv(file_i, index_col=0)
+        df['K']=k
+        df['criterion'] = criterion
+        df['time_budget']=time_budget
+        df['allocation_mode'] = allocation_mode
+        df = df[target_cols]
+        #df[target_cols].to_csv("/home/ise/eran/bbb.csv", index=False)
+        if all_dfs is None:
+            all_dfs = df
+            #print "len: {}".format(len(all_dfs))
+            continue
+        else:
+            size_df=len(df)
+            size_all_df = len(all_dfs)
+            print "df:",size_df
+            print "all_dfs:", size_all_df
+            all_dfs = all_dfs.append(df)
+            print "mereg: {}".format(len(all_dfs))
+            if len(all_dfs)-size_all_df != 73:
+                print "-------Error--------"
+    if out_path[-1] == '/':
+        all_dfs.to_csv("{}by_package_{}.csv".format(out_path, name), index=False)
+    else:
+        all_dfs.to_csv("{}/by_package_{}.csv".format(out_path, name), index=False)
+    exit()
+
+
+def merge_by_packages(dir_root,out_path):
+    print ""
+    d = []
+    name = dir_root.split('/')[-1]
+    target_cols = ['KILLED','all_mutation','package','package_class_size','package_size_actual_pit','package_size_actual_test']
+    list_files = pt.walk(dir_root, '.csv')
+    all_dfs = None
+    for file_i in list_files:
+        name_file = str(file_i).split('/')[-1][:-4]
+        if str(name_file).__contains__('sum'):
+            continue
+        dir_name = str(file_i).split('/')[-2]
+        arr = str(name_file).split('_')
+        k_num = arr[2]
+        criterion = arr[4]
+        df = pd.read_csv(file_i, index_col=0)
+        col_list = list(df)
+        name_col = "K_{}_mode_{}_dir_{}".format(k_num,criterion,dir_name)
+        print list(df)
+        df = df[target_cols]
+        df.rename(columns={'KILLED': '{}_{}'.format(name_col,'kill')}, inplace=True)
+        #df.rename(columns={'all_mutation': '{}_{}'.format(name_col,'all_bug')}, inplace=True)
+        if all_dfs is None:
+            all_dfs = df
+            print "len: {}".format(len(all_dfs))
+            continue
+        else:
+
+            all_dfs=pd.merge(all_dfs,df,on=['package','package_class_size','package_size_actual_pit','package_size_actual_test','all_mutation'])
+            print "len: {}".format(len(all_dfs))
+    if out_path[-1]=='/':
+        all_dfs.to_csv("{}by_package_{}.csv".format(out_path,name), index=False)
+    else:
+        all_dfs.to_csv("{}/by_package_{}.csv".format(out_path,name), index=False)
+    #df_all = pd.DataFrame(d)
+    #df_all.sort_values(by=['K'], inplace=True)
+    #df_all.to_csv("{}/sum.csv".format(dir_root), index=False)
 
 import sys
 
 if __name__ == "__main__":
-    #sum_all_stat_dir('/home/ise/eran/exp_all/')
 
-    #pp = '/home/ise/tran/'
+
+    #merge_by_packages_Roni('/home/ise/eran/oout/data','/home/ise/eran/oout/')
+#    exit()
+    #sum_all_stat_dir('/home/ise/eran/exp_all/')
+    sys.argv=['','/home/ise/tran','reg'] #'/home/ise/tran'
     if len(sys.argv)>1:
         pp=sys.argv[1]
-        func_start(pp)
-        sum_all_stat_dir(pp)
-    exit()
-#    exit()
-    #aggregation_res_matrix('/home/ise/eran/oout')
+        #func_start(pp,sys.argv[2])
+        sum_all_stat_dir(pp, 'fp')
+        sum_all_stat_dir(pp,'u')
+
+    #fraggregation_res_matrix('/home/ise/eran/oout')
     #exit()
-    p_stat_U ='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat/ALL_U_t=30_it=0_.csv'
-    p_stat_FP='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat/ALL_FP_t=30_it=0_.csv'
+
+    p_stat_U ='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_U_t=30_it=0_.csv'
+    p_stat_FP='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_FP_t=30_it=0_.csv'
     p_prefix_csv_Fp = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_FP_t=30_it=0_/commons-math3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_U_t=30_it=0_/commons-math3-3.5-src/csvs/package'
 
-    #p_stat_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat/ALL_U_t=60_it=0_.csv'
-    #p_stat_FP = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat/ALL_FP_t=60_it=0_.csv'
-    #p_prefix_csv_Fp = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src/csvs/package'
-    #p_prefix_csv_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/package'
+    p_stat_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat_r/ALL_U_t=60_it=0_.csv'
+    p_stat_FP = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat_r/ALL_FP_t=60_it=0_.csv'
+    p_prefix_csv_Fp = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src/csvs/package'
+    p_prefix_csv_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/package'
 
 
-    arr_on=['random','loc_class','FP']
+#    aggregation_res_matrix('/home/ise/eran/oout')
+#    merge_by_packages('/home/ise/eran/oout/ALL_FP_t=60_it=0_','/home/ise/eran/oout/')
+
+    exit()
+    arr_on=['loc_class','random','FP']
     for x in arr_on:
-        for k_val in [1,3,8,10,30,100,1000]:
+        for k_val in [1,2,3,5,8,10,30,100]:
+            print "config: k={} on={}".format(k_val,x)
             matrix_analysis(p_prefix_csv_U,p_stat_U,on=x,k=k_val)
             matrix_analysis(p_prefix_csv_Fp, p_stat_FP, on=x, k=k_val)
-    aggregation_res_matrix('/home/ise/eran/oout')
+    #aggregation_res_matrix('/home/ise/eran/oout')
 
     #args = sys.argv
     #func_start(args[1])

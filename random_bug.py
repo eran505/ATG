@@ -7,22 +7,23 @@ import random as rand
 import pit_render_test
 
 class bugger:
-    def __init__(self, result_path , pred_path,path_out):
+    def __init__(self, result_path , pred_path,path_out,p_index=None):
         self.dcit = None
         self.seq = None
         self.col_name = ["ID,"]
         self.out = path_out
         self.result_path = result_path
         self.df_FP=None
+        self.out_p=None
+        self.df_index = None
+        self.fp_index_path = p_index
         self.pred_path = pred_path
         self.read_csv_FP()
-        self.seed = rand.randint(1, 99)
-        self.random_object = rand.seed(self.seed)
-        self.init_rand()
         self.df_bugs=None
-        #self.data_freq = self.group_class()
+        self.d_packages= None
         self.result_data = []
         self.err_not_found= {}
+        self.init_dfs()
     def touch_file(self,path_out,total,ch):
         with open('{}err_not_found_{}.txt'.format(path_out,ch), 'wb') as fp:
             summ=0
@@ -33,6 +34,7 @@ class bugger:
             fp.write("total= {}".format(total) + '\n\n')
             fp.write("parentage = {}".format(float(summ)/float(total)) + '\n\n')
             fp.close()
+
     def pars_csv_by_bugID(self):
         df_bugs = pd.read_csv(self.result_path)
         print list(df_bugs)
@@ -44,6 +46,7 @@ class bugger:
         #df_bugs.to_csv("/home/eran/Desktop/out/tmp.csv", sep='\t')
         print df_bugs.shape
         print list(df_bugs)
+
     def read_csv_FP(self):
         self.df_FP=pd.read_csv(self.pred_path,header=None,names=["class","probability"])
 
@@ -59,6 +62,32 @@ class bugger:
         res_arr =  np.random.choice(d_choices, draws, p=d_probs)
         print res_arr
         return res_arr
+
+    def bug_generator_packages(self,mode,rand_mode='FP',draws=4,out='/home/ise/Desktop/out_package/'):
+        packages_dfs = {}
+        for ky_pack in self.d_packages.keys():
+            size_len = len(self.d_packages[ky_pack])
+            list_class =  self.d_packages[ky_pack]['class'].tolist()
+            print "self.df_FP: {}".format(len(self.df_FP))
+            df_fp_filter = self.df_FP.loc[self.df_FP['class'].isin(list_class)]
+            print "df_fp_filter : {}".format(len(df_fp_filter))
+            d_choices = df_fp_filter['class'].values
+            size_d_choices = len(d_choices)
+            if rand_mode == 'U':
+                d_probs = np.empty(size_d_choices)
+                val = float(1) / float(size_d_choices)
+                d_probs.fill(val)
+            else:
+                d_probs = df_fp_filter['probability'].values
+            sum_val = d_probs.sum()
+            d_probs = [x/sum_val for x in d_probs ]
+            res_arr = np.random.choice(d_choices, draws, p=d_probs)
+            df_ky = self.get_bug_DataFrame_V1(res_arr,mode)
+            packages_dfs[ky_pack]=df_ky
+        out_path = self.out
+        for key in packages_dfs:
+            flush_csv(out_path,packages_dfs[key],key)
+
 
 
     def get_id(self,x):
@@ -79,6 +108,35 @@ class bugger:
             else:
                 d[row[1]] = [{'fp':row[6],'ID':row[0] , 'uni':row[5] }]
         return d
+
+
+    def get_relevant_ids(self,class_name):
+        df_part = self.df_index.loc[self.df_index['class'] == class_name]
+        print "len: {}".format( len(df_part))
+        df_res = pd.merge(df_part,self.df_bugs,on=['ID'])
+        #flush_csv(self.out_p,df_res,class_name)
+        return df_res
+
+    def get_bug_DataFrame_V1(self,arr,draws=1,char='',tot=0):
+        all_bugs = None
+        for klass in arr:
+            id_df = self.get_relevant_ids(klass)
+            size_cur = int(len(id_df))
+            if size_cur == 0 :
+                print "[Error] class has no ID mutations: {} ".format(klass)
+                continue
+            if draws < len(id_df):
+                chosen_idx = np.random.choice(size_cur, replace=False, size=draws)
+                df_trimmed = id_df.iloc[chosen_idx]
+            else:
+                df_trimmed = id_df
+            if all_bugs is None:
+                all_bugs=df_trimmed
+            else:
+                all_bugs = pd.concat([all_bugs, df_trimmed])
+        return all_bugs
+
+
 
     def get_bugs_DataFrame(self,arr,draws=1,char='',tot=0):
         cols = list(self.df_bugs)
@@ -111,19 +169,21 @@ class bugger:
 
         self.touch_file(self.out,tot,char)
 
-    def get_plot(self,df,ch):
+    def get_plot(self,df,ch,mod='Avg'): # Avg or Sum
         list_val = list(df)
-        list_val_U = [x for x in list_val if str(x).__contains__('_U')]
-        list_val_FP = [x for x in list_val if str(x).__contains__('_FP')]
+        list_val_U = [x for x in list_val if str(x).__contains__('U') and str(x).__contains__(mod)]
+        list_val_FP = [x for x in list_val if str(x).__contains__('FP') and str(x).__contains__(mod) ]
         d=[]
         time_u = []
         time_fp = []
         for x in list_val_U:
             time_val = str(x).split('_')[0]
+            time_val = time_val[2:]
             time_u.append(time_val)
 
         for x in list_val_FP:
             time_val = str(x).split('_')[0]
+            time_val = time_val[2:]
             time_fp.append(time_val)
 
         all_time = time_u + time_fp
@@ -133,19 +193,19 @@ class bugger:
             val_u = -1.0
             val_fp = -1.0
             for col in list_val_U :
-                if str(col).__contains__(t):
+                if str(col).__contains__("t={}_".format(t)):
                     val_u = df[col].mean()
+                    break
             for col_i in list_val_FP :
-                if str(col_i).__contains__(t):
+                if str(col_i).__contains__("t={}_".format(t)):
                     val_fp = df[col_i].mean()
+                    break
             d.append({'time':t, 'FP':val_fp , 'U':val_u})
         df_finall = pd.DataFrame(d)
-        #df_finall.sort(['time'], inplace=True)
-        df_finall.to_csv(self.out+'seed_{}_res_fin_{}.csv'.format(self.seed,ch))
-
-    def init_rand(self):
-        self.random_object = rand
-        self.random_object.seed(self.seed )
+        if self.out_p[-1]=='/':
+            df_finall.to_csv(self.out+'{}_fin_{}.csv'.format(mod,ch))
+        else:
+            df_finall.to_csv(self.out + '/{}_fin_{}.csv'.format(mod, ch))
 
     def sort_list(self):
         list_d={}
@@ -225,7 +285,6 @@ class bugger:
                 exit(1)
                 return
 
-
     def make_bugs(self,rounds=10,mod="fp"):
         if mod == "fp":
             for i in range(rounds):
@@ -254,31 +313,113 @@ class bugger:
         df_sum.to_csv(self.out+'sum_seed_'+str(self.seed)+'.csv',encoding='utf-8', index=False)
         df.to_csv(self.out+'bug_seed_'+str(self.seed)+'.csv',encoding='utf-8', index=False)
 
+    def init_dfs(self):
+        self.init_index()
+        p = self.result_path
+        arr = str(p).split('/')[:-1]
+        self.out_p = '/'.join(arr)
+        self.df_bugs=pd.read_csv(self.result_path,index_col=0)
+
+    def package_separation(self,num,mod):  ## for package analysis !!!!!
+        d_package = {}
+        if self.df_index is None:
+            print "No index DataFrame is available"
+            return None
+        self.df_index['package']=self.df_index['class'].apply(lambda x: '.'.join(str(x).split('.')[:-1]))
+        all_package_list=self.df_index['package'].unique()
+        for pack in all_package_list:
+            d_package[pack]=self.df_index.loc[self.df_index['package'] == pack]
+        self.d_packages = d_package
+        res_data = self.bug_generator_packages(num,mod)
 
 
+    def init_index(self):
+        if self.fp_index_path is None:
+            p = self.result_path
+            arr = str(p).split('/')[:-1]
+            root_p = '/'.join(arr)
+            bol=get_ID_index_table(root_p)
+            if bol:
+                df_index = pd.read_csv("{}/indexer.csv".format(root_p),index_col=0)
+            else:
+                print "[Error ] No index csv in :{}".format(root_p)
+                raise Exception("no index")
+        else:
+            df_index = pd.read_csv("{}".format(self.fp_index_path), index_col=0)
+        self.df_index = df_index
+        ###############################
+        df_fp = self.df_FP
+        print list(df_fp)
+        print 'size:{}'.format(df_fp.shape)
+        result_df = pd.merge(df_fp,df_index,on=['class'])
+        flush_csv('/home/ise/eran/random',result_df,'fp_index')
+        print list(df_index )
+        print 'size:{}'.format(df_index.shape)
+
+
+
+def get_ID_index_table(root_path):
+    res = pit_render_test.walk(root_path,'index_er')
+    index_df = pd.DataFrame(columns=['ID','mutatedClass'])
+    if len(res)>0:
+        index_df = pd.read_csv(res[0],index_col=0)
+        print "size:{}".format(len(index_df))
+    for csv_p in res[1:]:
+        df=pd.read_csv(csv_p,index_col=0)
+        index_df = pd.merge(index_df,df,on=['ID','mutatedClass'],how='outer')
+        print "size:{}".format(len(index_df))
+    index_df.rename(columns={'mutatedClass': '{}'.format('class')}, inplace=True)
+    flush_csv(root_path,index_df,'indexer')
+    print "done"
+
+
+def collctor(path,name_file):
+    out_path = '/'.join(str(path).split('/')[:-1])
+    list_dico = []
+    csv_list = pit_render_test.walk(path,'.csv')
+    for item_csv in csv_list:
+        name  = str(item_csv).split('/')[-1][:-4]
+        df = pd.read_csv(item_csv,index_col=0)
+        list_cols = list(df)
+        list_cols = [x for x in list_cols if str(x).__contains__('t=')]
+        d={'package':name}
+        for col in list_cols:
+            d[col]=df[col].mean()
+        list_dico.append(d)
+    ans_df = pd.DataFrame(list_dico)
+    flush_csv(out_path,ans_df,name_file)
+
+def flush_csv(out_path_dir, xml_df, name_file):
+    if xml_df is None:
+        return
+    ##print "{}/{}.csv".format(out_path_dir, name_file)
+    xml_df.to_csv("{}/{}.csv".format(out_path_dir,name_file))
 
 def init_main():
-    p_path = '/home/ise/Desktop/map_out/v1/big.csv'
-    out_path = '/home/ise/Desktop/map_out/v1/bug/'
-    csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
-
-    #p_path = '/home/ise/Desktop/smart_out/v1/big.csv'
-    #out_path = '/home/ise/Desktop/smart_out/v1/bug/'
-    #csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
-
-
+    collctor('/home/ise/eran/random/pack/tran_FP','FP_summery')
+    collctor('/home/ise/eran/random/pack/tran_U', 'U_summery')
+    exit()
     print "starting.."
-    num=20000
-    mod = 'FP'
-    bugger_obj = bugger(p_path,csv_fp_file,out_path)
-    bugger_obj.pars_csv_by_bugID()
-    arr= bugger_obj.bug_generator(num,mod)
-    bugger_obj.get_bugs_DataFrame(arr,1,mod,num)
+    for mod in ['FP','U']:
+        num=10
+        ch_i = 1
+        #get_ID_index_table('/home/ise/tran')
+        out_path = pit_render_test.mkdir_system('/home/ise/eran/random/pack','tran_{}'.format(mod),False)
+        p_path = '/home/ise/tran/big_all_df.csv'
+        p_index = '/home/ise/tran/indexer.csv'
+        csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
+        bugger_obj = bugger(p_path,csv_fp_file,out_path,p_index)
+        bugger_obj.package_separation(num,mod)
+        continue
+        arr= bugger_obj.bug_generator(num,mod)
+        df = bugger_obj.get_bug_DataFrame_V1(arr,ch_i,mod,num)
+        bugger_obj.get_plot(df,ch_i)
+        bugger_obj.get_plot(df,ch_i,'Sum')
+        flush_csv(out_path,df,'n_{}_mod_{}'.format(num,mod))
+    exit()
 
-    #bugger_obj = bugger(p_path,csv_fp_file,out_path)
-    #bugger_obj.pars_csv_by_bugID()
-    #arr= bugger_obj.bug_generator(5000,'U')
-    #bugger_obj.get_bugs_DataFrame(arr,1,'U')
+
 
 if __name__ == "__main__":
     init_main()
+
