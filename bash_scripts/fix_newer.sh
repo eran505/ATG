@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-ATG="/home/ise/eran/repo/ATG/"
 
+root_dir=${PWD}
 arg_package=${1}
 
-
+ATG="/home/ise/eran/repo/ATG/"
+Mathjar="/home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz"
 father_dir=${PWD}
+${ATG}python pit_render_test.py ${PWD}
 for D in `find ${PWD}  -maxdepth 1  -type d  `
 do
 
@@ -14,7 +16,7 @@ do
 
             ##echo ${D}"/pit_test/"
 	    string=${D}
-	    array+=(${D}"/pit_test/")
+	    array+=(${D})
 	fi
 
 done
@@ -31,66 +33,55 @@ file_log=${PWD}"/logs/"${file_log}
 
 cnt=${#array[@]}
 for ((i=0;i<cnt;i++)); do
-	path_dir=${array[i]}
-	if [ ! -d "${path_dir}" ]; then
-  		echo "No pit_test in ${path_dir}" >> ${file_log}
-		echo "" >> ${file_log}
-		continue
+	array_sub=()
+	father_dir=${array[i]}
+	if [ ! -d "${father_dir}/pit_test" ]; then
+		mkdir "${father_dir}/pit_test"
 	fi
-
-	for Dir in `find ${path_dir}  -maxdepth 1  -type d  `
-		do
-    		dir_n=${Dir##*/}
-    		if [[ $dir_n == *"ALL"* ]]; then
-
-			echo ${Dir}"/"
-			if [ ! -d ${Dir}"/commons-math3-3.5-src" ]; then
-		  		echo "No commons-math3-3.5-src in ${Dir}" >> ${file_log}
-				echo "" >> ${file_log}
-				continue
-			fi
-			array_all+=(${Dir}"/commons-math3-3.5-src/")
+	for D in `find ${father_dir}  -maxdepth 1  -type d  `
+	do
+		currnet_dir=${D##*/}
+		if [[ $currnet_dir == *"exp"* ]]; then
+	    	string=${D}
+	    	array_sub+=(${D})
 		fi
+	done
+	#suffix_name=${path_dir##*/}
+	#echo "path_dir"$path_dir
+	#echo "path_dir="$suffix_name
+	cnt=${#array_sub[@]}
+	for ((k=0;k<cnt;k++)); do
+		now_dir=${array_sub[k]}
+		echo "now="$now_dir
+		suffix_name=${now_dir##*/}
+		echo "suffix_name="$suffix_name
+		mod=$(echo $suffix_name| cut -d'_' -f 1)
+		echo "mod="$mod
+		time=$(echo $suffix_name| cut -d'_' -f 9)
+		echo "time="$time
+		it=$(echo $suffix_name| cut -d'_' -f 10)
+		echo "it="$it
+		string_dir="ALL_"${mod}"_${time}_"${it}"_"
+		echo $string_dir
+		cut_dir=${father_dir}/"pit_test"/${string_dir}
+		mkdir $cut_dir
+		tar -xzf ${Mathjar} -C $cut_dir
+		relative_path=${cut_dir}/commons-math3-3.5-src/
+		rm -r ${cut_dir}/commons-math3-3.5-src/src/test/java/org
+		rm ${cut_dir}/commons-math3-3.5-src/pom.xml
+		cp -ar ${now_dir}/org/ ${relative_path}src/test/java/
+		cp -ar ${ATG}pom.xml ${relative_path}
+		cp -ar ${ATG}pti_init.py ${relative_path}
+		cd ${relative_path}
+		mvn -fn install
 
 	done
-done
-
-# go over all the ALL_U dir
-
-size=${#array_all[@]}
-for ((i=0;i<size;i++)); do
-	dir_i=${array_all[i]}
-	if [ ! -d ${dir_i}"/target" ]; then
-		echo "Need to compile the path no target dir ${dir_i} \n" >> ${file_log}
-		echo "" >> ${file_log}
-		continue
-	fi
-	# if pti_init is in the dir so del
-	file_pit=${dir_i}"pti_init.py"
-	if [ -f "$file_pit" ]
-	then
-		rm "$file_pit"
-	fi
-	#copy the pti_init for ATG
-	cp ${ATG}"pti_init.py" ${dir_i}
-
-	#crate dir for pit logs
-	if [ ! -d ${dir_i}"/target/log_pit" ]; then
-		mkdir
-	fi
-
-	#start the pit program
-	echo "starting PIT on ${dir_i}"
-	if [ -z "$arg_package" ]; then
-		cd ${dir_i}
-		python ${dir_i}"pti_init.py"
-
-	else
-		cd ${dir_i}
-		python ${dir_i}"pti_init.py" ${arg_package}
-	fi
-
 
 done
 
-echo "END !!"
+##########################3
+
+python ${ATG}pit_render_test.py ${root_dir}
+python ${ATG}fail_cleaner.py ${root_dir}
+cd ${root_dir}
+bash fixer.sh
