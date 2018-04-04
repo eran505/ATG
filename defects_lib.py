@@ -15,7 +15,7 @@ class Bug_4j:
     # b_mod = 'class' / 'package' , to kill the bug
     def __init__(self, pro_name, bug_id, info_args, root_dir,
                  defect4j_root="/home/ise/programs/defects4j/framework/bin/defects4j"
-                 , csv_path='/home/ise/eran/repo/ATG/csv/Most_out_files.csv', b_mod='class'):
+                 , csv_path='/home/ise/eran/repo/ATG/csv/Most_out_files.csv', b_mod='package'):
         os.system('export PATH=$PATH:/home/ise/programs/defects4j/framework/bin')
         self.root = root_dir
         self.p_name = pro_name
