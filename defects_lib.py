@@ -1,6 +1,7 @@
-import os, copy, csv
+import os, copy, csv, xml
 import sys, time
 import subprocess
+import pandas as pd
 import shutil
 import pit_render_test as pt
 from contextlib import contextmanager
@@ -111,7 +112,8 @@ class Bug_4j:
         print "checking out version..."
         if var == 'f':
             str_command = self.defects4j + ' checkout -p {1} -v {0}"{3}" -w {2}fixed/'.format(self.id, self.p_name,
-                                                                                              self.root, var)
+                                                                                               self.root, var)
+
         elif var == 'b':
             str_command = self.defects4j + ' checkout -p {1} -v {0}"{3}" -w {2}buggy/'.format(self.id, self.p_name,
                                                                                               self.root, var)
@@ -138,18 +140,18 @@ class Bug_4j:
         self.correspond_package()
         self.info[4] = self.root
 
-    def add_main_dir_src(self,path_project):
+    def add_main_dir_src(self, path_project):
         '''
         if in the src there is no main dir for the src java add one
         '''
-        if path_project[-1]=='/':
-            path_project=path_project[:-1]
+        if path_project[-1] == '/':
+            path_project = path_project[:-1]
         if os.path.isdir("{}/src/main".format(path_project)):
             return
         else:
             if os.path.isdir("{}/src/java".format(path_project)):
                 os.system("mkdir {}/src/main".format(path_project))
-                os.system("mv {}/src/java/ {}/src/main/".format(path_project,path_project))
+                os.system("mv {}/src/java/ {}/src/main/".format(path_project, path_project))
         return
 
     def extract_data(self):
@@ -159,8 +161,16 @@ class Bug_4j:
             print str_c
             result = subprocess.check_output(str_c, shell=True)
             x = result.find("List of modified sources:")
-            # print result
-            # print "val = ", result[x+len("List of modified sources:"):-81]
+            date_index = result.find("Revision date (fixed version):")
+            stoper = result.find("Root cause in triggering tests")
+
+            data_time = result[date_index + len("Revision date (fixed version):"):stoper].replace('-',"")
+            data_time = data_time.replace('\n',"").split()[0]
+            year = data_time[:4]
+            month = data_time[4:6]
+            day = data_time[-2:]
+            print "{}_{}_{}".format(year,month,day)
+
             y = result[x + len("List of modified sources:"):].replace("-", "").replace(" ", "").split('\n')
             for y1 in y:
                 if len(y1) > 1:
@@ -185,8 +195,8 @@ class Bug_4j:
         res_path = pt.mkdir_system(self.root, dir_out, False)
 
         if os.path.isdir('{}/Evo_Test'.format(self.root)) is False:
-            print "No dir Evo_Test {}".format(self.root)
-            exit(-1)
+            err_str = "[Error] No dir Evo_Test {}".format(self.root)
+            raise Exception(err_str)
         evo_test_dir = pt.walk('{}Evo_Test'.format(self.root), 'exp', False)
         path_dir = "{}{}/src/test/".format(self.root, dir)
         project_dir = "{}{}/".format(self.root, dir)
@@ -209,7 +219,9 @@ class Bug_4j:
                 os.system(command_mv)
                 continue
             os.system('mvn clean test')
-            os.system('mv {}target/surefire-reports {}{}/{}'.format(project_dir, self.root, dir_out, name))
+            if os.path.isdir('{}{}/{}'.format(self.root, dir_out, name)) is False:
+                os.system('mkdir {}{}/{}'.format(self.root, dir_out, name))
+            os.system('mv {}target/surefire-reports/* {}{}/{}'.format(project_dir, self.root, dir_out, name))
             command_rm = "rm -r {}src/test/java/*".format(project_dir)
             os.system(command_rm)
 
@@ -282,7 +294,6 @@ def main_wrapper():
             print('cant make dir')
             exit(1)
         main_bugger(args, proj_name, i, full_dis)
-
 
 
 def pars_parms():
@@ -403,6 +414,120 @@ def csv_to_dict(path, key_name='FileName', val_name='prediction', delimiter='org
     return dico
 
 
+#######################################################
+##################XML_parser_functions#################
+#######################################################
+
+def wrapper_xml_test_file(list_dirz_path,name):
+    """
+    getting list dirs in results dir, and parsing them
+    """
+    name_dir_father = '_'.join(str(name).split('/')[-1].split('_')[:4])
+    list_acc = []
+    for dir_i in list_dirz_path:
+        dir_name = str(dir_i).split('/')[-1][4:]
+        files_arr = pt.walk_rec(dir_i, [], rec='.xml')
+        if len(files_arr) == 0:
+            print "in dir : {} no files ".format(dir_i)
+        for file_i in files_arr:
+            cut_name = str(file_i).split('/')[-1][5:-11]
+            ans_income = pars_xml_test_file(file_i)
+            ans_income['CUT'] = cut_name
+            ans_income['father_dir'] = name_dir_father
+            ans_income['mode'] = dir_name
+            list_acc.append(ans_income)
+    return list_acc
+
+
+
+
+def pars_xml_test_file(path_file):  # TODO: keep edit form here you need to parse the xml file for each result dir
+    """
+    parsing the xml tree and return the results
+    """
+    err = {}
+    failure = {}
+    d = {"err":float(0), "fail":float(0), "bug": 'no', 'class_err': [], 'class_fail': []}
+    if os.path.isfile(path_file) is False:
+        raise Exception("'[Error] the path: {} is not valid ".format(path_file))
+    root_node = xml.etree.ElementTree.parse(path_file).getroot()
+    val, bol = _intTryParse(root_node.attrib['errors'])
+    if bol is False:
+        print "[Error] cant parse the xml file error val input : {}".format(path_file)
+    errors_num = val
+    val, bol = _intTryParse(root_node.attrib['failures'])
+    if bol is False:
+        print "[Error] cant parse the xml file failures val input : {}".format(path_file)
+    failures_num = val
+    if failures_num or errors_num > 0:
+        d['bug']='yes'
+        for elt in root_node.iter():
+            if elt.tag == 'testcase':
+                if len(elt._children) > 0:
+                    for msg in elt:
+                        if msg.tag == 'error':
+                            class_name = elt.attrib['classname']
+                            test_case_number = elt.attrib['name']
+                            d['class_err'].append("{}_{}".format(class_name, test_case_number))
+                            d['err'] = d['err'] + 1
+                        elif msg.tag == 'failure':
+                            class_name = elt.attrib['classname']
+                            test_case_number = elt.attrib['name']
+                            d['class_fail'].append("{}_{}".format(class_name, test_case_number))
+                            d['fail'] = d['fail']+ 1
+    return d
+
+
+def _intTryParse(value):
+    try:
+        return int(value), True
+    except ValueError:
+        return value, False
+
+
+def analysis_dir(path_root_dir):
+    """
+    going over all the dirs and getting all the results form the bugs_dir
+    """
+    out_df_path = '/'.join(path_root_dir.split('/')[:-1])
+    if os.path.isdir(path_root_dir) is False:
+        str_err = "[Error ]{} is not a dir ".format(path_root_dir)
+        raise Exception(str_err)
+    all_dirz = pt.walk_rec(path_root_dir, [], rec='P_', file_t=False, lv=-2)
+    if len(all_dirz) == 0:
+        str_err = "no dirs to analysis found in path: {}".format(path_root_dir)
+        print str_err
+        exit(0)
+    list_dir_empty = []
+    list_no_dir = []
+    dict_dir = {}
+    for dir_item in all_dirz:
+        if dir_item[-1] == '/':
+            dir_item = dir_item[:-1]
+        if os.path.isdir("{}/results".format(dir_item)):
+            res_files = pt.walk_rec("{}/results".format(dir_item), [], rec='Res', file_t=False)
+            if len(res_files) == 0:
+                list_dir_empty.append(dir_item)
+            else:
+                dict_dir[dir_item] = res_files
+        else:
+            list_no_dir.append(dir_item)
+    list_dico_data=[]
+    for ky_dir in dict_dir.keys():
+        x = wrapper_xml_test_file(dict_dir[ky_dir],ky_dir)
+        list_dico_data.extend(x)
+    df = pd.DataFrame(list_dico_data)
+    if path_root_dir[-1]!='/':
+        df.to_csv('{}/out.csv'.format(out_df_path))
+    else:
+        df.to_csv('{}out.csv'.format(out_df_path))
+    print "Done !"
+
 if __name__ == "__main__":
+    path_test = '/home/ise/Desktop/defect4j_exmple/out'
+    ########################
     before_op()
     main_wrapper()
+    #analysis_dir(path_test)
+    exit()
+    ##################

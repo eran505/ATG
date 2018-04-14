@@ -71,7 +71,7 @@ def walk(root, rec="", file_t=True, lv=-1, full=True):
     return class_list
 
 
-def walk_rec(root, list_res, rec="", file_t=True, lv=-1, full=True):
+def walk_rec(root, list_res, rec="", file_t=True, lv=-800, full=True):
     size = 0
     ctr = 0
     class_list = list_res
