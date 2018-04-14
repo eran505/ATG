@@ -11,7 +11,7 @@ if [ -z "$t" ]; then
 echo "missing path value ATG repo"
 exit
 fi
-
+echo ""
 curdir=${PWD}
 echo "curdir="${curdir}
 
