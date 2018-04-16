@@ -151,6 +151,5 @@ def mkdir_system(path_root, name, is_del=True):
     return '{}{}'.format(path_root, name)
 
 
-
 if __name__ == "__main__":
     main(sys)

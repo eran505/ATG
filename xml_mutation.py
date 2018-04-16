@@ -189,17 +189,17 @@ def main_func(root_p,mod):
     dict_classes = get_all_xml(out_path_dir,root_p,mod)
     if mod == 'rev':
         rev_analysis_by_package(out_path_dir,d_class=dict_classes)
-    else:
-        wrapper_class_analysis(root_p)
     #rev_analysis_by_package(out_path_dir,data_path='/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/class')
 
 def get_projects(p_root_path,mod='rev'):
-    list_project = pit_render_test.walk(p_root_path,'commons-math3-3.5-src',False)
+    list_project = pit_render_test.walk(p_root_path,'commons',False)
+    list_project = pit_render_test.walk_rec(p_root_path,[],'commons-',False,-4)
     #list_project = ['/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src','/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src']
     #list_project=[x for x in list_project if str(x).__contains__('t=20')]
     for x in list_project:
         main_func(x,mod)
     if mod!='rev':
+        wrapper_class_analysis(p_root_path)
         make_big_csv(p_root_path)
         add_all_big(p_root_path)
 
@@ -248,7 +248,6 @@ def read_and_mereg(dico,out_path):
         #m_df['killed'] = m_df.apply(sublst, axis=1)
         target_fp = [x for x in list(m_df) if str(x).__contains__('FP')]
         target_u = [x for x in list(m_df) if str(x).__contains__('U')]
-        ##print target
         aggregation(m_df,target_fp,'FP',time_b)
         aggregation(m_df, target_u,'U',time_b)
         flush_csv(out_dir,m_df,ky)
@@ -290,6 +289,7 @@ def add_all_big(root_p):
         big_df_all = pd.read_csv(list_p[0],index_col=0)
     else:
         print "didnt find any big_df Dataframe in path:{}".format(root_p)
+        return
     for p in list_p[1:]:
         df = pd.read_csv(p,index_col=0)
         big_df_all = pd.merge(big_df_all,df,on=['ID'],how='outer')
@@ -405,15 +405,15 @@ def packager(path_big,path_index): # make agg for packages TODO: fix the missing
 
 import sys
 if __name__ == "__main__":
-    #my_p = '//home/ise/tran/02_17_02_51_04_t=4_'
     tran_p = '/home/ise/tran/'
-    #wrapper_class_analysis(tran_p)
+    tran_p = '/home/ise/Desktop/test_Gen/'
+    wrapper_class_analysis(tran_p)
     make_big_csv(tran_p)
     add_all_big(tran_p)
-    #exit()
+    exit()
     args = sys.argv
     if len(args)>2:
         get_projects(args[1])
     else:
-        get_projects('/home/ise/tran/','reg') #/home/ise/eran/xml/
+        get_projects(tran_p,'reg') #/home/ise/eran/xml/
         pass

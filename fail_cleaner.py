@@ -306,10 +306,11 @@ class Cleaner:
 import sys
 
 def get_all_project(path):
-    projes = pit_render_test.walk(path,"commons-math3-3.5-src",False)
-    if len(projes) == 0:
+    project_dirs = pit_render_test.walk_rec(path,[],"commons",False,-4)
+    #projes = pit_render_test.walk(path,"commons-math3-3.5-src",False)
+    if len(project_dirs) == 0:
         print "no project in the following path : {}".format(path)
-    return projes
+    return project_dirs
 
 def get_all_project_D4J(path):
     projes_bug = pit_render_test.walk(path,"buggy",False)
@@ -326,9 +327,8 @@ def cleaning(p_path):
 
 if __name__ == "__main__":
 
-#    args = sys.argv
     args = sys.argv
-   ## args = ['','/home/ise/Desktop/defect4j_exmple/','D4J']
+    args = ['','/home/ise/Desktop/test_Gen/']
     if len(args) == 2 :
         proj_arr = get_all_project(args[1])
         for p_path in proj_arr:
