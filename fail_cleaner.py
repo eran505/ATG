@@ -16,7 +16,7 @@ class Cleaner:
         self.log_unexpected = ""
         self.file_unexpected =""
         self.logs = ''
-        self.max = 4
+        self.max = 6
 
     def mkdir_logs(self):
 
@@ -328,7 +328,7 @@ def cleaning(p_path):
 if __name__ == "__main__":
 
     args = sys.argv
-    args = ['','/home/ise/Desktop/test_Gen/']
+    #####args = ['','/home/ise/Desktop/test_Gen/']
     if len(args) == 2 :
         proj_arr = get_all_project(args[1])
         for p_path in proj_arr:
