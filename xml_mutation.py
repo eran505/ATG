@@ -403,14 +403,15 @@ def packager(path_big,path_index): # make agg for packages TODO: fix the missing
     packages_agg(path_big,df_index)
 
 
+
 import sys
 if __name__ == "__main__":
     tran_p = '/home/ise/tran/'
     tran_p = '/home/ise/Desktop/test_Gen/'
-    wrapper_class_analysis(tran_p)
-    make_big_csv(tran_p)
-    add_all_big(tran_p)
-    exit()
+    #wrapper_class_analysis(tran_p)
+    #make_big_csv(tran_p)
+    #add_all_big(tran_p)
+    #exit()
     args = sys.argv
     if len(args)>2:
         get_projects(args[1])

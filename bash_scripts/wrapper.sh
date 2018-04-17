@@ -8,9 +8,11 @@ if [ -z "${project_name}" ]; then
     echo "[Error] no project arg -- math or lang"
     exit
 fi
-python ${ATG}pit_render_test.py ${root_dir}
+
+
 
 ATG="/home/ise/eran/repo/ATG/"
+python ${ATG}pit_render_test.py ${root_dir}
 Mathjar="/home/ise/eran/repo/common_math/jars/commons-math3-3.5-src.tar.gz"
 Langjar="/home/ise/eran/repo/lang/jars/commons-lang3-3.5-src.tar.gz"
 

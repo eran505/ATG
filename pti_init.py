@@ -609,7 +609,7 @@ def funcme(p):
 
     #proj_path = '/home/eran/thesis/common_math/commons-math3-3.5-src'
 if __name__ == "__main__":
-    #os.chdir("/home/ise/eran/rev/02_26_13_27_45_t=30_/pit_test/ALL_U_t=30_it=0_/commons-math3-3.5-src")
+    #os.chdir("/home/ise/Desktop/test_Gen/04_15_13_26_33_t=10_/pit_test/ALL_U_t=10_it=0_/commons-lang3-3.5-src")
     args = sys.argv
     #args =['py','rev']
     if len(args)==1:
