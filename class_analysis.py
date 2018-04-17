@@ -191,7 +191,8 @@ def func_start(main_root,mode='reg'):
 def time_budget_analysis(path_root,mode):
     list_fp = []
     list_u =[]
-    res_scanner = pt.walk(path_root, "commons-math3-3.5-src", False)
+    res_scanner = pt.walk_rec(path_root, [],"commons-", False,-3)
+    #res_scanner = pt.walk(path_root, "commons-math3-3.5-src", False)
     p_path = path_root
     if p_path[-1] != '/':
         p_path= p_path+'/'
@@ -297,8 +298,6 @@ def load__data(root_data):
     list_files = pt.walk(root_data,'.csv')
     d_dico={}
     for item_csv in list_files:
-        if str(item_csv).__contains__('org.apache.commons.math3.genetics') is False:
-            pass
         prefix_name = str(item_csv).split('/')[-1][:-4]
         d_dico[prefix_name]=pd.read_csv(item_csv)
     return d_dico
@@ -604,12 +603,12 @@ if __name__ == "__main__":
     sys.argv=['','/home/ise/tran','reg'] #'/home/ise/tran'
     if len(sys.argv)>1:
         pp=sys.argv[1]
-        #func_start(pp,sys.argv[2])
+        func_start(pp,sys.argv[2])
         sum_all_stat_dir(pp, 'fp')
         sum_all_stat_dir(pp,'u')
 
     #fraggregation_res_matrix('/home/ise/eran/oout')
-    #exit()
+    exit()
 
     p_stat_U ='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_U_t=30_it=0_.csv'
     p_stat_FP='/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_FP_t=30_it=0_.csv'
