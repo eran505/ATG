@@ -407,7 +407,7 @@ def packager(path_big,path_index): # make agg for packages TODO: fix the missing
 import sys
 if __name__ == "__main__":
     tran_p = '/home/ise/tran/'
-    tran_p = '/home/ise/Desktop/test_Gen/'
+    tran_p = '/home/ise/eran/lang/'
     #wrapper_class_analysis(tran_p)
     #make_big_csv(tran_p)
     #add_all_big(tran_p)
