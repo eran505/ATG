@@ -14,4 +14,8 @@ bash init_exp.sh ~/eran/repo/ATG/ 5 exp lang
 bash init_exp.sh ~/eran/repo/ATG/ 10 exp lang
 
 
+bash wrapper.sh lang
+
+echo "done Gen !!!"
+
 exit

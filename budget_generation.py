@@ -94,7 +94,7 @@ def boundary_budget_allocation(dico, time_per_k, upper, lower, filtering):
 
 
 def get_csv_fp(path_project):
-    rel_path = os.getcwd() + '/'
+    rel_path = '/home/ise/eran/repo/ATG/'
     arr = str(path_project).split('/')
     for item in arr:
         if str(item).__contains__('commons-'):
@@ -510,7 +510,7 @@ def init_main():
     print"time=", b_klass
     for i in range(3):
         seed = time.strftime('%s')[-5:]
-        seed = str(i) + str(const) + str(i)  # <--------remove---remove---remove-----------
+        ####seed = str(i) + str(const) + str(i)  # <--------remove---remove---remove-----------
         localtime = time.asctime(time.localtime(time.time()))
         if mode == 'FP':
             localtime_str = 'FP_' + str(localtime) + '_t=' + str(b_klass) + '_it=' + str(i)
@@ -533,7 +533,7 @@ def init_main():
 
 def int_exp(args):
     print 'exp...'
-    it = 1  # TODO : change it back to two (2)
+    it = 2  # TODO : change it back to two (2)
     comp = ["FP", "U"]
     v_path = sys.argv[1]  # target = /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org
     v_evo_name = sys.argv[2]  # evo_version = evosuite-1.0.5.jar
@@ -545,9 +545,8 @@ def int_exp(args):
     csv_path = get_csv_fp(v_path)
     if len(sys.argv) > 9 and sys.argv[5] == 'exp':
         it = int(sys.argv[9])
-        comp = []
-        comp.append(str(sys.argv[10]))
-    rel_path = os.getcwd() + '/'
+        comp = [str(sys.argv[10])]
+    ###rel_path = os.getcwd() + '/'
     if sys.argv[5] == 'd4j':
         fp_budget = sys.argv[9]
         it = int(sys.argv[10])
