@@ -48,7 +48,7 @@ python ${ATG}budget_generation.py /home/ise/eran/repo/common_math/commons-math3-
 fi
 
 if [[ $project == *"lang"* ]]; then
-python ${ATG}budget_generation.py /home/ise/eran/repo/lang/commons-lang3-3.5-src/target/classes/org/apache/commons/lang3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} ${m} 1 240 ${t} 2 U
+python ${ATG}budget_generation.py /home/ise/eran/repo/lang/commons-lang3-3.5-src/target/classes/org/apache/commons/lang3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} ${m} 1 50 ${t} 2 FP
 fi
 
 python ${ATG}pit_render_test.py ${newdir}
