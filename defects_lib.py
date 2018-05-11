@@ -16,19 +16,21 @@ class Bug_4j:
     # b_mod = 'class' / 'package' , to kill the bug
     def __init__(self, pro_name, bug_id, info_args, root_dir,
                  defect4j_root="/home/ise/programs/defects4j/framework/bin/defects4j"
-                 , csv_path='/home/ise/eran/repo/ATG/csv/Most_out_files.csv', b_mod='package'):
-        os.system('export PATH=$PATH:/home/ise/programs/defects4j/framework/bin')
+                 , csv_path='/home/ise/eran/repo/ATG/csv/Most_out_files.csv', b_mod='package', it=2):
         self.root = root_dir
         self.p_name = pro_name
         self.id = bug_id
+        self.bug_date = ''
         self.k_budget = None
-        self.mod = b_mod
+        self.mod = info_args[-1] # package // class
         self.fp_dico = None
+        self.iteration = it
         self.info = info_args
         self.defects4j = defect4j_root
         self.csvFP = csv_path
         self.modified_class = []
         self.infected_packages = []
+        self.clean_flaky = info_args[-2]
         self.contractor()
 
     def isValid(self):
@@ -112,7 +114,7 @@ class Bug_4j:
         print "checking out version..."
         if var == 'f':
             str_command = self.defects4j + ' checkout -p {1} -v {0}"{3}" -w {2}fixed/'.format(self.id, self.p_name,
-                                                                                               self.root, var)
+                                                                                              self.root, var)
 
         elif var == 'b':
             str_command = self.defects4j + ' checkout -p {1} -v {0}"{3}" -w {2}buggy/'.format(self.id, self.p_name,
@@ -164,13 +166,16 @@ class Bug_4j:
             date_index = result.find("Revision date (fixed version):")
             stoper = result.find("Root cause in triggering tests")
 
-            data_time = result[date_index + len("Revision date (fixed version):"):stoper].replace('-',"")
-            data_time = data_time.replace('\n',"").split()[0]
+            data_time = result[date_index + len("Revision date (fixed version):"):stoper].replace('-', "")
+            data_time = data_time.replace('\n', "").split()[0]
             year = data_time[:4]
             month = data_time[4:6]
             day = data_time[-2:]
-            print "{}_{}_{}".format(year,month,day)
-
+            str_data_bug = "{}_{}_{}".format(year, month, day)
+            # with open("/home/ise/Desktop/time_d4j.txt", "a") as myfile:
+            #    myfile.write('\n')
+            #    myfile.write(str_data_bug)
+            print 'date : %s' % str_data_bug
             y = result[x + len("List of modified sources:"):].replace("-", "").replace(" ", "").split('\n')
             for y1 in y:
                 if len(y1) > 1:
@@ -179,6 +184,7 @@ class Bug_4j:
             print "______modified_class_______"
             for item in self.modified_class:
                 print item
+            self.bug_date = str_data_bug
 
     def modfiy_pom(self):
         bugg_path = "{}buggy".format(self.root)
@@ -207,12 +213,13 @@ class Bug_4j:
         for test_dir in evo_test_dir:
             arr_path = str(test_dir).split('/')[-1]
             name_arr = str(arr_path).split('_')
-            name = "Res_{}_{}_{}_".format(name_arr[0], name_arr[-2], name_arr[-1])
+            dir_name_test = "{}_{}_{}".format(name_arr[0], name_arr[-2], name_arr[-1])
+            name = "Res_{}".format(dir_name_test)
             command_cp = 'cp -r {}/org {}src/test/java/'.format(test_dir, project_dir)
             os.system(command_cp)
             os.chdir(project_dir)
             if dir == 'fixed':
-                fc.cleaning(project_dir)
+                fc.cleaning(project_dir, dir_name_test)
                 command_rm = "rm -r {}/org/".format(test_dir)
                 os.system(command_rm)
                 command_mv = "mv {}src/test/java/org/ {}/".format(project_dir, test_dir)
@@ -228,6 +235,47 @@ class Bug_4j:
     def clean_flaky_test(self):
         self.analysis_test(dir='fixed', dir_out='flaky')
 
+    def get_the_prediction_csv(self):
+        """
+        This function look for the most proper csv file for the prediction task in the FP
+        :return: The right csv for the project, path to csv
+        """
+        print "in get the csv !!!"
+        d = {}
+        lower_case_project_name = str(self.p_name).lower()
+        csv_paths = "/home/ise/eran/repo/ATG/D4J/csvs/{}".format(lower_case_project_name)
+        list_csv = pt.walk_rec(csv_paths, [], '.csv')
+        for csv_item in list_csv:
+            if len(str(csv_item)) > 10:
+                name = csv_item[-9:]
+                name = str(name[:-4]).split('_')
+                date_i = name[1] + name[0]
+                num_date, bol = _intTryParse(date_i)
+                if bol:
+                    d[num_date] = csv_item
+                else:
+                    raise Exception('[Error] cant pars the date in the csv files in ATG')
+            else:
+                print "[Error] in parsing the csv date {}".format(csv_item)
+
+        arr_date = self.bug_date.split('_')
+        num_date = arr_date[0][-2:] + arr_date[1]
+        num_date, bol = _intTryParse(num_date)
+        if bol is False:
+            raise Exception('[Error] cant parse the date bug !!! {}'.format(self.bug_date))
+        csv_path_name = self.get_min_csv(d, num_date)
+        print "{} : {}".format(self.p_name, self.bug_date)
+        self.csvFP = csv_path_name
+
+    def get_min_csv(self, d, num):
+        min_val = None
+        min_number = float('-inf')
+        for x in d.keys():
+            if x - num < 0 and x - num > min_number:
+                min_number = x - num
+                min_val = d[x]
+        return min_val
+
     def get_fp_budget(self, b_per_class):
         list_packages = self.infected_packages
         dico, project_allocation = cal_fp_allocation_budget(list_packages, self.csvFP,
@@ -236,10 +284,17 @@ class Bug_4j:
         root_cur = self.root
         if root_cur[-1] != '/':
             root_cur = root_cur + '/'
-        with open('{}{}_b={}_.csv'.format(self.root, 'FP_Allocation', b_per_class), 'w') as f:
+        with open('{}{}_budget={}_.csv'.format(self.root, 'FP_Allocation', b_per_class), 'w') as f:
             f.write('{0},{1},{2}\n'.format('class', 'probability_fp', 'time_budget'))
             [f.write('{0},{1},{2}\n'.format(key, value[0], value[1])) for key, value in project_allocation.items()]
+        with open('{}{}_package_b={}.csv'.format(self.root, 'FP_Allocation', b_per_class), 'w') as f:
+            f.write('{0},{1}\n'.format('class', 'time_budget'))
+            [f.write('{0},{1}\n'.format(key, value)) for key, value in dico.items()]
+
         self.fp_dico = dico
+
+    def gen_test_copy(self, param):
+        os.system('cp -r {} {} '.format(param, self.root))
 
 
 def before_op():
@@ -251,28 +306,49 @@ def before_op():
     project_dict['Time'] = {'project_name': "Joda-Time", "num_bugs": 27}
 
 
-def main_bugger(info, proj, idBug,
-                out_path):  # [ Evo_path , evo_version , mode , out_path , budget_time , upper , lowe ,
+def get_time_budget(arr_string):
+    """
+    :param arr_string: string that representing the diff time budget e.g. 10;44;100
+    :return: list of int
+    """
+    arr = str(arr_string).split(';')
+    time_budget_arr = []
+    for x in arr:
+        val, bol = _intTryParse(x)
+        if bol:
+            time_budget_arr.append(val)
+    return time_budget_arr
+
+
+def main_bugger(info, proj, idBug, out_path):
     print "starting.."
-    time_budget = [2]  # 10 , 5, 1
+    time_budget = get_time_budget(info[5])
     bug22 = Bug_4j(proj, idBug, info, out_path)
     val = bug22.get_data()
     if val == 0:
         for time in time_budget:
             bug22.k_budget = time
+            bug22.get_the_prediction_csv()
             bug22.get_fp_budget(time)
+            # bug22.gen_test_copy('/home/ise/Desktop/defect4j_exmple/Evo_Test') # for debugging
             bg.Defect4J_analysis(bug22)
-        bug22.clean_flaky_test()
+        if bug22.clean_flaky:
+            bug22.clean_flaky_test()
         bug22.analysis_test()
     else:
         print "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
 
 
 def main_wrapper():
+    '''
+    1. project name
+    2.
+    :return:
+    '''
     args = pars_parms()
-    args = ["", "Math", 'A', str(os.getcwd() + '/') + "csv/Most_out_files.csv"
-        , '/home/ise/Desktop/defect4j_exmple/out/', "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar", '10', '1',
-            '100']
+    args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
+            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar", '5;3', '1',
+            '100', True, 'class']
     proj_name = args[1]
     path_original = copy.deepcopy(args[4])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
@@ -297,18 +373,24 @@ def main_wrapper():
 
 
 def pars_parms():
-    if len(sys.argv) != 10:
-        print "[ project_name ,mode, csv_path, out_path, Evo_Version, Evo_path, upper, lower ,budget_time]"
+    if len(sys.argv) != 9:
+        print "printing usage:\n"
+        print "[project_name, out_path, Evo_Version, Evo_path, budget_time_arr ,upper, lower, clean_flaky_test]"
+        print "\n-----info-----\nbudget_time_arr: separation by ; e.g. 2;3;10"
+        print "clean_flaky_test: clean the failing tests on the fix version (True/False)"
         return []
     args = sys.argv
     return args
 
 
 def mereg_dicos(dico, list_klass, delimiter='org'):
-    '''
+    """
     Make sure that the FP dict is contains only class with in the project.
-    '''
+    the unknown var is the prediction of unknown class we give it a small prediction for being fault
+    """
     ctr_in = 0
+    ctr_unknow = 0
+    unknown = 0.00001
     new_d = {}
     for klass in list_klass:
         xs = str(klass).split('/')
@@ -322,8 +404,10 @@ def mereg_dicos(dico, list_klass, delimiter='org'):
             new_d[klass_i] = dico[klass_i]
             ctr_in += 1
         else:
-            print klass_i
+            new_d[klass_i] = unknown
+            ctr_unknow += 1
     print "merg {} classes out of {}".format(ctr_in, len(list_klass))
+    print "unknown class = {} / {}".format(ctr_unknow, len(list_klass))
     return new_d
 
 
@@ -388,6 +472,7 @@ def allocate_time_FP(dico, time_per_k, upper=120, lower=1):
 def csv_to_dict(path, key_name='FileName', val_name='prediction', delimiter='org', prefix_str='src\\main\\java\\',
                 filter_out='package-info', math3=True):
     dico = {}
+    prefix_str_old_v = 'src\\java\\'  # TODO: need to fix it for all prefix !!!!
     with open(path) as csvfile:
         reader1 = csv.DictReader(csvfile)
         for row in reader1:
@@ -395,7 +480,8 @@ def csv_to_dict(path, key_name='FileName', val_name='prediction', delimiter='org
             key_i = row[key_name]
 
             if str(key_i).startswith(prefix_str) is False:
-                continue
+                if str(key_i).startswith(prefix_str_old_v) is False:
+                    continue
             # key_i= key_i.replace('\\','.')
             xs = str(key_i).split('\\')
             indexes = [i for i, x in enumerate(xs) if x == delimiter]
@@ -407,18 +493,15 @@ def csv_to_dict(path, key_name='FileName', val_name='prediction', delimiter='org
             key_i = key_i[:-5]  # to remove the .java from the prefix packages
             if str(key_i).__contains__(filter_out):
                 continue
-            if math3 is False:
-                key_i = str(key_i).replace('math3',
-                                           'math')  # TODO: FIX IT # because the fp is on common math 3+ need to remove the math3. form the prefix paac
             dico[key_i] = float(val_i)
     return dico
 
 
-#######################################################
-##################XML_parser_functions#################
-#######################################################
+####################################################
+##################XML_parser_functions############
+################################################
 
-def wrapper_xml_test_file(list_dirz_path,name):
+def wrapper_xml_test_file(list_dirz_path, name):
     """
     getting list dirs in results dir, and parsing them
     """
@@ -433,21 +516,27 @@ def wrapper_xml_test_file(list_dirz_path,name):
             cut_name = str(file_i).split('/')[-1][5:-11]
             ans_income = pars_xml_test_file(file_i)
             ans_income['CUT'] = cut_name
+            ans_income['project'] = str(name_dir_father).split('_')[1]
+            ans_income['bug_ID'] = str(name_dir_father).split('_')[-1]
             ans_income['father_dir'] = name_dir_father
-            ans_income['mode'] = dir_name
+            time_b = str(dir_name).split('_')[1][2:]
+            mode_allocation = str(dir_name).split('_')[0]
+            iter_num = str(dir_name).split('_')[-1][3:]
+            ans_income['time_budget'] = time_b
+            ans_income['allocation_mode'] = mode_allocation
+            ans_income['iteration_num'] = iter_num
+
             list_acc.append(ans_income)
     return list_acc
 
 
-
-
-def pars_xml_test_file(path_file):  # TODO: keep edit form here you need to parse the xml file for each result dir
+def pars_xml_test_file(path_file):
     """
     parsing the xml tree and return the results
     """
     err = {}
     failure = {}
-    d = {"err":float(0), "fail":float(0), "bug": 'no', 'class_err': [], 'class_fail': []}
+    d = {"err": float(0), "fail": float(0), "bug": 'no', 'class_err': [], 'class_fail': []}
     if os.path.isfile(path_file) is False:
         raise Exception("'[Error] the path: {} is not valid ".format(path_file))
     root_node = xml.etree.ElementTree.parse(path_file).getroot()
@@ -460,7 +549,7 @@ def pars_xml_test_file(path_file):  # TODO: keep edit form here you need to pars
         print "[Error] cant parse the xml file failures val input : {}".format(path_file)
     failures_num = val
     if failures_num or errors_num > 0:
-        d['bug']='yes'
+        d['bug'] = 'yes'
         for elt in root_node.iter():
             if elt.tag == 'testcase':
                 if len(elt._children) > 0:
@@ -474,7 +563,7 @@ def pars_xml_test_file(path_file):  # TODO: keep edit form here you need to pars
                             class_name = elt.attrib['classname']
                             test_case_number = elt.attrib['name']
                             d['class_fail'].append("{}_{}".format(class_name, test_case_number))
-                            d['fail'] = d['fail']+ 1
+                            d['fail'] = d['fail'] + 1
     return d
 
 
@@ -512,22 +601,23 @@ def analysis_dir(path_root_dir):
                 dict_dir[dir_item] = res_files
         else:
             list_no_dir.append(dir_item)
-    list_dico_data=[]
+    list_dico_data = []
     for ky_dir in dict_dir.keys():
-        x = wrapper_xml_test_file(dict_dir[ky_dir],ky_dir)
+        x = wrapper_xml_test_file(dict_dir[ky_dir], ky_dir)
         list_dico_data.extend(x)
     df = pd.DataFrame(list_dico_data)
-    if path_root_dir[-1]!='/':
+    if path_root_dir[-1] != '/':
         df.to_csv('{}/out.csv'.format(out_df_path))
     else:
         df.to_csv('{}out.csv'.format(out_df_path))
     print "Done !"
 
+
 if __name__ == "__main__":
     path_test = '/home/ise/Desktop/defect4j_exmple/out'
     ########################
+    # analysis_dir(path_test)
+    # exit()
+    ##################
     before_op()
     main_wrapper()
-    #analysis_dir(path_test)
-    exit()
-    ##################

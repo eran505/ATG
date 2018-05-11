@@ -5,9 +5,10 @@ import xml.etree.ElementTree
 import os,re
 
 class Cleaner:
-    def __init__(self, Path_mvn ,_remove=False,Clean_Fail=True,Clean_Error=True,test_out = 'target/surefire-reports/'):
+    def __init__(self, Path_mvn ,_remove=False,Clean_Fail=True,Clean_Error=True,test_out = 'target/surefire-reports/',fileName=None):
         self.out_path = self.mod_path(Path_mvn)
         self.mvn_path = self.mod_path(Path_mvn)
+        self.name_file = fileName
         self.remove_whole = _remove
         self.clean_fail = Clean_Fail
         self.clean_error = Clean_Error
@@ -70,7 +71,13 @@ class Cleaner:
             for xml in arr :
                 f,e,all = self.pars_xml(xml)
                 res += all
-            text_file = open(self.logs+"clear_{0}_.txt".format(self.get_time()), "w")
+            if self.name_file is None:
+                log_file_name = 'clear'
+            else:
+                log_file_name=str(self.name_file)+"_clear"
+            text_file_name = "{}{}_{}".format(self.logs,log_file_name,self.get_time())
+            print "log file name ::: \n{}".format(text_file_name)
+            text_file = open(text_file_name, "w")
             if len(res) == 0 :
                 text_file.write("%s\n" % "{}")
                 return
@@ -78,7 +85,7 @@ class Cleaner:
                 text_file.write("%s\n" % item)
             text_file.close()
             if i == self.max-1:
-                text_file = open(self.logs + "BUG_{0}_.txt".format(self.get_time()), "w")
+                text_file = open(self.logs + "BUG_{}_.txt".format(self.get_time()), "w")
                 text_file.write("%s\n" % "BUG")
                 text_file.close()
 
@@ -320,10 +327,13 @@ def get_all_project_D4J(path):
         print "no project in the following path : {}".format(path)
     return projes
 
-def cleaning(p_path):
-    print 'path: ',p_path
-    obj = Cleaner(p_path)
-    obj.fit()
+def cleaning(p_path,name=None):
+    if name is not None:
+        obj = Cleaner(p_path, fileName=name)
+        obj.fit()
+    else:
+        obj = Cleaner(p_path)
+        obj.fit()
 
 if __name__ == "__main__":
 

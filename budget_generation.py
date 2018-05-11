@@ -92,6 +92,22 @@ def boundary_budget_allocation(dico, time_per_k, upper, lower, filtering):
     return dico, d
 
 
+
+def get_csv_fp(path_project):
+    rel_path = os.getcwd() + '/'
+    arr = str(path_project).split('/')
+    for item in arr:
+        if str(item).__contains__('commons-'):
+            name= str(item).split('-')[1]
+            break
+    if name.startswith('math'):
+        csv_p = 'csv/Most_out_files.csv'
+    elif name.startswith('lang'):
+        csv_p= 'csv/Most_out_files_35_lang.csv'
+    else:
+        raise "cnat reconaze the project name path:{}".format(path_project)
+    return "{}{}".format(rel_path,csv_p)
+
 def allocate_time_FP(dico, time_per_k, upper, lower, filtering):
     for k in dico.keys():
         if str(k).__contains__(filtering):
@@ -514,6 +530,7 @@ def init_main():
         single_call_EvoSuite(v_evo_name, v_evo_path, target_list, budget_dico, full_dis, lower_b, seed, b_klass)
 
 
+
 def int_exp(args):
     print 'exp...'
     it = 1  # TODO : change it back to two (2)
@@ -525,6 +542,7 @@ def int_exp(args):
     upper_b = int(sys.argv[7])
     lower_b = int(sys.argv[6])
     b_klass = int(sys.argv[8])
+    csv_path = get_csv_fp(v_path)
     if len(sys.argv) > 9 and sys.argv[5] == 'exp':
         it = int(sys.argv[9])
         comp = []
@@ -532,8 +550,9 @@ def int_exp(args):
     rel_path = os.getcwd() + '/'
     if sys.argv[5] == 'd4j':
         fp_budget = sys.argv[9]
+        it = int(sys.argv[10])
     else:
-        fp_budget, d = get_time_fault_prediction(str(rel_path) + 'csv/Most_out_files.csv', 'FileName', 'prediction',
+        fp_budget, d = get_time_fault_prediction(csv_path, 'FileName', 'prediction',
                                                  v_path, upper_b, lower_b, b_klass)
         dict_to_csv(d, v_dis_path)
     uni_budget = {}
@@ -561,14 +580,15 @@ def int_exp(args):
 
 def Defect4J_analysis(obj_BUG):
     print ""
-    min_time = 1
-    max_time = 100
+    min_time = int(obj_BUG.info[-4])
+    max_time = int(obj_BUG.info[-3])
     buggy_path = str(obj_BUG.root) + "buggy/target/classes/"
     fixed_path = str(obj_BUG.root) + "fixed/target/classes/"
-    path_FP_CSV = str(obj_BUG.csvFP)
-    target_class_list = obj_BUG.modified_class
-    path_evo = '/home/ise/eran/evosuite/jar/'
-    evo_version = 'evosuite-1.0.5.jar'
+    iter = int(obj_BUG.iteration)
+    path_evo = obj_BUG.info[4]
+    evo_version = obj_BUG.info[3]
+    # path_evo = '/home/ise/eran/evosuite/jar/'
+    # evo_version = 'evosuite-1.0.5.jar'
     time_list = obj_BUG.k_budget
     out_dir = pt.mkdir_system(obj_BUG.root, 'Evo_Test', False)
     out_dir = out_dir + '/'
@@ -583,12 +603,12 @@ def Defect4J_analysis(obj_BUG):
     if obj_BUG.mod == 'class':
         for klass in modified_class_paths:
             sys.argv = ['', "{}{}".format(fixed_path, klass), evo_version, path_evo, out_dir, 'd4j', max_time,
-                        min_time, time_list, d_fp]
+                        min_time, time_list, d_fp, iter]
             int_exp(sys.argv)
     elif obj_BUG.mod == 'package':
         for package in modified_package_path:
             sys.argv = ['', "{}{}".format(fixed_path, package), evo_version, path_evo, out_dir, 'd4j', max_time,
-                        min_time, time_list, d_fp]
+                        min_time, time_list, d_fp, iter]
             int_exp(sys.argv)
 
     # TODO: finsh this fucnction make sure that after running the test the run on the fix version and the buggy version
