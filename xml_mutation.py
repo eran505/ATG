@@ -408,6 +408,7 @@ import sys
 if __name__ == "__main__":
     tran_p = '/home/ise/tran/'
     tran_p = '/home/ise/eran/lang/'
+    tran_p='/home/ise/eran/lang/rev_exp/'
     #wrapper_class_analysis(tran_p)
     #make_big_csv(tran_p)
     #add_all_big(tran_p)
@@ -416,5 +417,5 @@ if __name__ == "__main__":
     if len(args)>2:
         get_projects(args[1])
     else:
-        get_projects(tran_p,'reg') #/home/ise/eran/xml/
+        get_projects(tran_p,'rev') #/home/ise/eran/xml/
         pass

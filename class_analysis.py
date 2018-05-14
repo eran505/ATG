@@ -125,7 +125,7 @@ def system_call(command):
 
 
 def get_FP_probability():
-    p_path_csv = '/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
+    p_path_csv = '/home/ise/eran/repo/ATG/csv/FP_budget_time_lang.csv'
     df = pd.read_csv(p_path_csv, header=None)
     d = {}
     print list(df)
@@ -327,6 +327,7 @@ def get_top_k(df, col_name, k=5):
             print('Sample size exceeded population size.')
             exit(-1)
     if df_cut is None:
+        print ""
         raise Exception("the df cut is None")
     return df_cut
 
@@ -359,7 +360,7 @@ def project_name(path):
             return x
 
 
-def matrix_analysis(root_path_project, root_stat, k=3, on='FP', out='/home/ise/eran/oout'):
+def matrix_analysis(root_path_project, root_stat, k=3, on='FP', out='/home/ise/eran/lang/out_rev/'):
     df_sum = []
     d_fp = load__data(root_path_project)  # load all the package of the prefix packages
     name_project = project_name(root_path_project)  # get the project name
@@ -370,16 +371,18 @@ def matrix_analysis(root_path_project, root_stat, k=3, on='FP', out='/home/ise/e
         print '--------------------------on={}---------------------------'.format(on)
         print "name----->name_project: {}".format(name_project)
         print "KEY : {}".format(ky)
+        ##print list(df_stat)
         df_filter = df_stat.loc[df_stat['prefix'] == ky]
         package_size = len(df_filter)
         df_filter = df_filter.loc[df_filter['test'] == 1]
         package_size_actual_test = len(df_filter)
-        df_filter = df_filter.loc[df_filter['pit'] == 1]
+        df_filter = df_filter.loc[df_filter['pit_xml'] == 1]
         package_size_actual_pit = len(df_filter)
         print list(df_filter)
         loc = df_filter['loc_TEST'].sum()
         if len(df_filter) > k:
             # print "ky: {} len: {}".format(ky,len(df_filter))
+            print k
             df_cut = get_top_k(df_filter, on, k)
         else:
             df_cut = df_filter
@@ -564,8 +567,7 @@ def merge_by_packages_Roni(dir_root, out_path):
             print "all_dfs:", size_all_df
             all_dfs = all_dfs.append(df)
             print "mereg: {}".format(len(all_dfs))
-            if len(all_dfs) - size_all_df != 73:
-                print "-------Error--------"
+            all_dfs=all_dfs.fillna(0.0)
     if out_path[-1] == '/':
         all_dfs.to_csv("{}by_package_{}.csv".format(out_path, name), index=False)
     else:
@@ -619,17 +621,15 @@ import sys
 if __name__ == "__main__":
 
     # make an normalized table for pivot table, the n-choose test by category
-    # merge_by_packages_Roni('/home/ise/eran/oout/data','/home/ise/eran/oout/')
-
-    sys.argv = ['', '/home/ise/Desktop/test_Gen', 'reg']
-    if len(sys.argv) > 1:
+    merge_by_packages_Roni('/home/ise/eran/lang/out_rev/','/home/ise/eran/lang/agg/')
+    exit()
+    sys.argv = ['', '/home/ise/eran/lang/rev_exp', 'reg']
+    if len(sys.argv) > 188:
         pp = sys.argv[1]
         func_start(pp, sys.argv[2])
-        sum_all_stat_dir(pp, 'fp')
-        sum_all_stat_dir(pp, 'u')
-
+        #sum_all_stat_dir(pp, 'fp')
+        #sum_all_stat_dir(pp, 'u')
     # fraggregation_res_matrix('/home/ise/eran/oout')
-    # exit()
 
     p_stat_U = '/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_U_t=30_it=0_.csv'
     p_stat_FP = '/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_FP_t=30_it=0_.csv'
@@ -641,17 +641,23 @@ if __name__ == "__main__":
     p_prefix_csv_Fp = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/package'
 
-    #    aggregation_res_matrix('/home/ise/eran/oout')
-    #    merge_by_packages('/home/ise/eran/oout/ALL_FP_t=60_it=0_','/home/ise/eran/oout/')
 
-    exit()
-    arr_on = ['loc_class', 'random', 'FP']
+    #####lang####
+
+    p_stat_U = '/home/ise/eran/lang/rev_exp/04_22_14_47_29_t=35_/stat_r/ALL_U_t=35_it=0_.csv'
+    p_stat_FP = '/home/ise/eran/lang/rev_exp/05_11_20_07_29_t=35_/stat_r/ALL_FP_t=35_it=0_.csv'
+    p_prefix_csv_Fp = '/home/ise/eran/lang/rev_exp/05_11_20_07_29_t=35_/pit_test/ALL_FP_t=35_it=0_/commons-lang3-3.5-src/csvs/package'
+    p_prefix_csv_U = '/home/ise/eran/lang/rev_exp/04_22_14_47_29_t=35_/pit_test/ALL_U_t=35_it=0_/commons-lang3-3.5-src/csvs/package'
+
+    ############
+
+    #
+    arr_on = ['FP','loc_class', 'random' ]
     for x in arr_on:
-        for k_val in [1, 2, 3, 5, 8, 10, 30, 100]:
+        for k_val in [1,2,3,5,10,20,30,40]:
             print "config: k={} on={}".format(k_val, x)
             matrix_analysis(p_prefix_csv_U, p_stat_U, on=x, k=k_val)
             matrix_analysis(p_prefix_csv_Fp, p_stat_FP, on=x, k=k_val)
-    # aggregation_res_matrix('/home/ise/eran/oout')
-
+    aggregation_res_matrix('/home/ise/eran/lang/out_rev/')
     # args = sys.argv
     # func_start(args[1])
