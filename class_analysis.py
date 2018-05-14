@@ -2,11 +2,31 @@ import random
 
 import pandas as pd
 import numpy as np
-import os
+import os,xml
 
 import subprocess
 
 import pit_render_test as pt
+
+def check_file_xml(path_xml):
+    print "PATH:: {}".format(path_xml)
+    test_name =None
+    list_xml=[] #the dict that will become to DataFrame
+    if os.path.isfile(path_xml) is False:
+        raise "[Error] no file in the path --> {}".format(path_xml)
+    try:
+        root_node = xml.etree.ElementTree.parse(path_xml).getroot() #get the root xml
+
+    except (Exception, ArithmeticError) as e:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(e).__name__, e.args)
+        print (message)
+        return None
+    for item in root_node._children:
+        sourceFile = item['sourceFile']
+        break
+    print "sourceFile: ",sourceFile
+    return sourceFile
 
 
 def get_class_size(root_path):
@@ -31,7 +51,11 @@ def miss_target_pit(path_PIT, dico):
             else:
                 raise Exception('unreconzie suffix: (path)= {}'.format(files[0]))
         elif len(files) > 1:
-            raise Exception('more than on Mutations.xml/Mutations.csv in dir: {}'.format(dir))
+            #for p_item in files:
+            #    print 'p_item:', p_item
+            #    if str(p_item).__contains__('201804'):
+            #        os.system('rm -r {}'.format(p_item))
+            raise Exception('more than on Mutations.xml/Mutations.xml in dir: {}'.format(dir))
         else:
             d[name] = {'xml': 0, 'csv': 0, 'empty': empty}
     for ky in dico.keys():
@@ -621,26 +645,30 @@ import sys
 if __name__ == "__main__":
 
     # make an normalized table for pivot table, the n-choose test by category
-    merge_by_packages_Roni('/home/ise/eran/lang/out_rev/','/home/ise/eran/lang/agg/')
-    exit()
-    sys.argv = ['', '/home/ise/eran/lang/rev_exp', 'reg']
-    if len(sys.argv) > 188:
+    ##merge_by_packages_Roni('/home/ise/eran/lang/out_rev/','/home/ise/eran/lang/agg/')
+    pp='/home/ise/eran/lang/'
+    sys.argv = ['', pp , 'reg']
+    if len(sys.argv) > 1:
         pp = sys.argv[1]
         func_start(pp, sys.argv[2])
-        #sum_all_stat_dir(pp, 'fp')
-        #sum_all_stat_dir(pp, 'u')
+        sum_all_stat_dir(pp, 'fp')
+        sum_all_stat_dir(pp, 'u')
     # fraggregation_res_matrix('/home/ise/eran/oout')
+    exit()
+
+    #####math##
 
     p_stat_U = '/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_U_t=30_it=0_.csv'
     p_stat_FP = '/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_FP_t=30_it=0_.csv'
     p_prefix_csv_Fp = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_FP_t=30_it=0_/commons-math3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_U_t=30_it=0_/commons-math3-3.5-src/csvs/package'
 
+    #####math##
+
     p_stat_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat_r/ALL_U_t=60_it=0_.csv'
     p_stat_FP = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat_r/ALL_FP_t=60_it=0_.csv'
     p_prefix_csv_Fp = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/package'
-
 
     #####lang####
 
@@ -649,9 +677,8 @@ if __name__ == "__main__":
     p_prefix_csv_Fp = '/home/ise/eran/lang/rev_exp/05_11_20_07_29_t=35_/pit_test/ALL_FP_t=35_it=0_/commons-lang3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/lang/rev_exp/04_22_14_47_29_t=35_/pit_test/ALL_U_t=35_it=0_/commons-lang3-3.5-src/csvs/package'
 
-    ############
+    #####lang#######
 
-    #
     arr_on = ['FP','loc_class', 'random' ]
     for x in arr_on:
         for k_val in [1,2,3,5,10,20,30,40]:

@@ -371,6 +371,7 @@ def get_ID_index_table(root_path):
     index_df.rename(columns={'mutatedClass': '{}'.format('class')}, inplace=True)
     flush_csv(root_path,index_df,'indexer')
     print "done"
+    return True
 
 
 def collctor(path,name_file):
@@ -396,21 +397,22 @@ def flush_csv(out_path_dir, xml_df, name_file):
     xml_df.to_csv("{}/{}.csv".format(out_path_dir,name_file))
 
 def init_main():
-    collctor('/home/ise/eran/random/pack/tran_FP','FP_summery')
-    collctor('/home/ise/eran/random/pack/tran_U', 'U_summery')
-    exit()
+    #collctor('/home/ise/eran/random/LANG/tran_FP','FP_summery')
+    #collctor('/home/ise/eran/random/LANG/tran_U', 'U_summery')
+    #exit()
     print "starting.."
     for mod in ['FP','U']:
-        num=10
+        num=5000
         ch_i = 1
         #get_ID_index_table('/home/ise/tran')
-        out_path = pit_render_test.mkdir_system('/home/ise/eran/random/pack','tran_{}'.format(mod),False)
-        p_path = '/home/ise/tran/big_all_df.csv'
-        p_index = '/home/ise/tran/indexer.csv'
-        csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time.csv'
+        out_path = pit_render_test.mkdir_system('/home/ise/eran/random/LANG/by_class/','tran_{}'.format(mod),False)
+        p_path = '/home/ise/eran/lang/big_all_df.csv'
+        #p_index = '/home/ise/tran/indexer.csv'
+        p_index = None
+        csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time_lang.csv'
         bugger_obj = bugger(p_path,csv_fp_file,out_path,p_index)
-        bugger_obj.package_separation(num,mod)
-        continue
+        #bugger_obj.package_separation(num,mod)
+        #continue
         arr= bugger_obj.bug_generator(num,mod)
         df = bugger_obj.get_bug_DataFrame_V1(arr,ch_i,mod,num)
         bugger_obj.get_plot(df,ch_i)

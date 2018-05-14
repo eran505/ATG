@@ -1,35 +1,17 @@
 #!/usr/bin/env bash
 
-#print_something () {
-#echo "in"
-#path=$1
-#log_file=$2
-#for D in `find ${path}  -maxdepth 1  -type d  `
-#do
-#    array_pit+=(${D})
-#done
-#empty_ctr=0
-#full_ctr=0
-#cnt=${#array_pit[@]}
-#for ((i=0;i<cnt;i++)); do
-#   	path_dir=${array_pit[i]}
-#    if [ -z "$(ls -A ${path_dir})" ]; then
-#        empty_ctr=$((empty_ctr+1))
-#    else
-#        full_ctr=$((full_ctr+1))
-#fi
-#done
-#
-#echo "all:${cnt}, full:${full_ctr}, empty:${empty_ctr}, PATH:${path_dir}" >> ${log_file}
-#echo "" >> ${log_file}
-#
-#}
+
+father_dir=${1}
 
 
-arg_package=${1}
+if [ -z "$father_dir" ]; then
+echo "missing path value fir target"
+exit
+fi
+
+ATG='/home/ise/eran/repo/ATG/'
 
 
-father_dir=${arg_package}
 for D in `find ${father_dir}  -maxdepth 1  -type d  `
 do
 
