@@ -96,6 +96,7 @@ def boundary_budget_allocation(dico, time_per_k, upper, lower, filtering):
 def get_csv_fp(path_project):
     rel_path = '/home/ise/eran/repo/ATG/'
     arr = str(path_project).split('/')
+    print path_project
     for item in arr:
         if str(item).__contains__('commons-'):
             name= str(item).split('-')[1]
@@ -356,7 +357,7 @@ def get_all_class_v1(root):
         path_class = "{}.class".format(root)
         if os.path.isfile(path_class):
             arr = str(path_class).split('/')
-            name_class = str(arr[-1]) + '.class'
+            name_class = str(arr[-1]) + ''
             arr = arr[:-1]
             path_class = '/'.join(arr)
             class_list.append([path_class, name_class])
@@ -542,7 +543,6 @@ def int_exp(args):
     upper_b = int(sys.argv[7])
     lower_b = int(sys.argv[6])
     b_klass = int(sys.argv[8])
-    csv_path = get_csv_fp(v_path)
     if len(sys.argv) > 9 and sys.argv[5] == 'exp':
         it = int(sys.argv[9])
         comp = [str(sys.argv[10])]
@@ -551,6 +551,7 @@ def int_exp(args):
         fp_budget = sys.argv[9]
         it = int(sys.argv[10])
     else:
+        csv_path = get_csv_fp(v_path)
         fp_budget, d = get_time_fault_prediction(csv_path, 'FileName', 'prediction',
                                                  v_path, upper_b, lower_b, b_klass)
         dict_to_csv(d, v_dis_path)
@@ -564,12 +565,14 @@ def int_exp(args):
             dir_name = str(parm) + '_exp_t' + str(localtime) + '_t=' + str(b_klass) + '_it=' + str(i)
             full_dis = mkdir_Os(v_dis_path, dir_name)
             if full_dis == 'null':
+                print "v_dis_path: {} \n dir_name:{}".format(v_dis_path,dir_name)
                 print('cant make dir')
                 exit(1)
             # make a log dir
             is_log = mkdir_Os(full_dis, 'log_evo')
             if is_log == 'null':
-                print('cant make dir log')
+                print (full_dis)
+                print('[Error] -- cant make dir log')
                 exit(1)
             if str(parm) == 'FP':
                 single_call_EvoSuite(v_evo_name, v_evo_path, target_list, fp_budget, full_dis, lower_b, seed, b_klass)

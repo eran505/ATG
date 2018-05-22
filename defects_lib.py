@@ -140,7 +140,7 @@ class Bug_4j:
             os.mkdir(self.root + item)
         self.extract_data()
         self.correspond_package()
-        self.info[4] = self.root
+        self.info[2] = self.root
 
     def add_main_dir_src(self, path_project):
         '''
@@ -278,7 +278,7 @@ class Bug_4j:
 
     def get_fp_budget(self, b_per_class):
         list_packages = self.infected_packages
-        dico, project_allocation = cal_fp_allocation_budget(list_packages, self.csvFP,
+        dico, project_allocation = self.cal_fp_allocation_budget(list_packages, self.csvFP,
                                                             "{}fixed/target/classes/org/".format(self.root),
                                                             b_per_class)
         root_cur = self.root
@@ -295,6 +295,73 @@ class Bug_4j:
 
     def gen_test_copy(self, param):
         os.system('cp -r {} {} '.format(param, self.root))
+
+    def cal_fp_allocation_budget(self,package_name_list, FP_csv_path, root_classes, t_budget):
+        all_classes = pt.walk(root_classes, '.class')
+        if os.path.isdir("{}apache/commons/math3".format(root_classes)):
+            bol_math3 = True
+        else:
+            bol_math3 = False
+        dict_fp = csv_to_dict(FP_csv_path, math3=bol_math3)
+        self.mereg_dicos(dict_fp, all_classes, FP_csv_path)
+        dico, d_project_fp = allocate_time_FP(dict_fp, time_per_k=t_budget)
+        res_dico = {}
+        for key_i in dico.keys():
+            for package_name in package_name_list:
+                if str(key_i).lower().startswith(str(package_name).lower()):
+                    res_dico[key_i] = dico[key_i]
+        return res_dico, d_project_fp
+
+    def mereg_dicos(self, dico, list_klass, csv_path, delimiter='org'):
+        """
+        Make sure that the FP dict is contains only class with in the project.
+        the unknown var is the prediction of unknown class we give it a small prediction for being fault
+        """
+        proj_name = str(csv_path).split('/')[-2]
+        ctr_in = 0
+        memort_csvs = None
+        ctr_unknow = 0
+        unknown = 0.00001
+        new_d = {}
+        before_size = len(list_klass)
+        list_klass = [x for x in list_klass if str(x).__contains__('$') is False]
+        print "class with $ : {}".format(before_size - len(list_klass))
+        for klass in list_klass:
+            xs = str(klass).split('/')
+            indexes = [i for i, x in enumerate(xs) if x == delimiter]
+            if len(indexes) == 0:
+                raise Exception('cant find the delimiter in the path: \n {} \n deli={}'.format(klass, delimiter))
+            xs = xs[indexes[-1]:]
+            klass_i = '.'.join(xs)
+            klass_i = klass_i[:-6]  # to remove the .class from the prefix packages
+            if klass_i in dico:
+                new_d[klass_i] = dico[klass_i]
+                ctr_in += 1
+            else:
+                if memort_csvs is None:
+                    ans, memort_csvs = look_for_old_pred(klass_i, csv_path, proj_name)
+                else:
+                    ans, memort_csvs = look_for_old_pred(klass_i, csv_path, proj_name, memort_csvs)
+                print ans
+                if ans is None:
+                    self.write_log("{}".format(klass_i))
+                    continue
+                new_d[klass_i] = ans
+                ctr_unknow += 1
+        print "merg {} classes out of {}".format(ctr_in, len(list_klass))
+        print "unknown class = {} / {}".format(ctr_unknow, len(list_klass))
+        return new_d
+
+    def write_log(self,info):
+        '''
+        write to log dir
+        :param info:
+        :return:
+        '''
+        dir_p = pt.mkdir_system(self.root,'log',False)
+        with open("{}/{}".format(dir_p,'missing_pred_class.txt'),'a') as f :
+            f.write(info)
+            f.write('\n')
 
 
 def before_op():
@@ -347,14 +414,14 @@ def main_wrapper():
     '''
     args = pars_parms()
     args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
-            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar", '5;3', '1',
+            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '5;3', '1',
             '100', True, 'class']
     proj_name = args[1]
-    path_original = copy.deepcopy(args[4])
+    path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     project_counter = 0
     max = 400
-    start_index = 1
+    start_index = 17
     for i in range(start_index, num_of_bugs):
         if project_counter > max:
             break
@@ -383,49 +450,31 @@ def pars_parms():
     return args
 
 
-def mereg_dicos(dico, list_klass, delimiter='org'):
-    """
-    Make sure that the FP dict is contains only class with in the project.
-    the unknown var is the prediction of unknown class we give it a small prediction for being fault
-    """
-    ctr_in = 0
-    ctr_unknow = 0
-    unknown = 0.00001
-    new_d = {}
-    for klass in list_klass:
-        xs = str(klass).split('/')
-        indexes = [i for i, x in enumerate(xs) if x == delimiter]
-        if len(indexes) == 0:
-            raise Exception('cant find the delimiter in the path: \n {} \n deli={}'.format(klass, delimiter))
-        xs = xs[indexes[-1]:]
-        klass_i = '.'.join(xs)
-        klass_i = klass_i[:-6]  # to remove the .class from the prefix packages
-        if klass_i in dico:
-            new_d[klass_i] = dico[klass_i]
-            ctr_in += 1
-        else:
-            new_d[klass_i] = unknown
-            ctr_unknow += 1
-    print "merg {} classes out of {}".format(ctr_in, len(list_klass))
-    print "unknown class = {} / {}".format(ctr_unknow, len(list_klass))
-    return new_d
-
-
-def cal_fp_allocation_budget(package_name_list, FP_csv_path, root_classes, t_budget):
-    all_classes = pt.walk(root_classes, '.class')
-    if os.path.isdir("{}apache/commons/math3".format(root_classes)):
-        bol_math3 = True
+def look_for_old_pred(class_name, cur_csv, proj_name,mem=None):
+    ans = {}
+    if mem is not None:
+        d_csv = mem
     else:
-        bol_math3 = False
-    dict_fp = csv_to_dict(FP_csv_path, math3=bol_math3)
-    mereg_dicos(dict_fp, all_classes)
-    dico, d_project_fp = allocate_time_FP(dict_fp, time_per_k=t_budget)
-    res_dico = {}
-    for key_i in dico.keys():
-        for package_name in package_name_list:
-            if str(key_i).lower().startswith(str(package_name).lower()):
-                res_dico[key_i] = dico[key_i]
-    return res_dico, d_project_fp
+        d_csv={}
+        list_csv = pt.walk_rec('/home/ise/eran/repo/ATG/D4J/csvs/{}/'.format(proj_name),[],'.csv')
+        for csv_item in list_csv:
+            d_dico=csv_to_dict(csv_item)
+            d_csv[csv_item]=d_dico
+    get_date = str(cur_csv[:-4]).split('_')[-2:]
+    for ky in d_csv:
+        if class_name in d_csv[ky]:
+            get_date_cur = str(ky[:-4]).split('_')[-2:]
+            print get_date_cur, get_date
+            diff = abs(int(get_date_cur[1]) - int(get_date[1]))
+            ans[diff]=d_csv[ky][class_name]
+    if len(ans)>0:
+        lis = sorted(ans.keys())
+        res = ans[lis[0]]
+    else:
+        res = None
+    return res,d_csv
+
+
 
 
 def allocate_time_FP(dico, time_per_k, upper=120, lower=1):
