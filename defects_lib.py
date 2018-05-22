@@ -344,7 +344,7 @@ class Bug_4j:
                     ans, memort_csvs = look_for_old_pred(klass_i, csv_path, proj_name, memort_csvs)
                 print ans
                 if ans is None:
-                    self.write_log("{}".format(klass_i))
+                    self.write_log("{} / {}".format(klass_i,len(list_klass)))
                     continue
                 new_d[klass_i] = ans
                 ctr_unknow += 1
@@ -414,14 +414,14 @@ def main_wrapper():
     '''
     args = pars_parms()
     args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
-            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '5;3', '1',
+            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '10', '1',
             '100', True, 'class']
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     project_counter = 0
     max = 400
-    start_index = 17
+    start_index = 1
     for i in range(start_index, num_of_bugs):
         if project_counter > max:
             break

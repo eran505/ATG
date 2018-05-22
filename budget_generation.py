@@ -602,6 +602,9 @@ def Defect4J_analysis(obj_BUG):
     for pac_path in obj_BUG.infected_packages:
         modified_package_path.append(str(pac_path).replace(".", "/"))
 
+    modified_package_path = list(set(modified_package_path))
+    modified_class_paths = list(set(modified_class_paths))
+
     if obj_BUG.mod == 'class':
         for klass in modified_class_paths:
             sys.argv = ['', "{}{}".format(fixed_path, klass), evo_version, path_evo, out_dir, 'd4j', max_time,
