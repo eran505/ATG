@@ -1,50 +1,77 @@
 from pit_render_test import walker
 import pit_render_test
 import os,csv
-import shutil
-import pickle
+import shutil,pickle
 import sys
 from time import gmtime, strftime
 import pandas as pd
+import xml.etree.ElementTree
 
-
+def is_empty_file(path_f):
+    '''
+    Check whether a file is empty or not
+    :param path_f: path to file
+    :return: T / F
+    '''
+    if os.stat(path_f).st_size == 0:
+        return True
+    return False
 
 def get_all_bugs_dir(pit_dir_path,arg):
+    d={}
     script_py = extract_script(pit_dir_path)
     print script_py
     obj_walk = walker(pit_dir_path)
     all_dir = obj_walk.walk('org',False)
-    bugs_dir=[]
     empty_dir=[]
-    test_dir = []
-    empty_csv = []
+    diff_names_dir = []
+    empty_xml = []
     for dir in all_dir:
         name_class_dir = str(dir).split('/')[-1]
         if is_empty_dir(str(dir)) is False:
-            path_to_csv =  dir+'/mutations.csv'
-            print path_to_csv
-            test_name = get_test_name_csv(path_to_csv)
+            xml_file_path =  dir+'/mutations.xml'
+            if is_empty_file(xml_file_path):
+                d[name_class_dir]={'class':name_class_dir,'path':xml_file_path,'empty_file':1}
+                empty_xml.append(xml_file_path)
+                continue
+            test_name = pars_xml_name(xml_file_path,arg)
             if test_name is not None:
                 if test_name != name_class_dir:
-                    test_dir.append([dir,name_class_dir])
-            name_class = get_class_name_csv(path_to_csv)
-            if name_class is None:
-                empty_csv.append([dir,name_class_dir])
-                continue
-            if name_class != name_class_dir:
-                bugs_dir.append([dir,name_class_dir])
+                    d[name_class_dir] = {'class': name_class_dir, 'path': xml_file_path, 'diff': 1}
+                    diff_names_dir.append([dir,name_class_dir])
+
         else:
+            d[name_class_dir] = {'class': name_class_dir, 'path': dir, 'empty_dir': 1}
             empty_dir.append([dir,name_class_dir])
     print ""
+    p_log = '{}/logS'.format(script_py)
+    log_to_dir_pit(d,p_log)
     #fix_error_list(bugs_dir,script_py,'bug_dir',arg)
     #fix_error_list(empty_csv, script_py,'empty_csv',arg)
-    #fix_error_list(empty_dir, script_py,'empty_dir',arg)
+    fix_error_list(empty_dir, script_py,'empty_dir',arg)
     #fix_error_list(test_dir, script_py, 'test_csv', 'rev')
+
+
+def log_to_dir_pit(d,p_log):
+    list_log=[]
+    for ky_class in d.keys():
+        list_log.append(d[ky_class])
+    df = pd.DataFrame(list_log)
+    flush_csv(p_log,df,'log_pit_dir')
+
+def flush_csv(out_path_dir, xml_df, name_file):
+    if xml_df is None:
+        return
+    if out_path_dir[-1]=='/':
+        xml_df.to_csv("{}{}.csv".format(out_path_dir, name_file))
+    else:
+        xml_df.to_csv("{}/{}.csv".format(out_path_dir,name_file))
+
 def extract_script(p):
     arr = str(p).split('/')
     res=[]
     for string in arr:
-        if string == 'commons-math3-3.5-src':
+        if string.startswith('commons-'):
             res.append(string)
             #res.append('pti_init.py')
             break
@@ -116,11 +143,31 @@ def get_test_name_csv(csv_p):
     return res
 
 
+def pars_xml_name(path_xml,mod):
+    test_name =None
+    list_xml=[] #the dict that will become to DataFrame
+    if os.path.isfile(path_xml) is False:
+        raise "[Error] no file in the path --> {}".format(path_xml)
+    try:
+        root_node = xml.etree.ElementTree.parse(path_xml).getroot()
+    except (Exception, ArithmeticError) as e:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(e).__name__, e.args)
+        print (message)
+        os.system('rm {}'.format(path_xml))
+        return None,None
+    for item in root_node._children:
+        for  x in item._children:
+            if x.tag == 'mutatedClass':
+                mutated_class_name =  x.text
+                return mutated_class_name
+    return None
+
 
 def is_empty_dir(path):
     dir_contents = os.listdir(path)
     print dir_contents
-    if dir_contents:
+    if len(dir_contents)>0:
         return False
     else:
         return True
@@ -174,7 +221,7 @@ if __name__ == "__main__":
     #pp_path = '/home/ise/Desktop/test_50/pit_test/ALL_FP__t=50_it=1/commons-math3-3.5-src/target/pit-reports/'
     #get_all_bugs_dir(pp_path)
     args = sys.argv
-    #args = ['','/home/ise/eran/xml/02_23_17_34_26_t=60_','rev']
+    args = ['','/home/ise/eran/test_replic']
     if len(args)==2:
         get_all_pit_dir_exp(args[1])
     elif len(args)==3:

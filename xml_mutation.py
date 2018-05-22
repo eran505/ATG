@@ -3,7 +3,7 @@ import pit_render_test
 import xml.etree.ElementTree
 import pandas as pd
 import hashlib
-
+import numpy as np
 
 def mkdir_system(path_root,name,is_del=True):
     if path_root is None:
@@ -46,7 +46,7 @@ def get_all_xml(path,root_path_project,mod):
     #    if str(x).__contains__('SphericalCoordinat'):
     #        x_list.append(x)
     #list_xml= x_list
-
+    df_dico_log=[]
     for x_xml in list_xml:
         print all
         all=all-1
@@ -60,23 +60,32 @@ def get_all_xml(path,root_path_project,mod):
 
         if xml_df is None:
             #d_class[name_file] = None
+            df_dico_log.append({'class':name_file , 'info':'empty xml'})
             print "empty xml file in class: {}".format(name_file)
             continue
         index_df = pd.concat([xml_df[cols],index_df])
         if test_name is not None and test_name != name_file:
             print "[Error] {} != {}".format(name_file,test_name)
+            df_dico_log.append({'class': name_file, 'info': 'file contain {}'.format(test_name)})
             err_name[test_name] = name_file
             err[test_name]=xml_df
             continue
         flush_csv(out_path_dir,xml_df,name_file)
         d_class[name_file]=xml_df
     print err_name
+    del_klass=[]
     for key in  err.keys():
         xml_df = err[key]
         name_file = key
         flush_csv(out_path_dir,xml_df,name_file)
+        if key in d_class:
+            df_dico_log.append({'class': name_file, 'info': 'overwrite'.format(name_file)})
         d_class[name_file]=xml_df
     flush_csv(out_path_index,index_df,'index_er')
+    if len(df_dico_log) > 0 :
+        log_df = pd.DataFrame(df_dico_log)
+        print "len_log",len(df_dico_log)
+        flush_csv(out_path_index, log_df, 'log')
     return d_class
 
 
@@ -257,6 +266,55 @@ def aggregation(m_df,cols,mode,time_budget):
     m_df['{}_KILL_Sum_{}'.format(time_budget,mode)] = m_df[cols].apply(lambda row: my_test(row, cols), axis=1)
     m_df['{}_KILL_Avg_{}'.format(time_budget,mode)] = m_df['{}_KILL_Sum_{}'.format(time_budget,mode)] / size_target
 
+def replication_table(root_p):
+    '''
+    this function help to make table replication to see if more replication with less time budget is better then more time in Evosuite,
+    for e,g, given T time if one test suite with T is better then T/n --> n* test suites (each test suite with T/n time budget)
+    :param root_p: the pass for out_xml dir
+    :return: csv file
+    '''
+    arr_sign = ['NO_COVERAGE', 'SURVIVED', 'TIMED_OUT', 'RUN_ERROR']
+    out_xml_dir = pit_render_test.walk_rec(root_p,[],'out_xml',False,-2)
+    for dir_out in out_xml_dir:
+        print dir_out
+        proj_cur = '/'.join(str(dir_out).split('/')[:-1])
+        rep_name = pit_render_test.walk_rec(proj_cur,[],'ALL',False,-2,False)
+        list_p = pit_render_test.walk_rec(dir_out, [],'.csv',-1)
+        cols=['ID']
+        acc=0
+        cols.extend(rep_name)
+        big_df = pd.DataFrame(columns=cols)
+        dir_out = dir_out[:-8]
+        name=str(dir_out).split('t=')[1]
+        time_budget= str(name).split('_')[0]
+        name = "replication_table_t={}".format(time_budget)
+        for csv_item in list_p:
+            print "csv_item =", csv_item
+            df = pd.read_csv(csv_item, index_col=0)
+            acc += int(len(df))
+            print "---"
+            print "df col :",list(df)
+            print "big col:",list(big_df)
+            print "--"
+            for col_name in cols:
+                if col_name not in df:
+                    df[col_name] = np.nan
+            df = df[cols]
+            big_df = pd.concat([big_df, df])
+            if acc != int(len(big_df)):
+                print "acc: {} big: {}".format(acc, int(len(big_df)))
+        big_df[big_df == 'KILLED'] = 1
+        for x in arr_sign:
+            big_df[big_df == x] = 0
+        size = len(rep_name)
+        for i in range(1,size):
+            big_df['max_0-{}'.format(i)] = big_df[rep_name[:i+1]].max(axis=1)
+        flush_csv(root_p,big_df,'{}'.format(name))
+
+
+
+
+
 def make_big_csv(root_p):
     list_p = pit_render_test.walk(root_p,'out_xml',False)
     for p in list_p:
@@ -279,7 +337,7 @@ def make_big_csv(root_p):
             if acc != int(len(big_df)):
                 print "acc: {} big: {}".format(acc,int(len(big_df)))
             #print "[Good] big_df size: ", len(big_df)
-            flush_csv(p,big_df,'big_df_{}'.format(name))
+        flush_csv(p,big_df,'big_df_{}'.format(name))
         print 'done'
 
 
@@ -408,6 +466,10 @@ import sys
 if __name__ == "__main__":
     tran_p = '/home/ise/tran/'
     tran_p = '/home/ise/eran/lang/'
+    tran_p = '/home/ise/eran/test_replic/'
+
+    #replication_table(tran_p)
+    #exit()
     #tran_p='/home/ise/eran/lang/rev_exp/'
     #wrapper_class_analysis(tran_p)
     #make_big_csv(tran_p)

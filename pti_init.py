@@ -449,6 +449,7 @@ def get_min_dir(list_dirs):
         raise Exception("[Error] more than one dir but the path is None --> {}".format(list_dirs))
     return min_path
 
+
 def package_test(pom_path,class_path,test_path):
     list_calss=walk(class_path)
     list_test = walk(test_path)

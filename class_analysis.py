@@ -647,6 +647,8 @@ if __name__ == "__main__":
     # make an normalized table for pivot table, the n-choose test by category
     ##merge_by_packages_Roni('/home/ise/eran/lang/out_rev/','/home/ise/eran/lang/agg/')
     pp='/home/ise/eran/lang/'
+    pp = '/home/ise/eran/test_replic/'
+
     sys.argv = ['', pp , 'reg']
     if len(sys.argv) > 1:
         pp = sys.argv[1]
@@ -657,26 +659,24 @@ if __name__ == "__main__":
     exit()
 
     #####math##
-
     p_stat_U = '/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_U_t=30_it=0_.csv'
     p_stat_FP = '/home/ise/eran/xml/02_26_13_27_45_t=30_/stat_r/ALL_FP_t=30_it=0_.csv'
     p_prefix_csv_Fp = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_FP_t=30_it=0_/commons-math3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/xml/02_26_13_27_45_t=30_/pit_test/ALL_U_t=30_it=0_/commons-math3-3.5-src/csvs/package'
-
     #####math##
 
+    #####math##
     p_stat_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat_r/ALL_U_t=60_it=0_.csv'
     p_stat_FP = '/home/ise/eran/xml/02_23_17_34_26_t=60_/stat_r/ALL_FP_t=60_it=0_.csv'
     p_prefix_csv_Fp = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/package'
+    #####math##
 
     #####lang####
-
     p_stat_U = '/home/ise/eran/lang/rev_exp/04_22_14_47_29_t=35_/stat_r/ALL_U_t=35_it=0_.csv'
     p_stat_FP = '/home/ise/eran/lang/rev_exp/05_11_20_07_29_t=35_/stat_r/ALL_FP_t=35_it=0_.csv'
     p_prefix_csv_Fp = '/home/ise/eran/lang/rev_exp/05_11_20_07_29_t=35_/pit_test/ALL_FP_t=35_it=0_/commons-lang3-3.5-src/csvs/package'
     p_prefix_csv_U = '/home/ise/eran/lang/rev_exp/04_22_14_47_29_t=35_/pit_test/ALL_U_t=35_it=0_/commons-lang3-3.5-src/csvs/package'
-
     #####lang#######
 
     arr_on = ['FP','loc_class', 'random' ]
