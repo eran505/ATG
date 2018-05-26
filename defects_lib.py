@@ -22,7 +22,7 @@ class Bug_4j:
         self.id = bug_id
         self.bug_date = ''
         self.k_budget = None
-        self.mod = info_args[-1] # package // class
+        self.mod = info_args[-1]  # package // class
         self.fp_dico = None
         self.iteration = it
         self.info = info_args
@@ -68,6 +68,7 @@ class Bug_4j:
             arr_pac = arr_pac[:-1]
             str1_pac = '.'.join(str(e) for e in arr_pac)
             self.infected_packages.append(str1_pac)
+        self.infected_packages = list(set(self.infected_packages))
 
     def evo_testing(self):
         print "preparing test suite ..."
@@ -212,9 +213,11 @@ class Bug_4j:
         pt.mkdir_system('{}src/test/'.format(project_dir), 'java')
         for test_dir in evo_test_dir:
             arr_path = str(test_dir).split('/')[-1]
+            java_name = str(test_dir).split('/')[-2]
             name_arr = str(arr_path).split('_')
             dir_name_test = "{}_{}_{}".format(name_arr[0], name_arr[-2], name_arr[-1])
-            name = "Res_{}".format(dir_name_test)
+
+            name = "{}_{}".format(java_name ,dir_name_test)
             command_cp = 'cp -r {}/org {}src/test/java/'.format(test_dir, project_dir)
             os.system(command_cp)
             os.chdir(project_dir)
@@ -279,8 +282,10 @@ class Bug_4j:
     def get_fp_budget(self, b_per_class):
         list_packages = self.infected_packages
         dico, project_allocation = self.cal_fp_allocation_budget(list_packages, self.csvFP,
-                                                            "{}fixed/target/classes/org/".format(self.root),
-                                                            b_per_class)
+                                                                 "{}fixed/target/classes/org/".format(self.root),
+                                                                 b_per_class)
+        if dico is None:
+            return None
         root_cur = self.root
         if root_cur[-1] != '/':
             root_cur = root_cur + '/'
@@ -290,13 +295,37 @@ class Bug_4j:
         with open('{}{}_package_b={}.csv'.format(self.root, 'FP_Allocation', b_per_class), 'w') as f:
             f.write('{0},{1}\n'.format('class', 'time_budget'))
             [f.write('{0},{1}\n'.format(key, value)) for key, value in dico.items()]
-
         self.fp_dico = dico
+        return 'good'
+
+    def remove_unknown_classes(self, dico):
+        print ""
+        unknow_klasses_path = "{}log/missing_pred_class.txt".format(self.root)
+        target = []
+        print unknow_klasses_path
+        with open(unknow_klasses_path, 'r') as file_unknown:
+            target = file_unknown.readlines()
+        if len(target) == 0:
+            return None
+        for klass in target:
+            class_ky = str(klass).split(' ')[0]
+            pack = '.'.join(str(klass).split(' ')[0].split('.')[:-1])
+            if pack in self.infected_packages:
+                return 'package'
+            if klass in self.modified_class:
+                return 'class'
+            if class_ky in dico:
+                try:
+                    del dico[class_ky]
+                except KeyError:
+                    with open("{}log/err_del.txt".format(self.root), 'w+') as f:
+                        f.write('{} -- in the fp dico but error while del in proj: {} '.format(class_ky, self.p_name))
+        return None
 
     def gen_test_copy(self, param):
         os.system('cp -r {} {} '.format(param, self.root))
 
-    def cal_fp_allocation_budget(self,package_name_list, FP_csv_path, root_classes, t_budget):
+    def cal_fp_allocation_budget(self, package_name_list, FP_csv_path, root_classes, t_budget):
         all_classes = pt.walk(root_classes, '.class')
         if os.path.isdir("{}apache/commons/math3".format(root_classes)):
             bol_math3 = True
@@ -304,6 +333,11 @@ class Bug_4j:
             bol_math3 = False
         dict_fp = csv_to_dict(FP_csv_path, math3=bol_math3)
         self.mereg_dicos(dict_fp, all_classes, FP_csv_path)
+        res = self.remove_unknown_classes(dict_fp)
+        if res != None:
+            with open("{}log/err_del.txt".format(self.root), 'a') as f:
+                f.write('{} - problem with missing pred class'.format(res))
+                return None,None
         dico, d_project_fp = allocate_time_FP(dict_fp, time_per_k=t_budget)
         res_dico = {}
         for key_i in dico.keys():
@@ -344,7 +378,7 @@ class Bug_4j:
                     ans, memort_csvs = look_for_old_pred(klass_i, csv_path, proj_name, memort_csvs)
                 print ans
                 if ans is None:
-                    self.write_log("{} / {}".format(klass_i,len(list_klass)))
+                    self.write_log("{} / {}".format(klass_i, len(list_klass)))
                     continue
                 new_d[klass_i] = ans
                 ctr_unknow += 1
@@ -352,14 +386,14 @@ class Bug_4j:
         print "unknown class = {} / {}".format(ctr_unknow, len(list_klass))
         return new_d
 
-    def write_log(self,info):
+    def write_log(self, info):
         '''
         write to log dir
         :param info:
         :return:
         '''
-        dir_p = pt.mkdir_system(self.root,'log',False)
-        with open("{}/{}".format(dir_p,'missing_pred_class.txt'),'a') as f :
+        dir_p = pt.mkdir_system(self.root, 'log', False)
+        with open("{}/{}".format(dir_p, 'missing_pred_class.txt'), 'a') as f:
             f.write(info)
             f.write('\n')
 
@@ -396,8 +430,14 @@ def main_bugger(info, proj, idBug, out_path):
         for time in time_budget:
             bug22.k_budget = time
             bug22.get_the_prediction_csv()
-            bug22.get_fp_budget(time)
-            # bug22.gen_test_copy('/home/ise/Desktop/defect4j_exmple/Evo_Test') # for debugging
+            out = bug22.get_fp_budget(time)
+            # out indicate that all process pass with a good results and we can move for Gen Test with Evosuite
+            if out is None:
+                with open(bug22.root+'log/error.txt0','w') as f:
+                    f.write("[Error] val={0} in project {2} BUG {1}".format(val, idBug, proj))
+                print "[Error] val={0} in project {2} BUG {1}".format(val, idBug, proj)
+                return
+            # bug22.gen_test_copy(path_evo_dir_test) # for debugging
             bg.Defect4J_analysis(bug22)
         if bug22.clean_flaky:
             bug22.clean_flaky_test()
@@ -414,8 +454,8 @@ def main_wrapper():
     '''
     args = pars_parms()
     args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
-            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '10', '1',
-            '100', True, 'class']
+            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2', '1',
+            '100', True, 'class']  # package / class
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
@@ -450,31 +490,29 @@ def pars_parms():
     return args
 
 
-def look_for_old_pred(class_name, cur_csv, proj_name,mem=None):
+def look_for_old_pred(class_name, cur_csv, proj_name, mem=None):
     ans = {}
     if mem is not None:
         d_csv = mem
     else:
-        d_csv={}
-        list_csv = pt.walk_rec('/home/ise/eran/repo/ATG/D4J/csvs/{}/'.format(proj_name),[],'.csv')
+        d_csv = {}
+        list_csv = pt.walk_rec('/home/ise/eran/repo/ATG/D4J/csvs/{}/'.format(proj_name), [], '.csv')
         for csv_item in list_csv:
-            d_dico=csv_to_dict(csv_item)
-            d_csv[csv_item]=d_dico
+            d_dico = csv_to_dict(csv_item)
+            d_csv[csv_item] = d_dico
     get_date = str(cur_csv[:-4]).split('_')[-2:]
     for ky in d_csv:
         if class_name in d_csv[ky]:
             get_date_cur = str(ky[:-4]).split('_')[-2:]
             print get_date_cur, get_date
             diff = abs(int(get_date_cur[1]) - int(get_date[1]))
-            ans[diff]=d_csv[ky][class_name]
-    if len(ans)>0:
+            ans[diff] = d_csv[ky][class_name]
+    if len(ans) > 0:
         lis = sorted(ans.keys())
         res = ans[lis[0]]
     else:
         res = None
-    return res,d_csv
-
-
+    return res, d_csv
 
 
 def allocate_time_FP(dico, time_per_k, upper=120, lower=1):

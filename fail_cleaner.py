@@ -23,9 +23,9 @@ class Cleaner:
 
         dir_path = ''
         if self.mvn_path[-1] == '/':
-            dir_path=self.mvn_path+"logS/"
+            dir_path=self.mvn_path+"logs/"
         else:
-            dir_path = self.mvn_path + "/logS/"
+            dir_path = self.mvn_path + "/logs/"
         if os.path.isdir(dir_path):
             self.logs = dir_path
         else:

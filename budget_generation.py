@@ -607,12 +607,16 @@ def Defect4J_analysis(obj_BUG):
 
     if obj_BUG.mod == 'class':
         for klass in modified_class_paths:
-            sys.argv = ['', "{}{}".format(fixed_path, klass), evo_version, path_evo, out_dir, 'd4j', max_time,
+            out_dir_i = pit_render_test.mkdir_system(out_dir, '.'.join(str(klass).split('/')) ,True)
+            out_dir_i += '/'
+            sys.argv = ['', "{}{}".format(fixed_path, klass), evo_version, path_evo, out_dir_i, 'd4j', max_time,
                         min_time, time_list, d_fp, iter]
             int_exp(sys.argv)
     elif obj_BUG.mod == 'package':
         for package in modified_package_path:
-            sys.argv = ['', "{}{}".format(fixed_path, package), evo_version, path_evo, out_dir, 'd4j', max_time,
+            out_dir_i = pit_render_test.mkdir_system(out_dir, '.'.join(str(package).split('/')), True)
+            out_dir_i += '/'
+            sys.argv = ['', "{}{}".format(fixed_path, package), evo_version, path_evo, out_dir_i, 'd4j', max_time,
                         min_time, time_list, d_fp, iter]
             int_exp(sys.argv)
 
