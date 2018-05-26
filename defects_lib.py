@@ -453,9 +453,10 @@ def main_wrapper():
     :return:
     '''
     args = pars_parms()
-    args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
-            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2', '1',
-            '100', True, 'class']  # package / class
+    print args
+    #args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
+    #        "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '30', '1',
+    #        '100', True, 'class']  # package / class
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
@@ -480,7 +481,7 @@ def main_wrapper():
 
 
 def pars_parms():
-    if len(sys.argv) != 9:
+    if len(sys.argv) < 3:
         print "printing usage:\n"
         print "[project_name, out_path, Evo_Version, Evo_path, budget_time_arr ,upper, lower, clean_flaky_test]"
         print "\n-----info-----\nbudget_time_arr: separation by ; e.g. 2;3;10"
