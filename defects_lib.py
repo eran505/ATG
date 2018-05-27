@@ -81,6 +81,7 @@ class Bug_4j:
         return process.returncode
 
     def compile_data_maven(self):
+        # TODO : modfiy pom by project name
         self.modfiy_pom()
         print "compiling..."
         path_p = '{}fixed'.format(self.root)
@@ -173,10 +174,12 @@ class Bug_4j:
             month = data_time[4:6]
             day = data_time[-2:]
             str_data_bug = "{}_{}_{}".format(year, month, day)
-            # with open("/home/ise/Desktop/time_d4j.txt", "a") as myfile:
-            #    myfile.write('\n')
-            #    myfile.write(str_data_bug)
+            # for Debug ----------------------------------------------------------------
+            with open("/home/ise/Desktop/time_d4j.txt", "a") as myfile:
+                myfile.write('\n')
+                myfile.write(str_data_bug)
             print 'date : %s' % str_data_bug
+            # for Debug -----------------------------------------------------------------
             y = result[x + len("List of modified sources:"):].replace("-", "").replace(" ", "").split('\n')
             for y1 in y:
                 if len(y1) > 1:
@@ -188,14 +191,23 @@ class Bug_4j:
             self.bug_date = str_data_bug
 
     def modfiy_pom(self):
+        if self.p_name == 'Lang':
+            return
         bugg_path = "{}buggy".format(self.root)
         fixed_path = "{}fixed".format(self.root)
         if os.path.isfile("{}/pom.xml".format(bugg_path)):
             os.system('rm {}'.format("{}/pom.xml".format(bugg_path)))
-            os.system('cp /home/ise/eran/repo/ATG/D4J/pom.xml {}'.format(bugg_path))
+            if self.p_name == 'Math':
+                os.system('cp /home/ise/eran/repo/ATG/D4J/math/pom.xml {}'.format(bugg_path))
+            elif self.p_name =='Lang':
+                os.system('cp /home/ise/eran/repo/ATG/D4J/lang/pom.xml {}'.format(bugg_path))
         if os.path.isfile("{}/pom.xml".format(fixed_path)):
             os.system('rm {}'.format("{}/pom.xml".format(fixed_path)))
-            os.system('cp /home/ise/eran/repo/ATG/D4J/pom.xml {}'.format(fixed_path))
+            if self.p_name == 'Math':
+                os.system('cp /home/ise/eran/repo/ATG/D4J/math/pom.xml {}'.format(fixed_path))
+            elif self.p_name == 'Lang':
+                os.system('cp /home/ise/eran/repo/ATG/D4J/lang/pom.xml {}'.format(fixed_path))
+
 
     def analysis_test(self, dir='buggy', dir_out='results'):  # TODO:hendel the folder with the different time budgets
         print ""
@@ -269,12 +281,13 @@ class Bug_4j:
         csv_path_name = self.get_min_csv(d, num_date)
         print "{} : {}".format(self.p_name, self.bug_date)
         self.csvFP = csv_path_name
+        return csv_path_name
 
     def get_min_csv(self, d, num):
         min_val = None
         min_number = float('-inf')
         for x in d.keys():
-            if x - num < 0 and x - num > min_number:
+            if x - num <= 0 and x - num > min_number:
                 min_number = x - num
                 min_val = d[x]
         return min_val
@@ -308,6 +321,8 @@ class Bug_4j:
         if len(target) == 0:
             return None
         for klass in target:
+            if len(str(klass)) < 4:
+                continue
             class_ky = str(klass).split(' ')[0]
             pack = '.'.join(str(klass).split(' ')[0].split('.')[:-1])
             if pack in self.infected_packages:
@@ -358,6 +373,7 @@ class Bug_4j:
         unknown = 0.00001
         new_d = {}
         before_size = len(list_klass)
+
         list_klass = [x for x in list_klass if str(x).__contains__('$') is False]
         print "class with $ : {}".format(before_size - len(list_klass))
         for klass in list_klass:
@@ -384,16 +400,17 @@ class Bug_4j:
                 ctr_unknow += 1
         print "merg {} classes out of {}".format(ctr_in, len(list_klass))
         print "unknown class = {} / {}".format(ctr_unknow, len(list_klass))
+        self.write_log('EOF')
         return new_d
 
-    def write_log(self, info):
+    def write_log(self, info,name='missing_pred_class'):
         '''
         write to log dir
         :param info:
         :return:
         '''
         dir_p = pt.mkdir_system(self.root, 'log', False)
-        with open("{}/{}".format(dir_p, 'missing_pred_class.txt'), 'a') as f:
+        with open("{}/{}".format(dir_p, '{}.txt'.format(name)), 'a') as f:
             f.write(info)
             f.write('\n')
 
@@ -421,21 +438,27 @@ def get_time_budget(arr_string):
     return time_budget_arr
 
 
+
+
 def main_bugger(info, proj, idBug, out_path):
     print "starting.."
     time_budget = get_time_budget(info[5])
     bug22 = Bug_4j(proj, idBug, info, out_path)
+    return
     val = bug22.get_data()
     if val == 0:
         for time in time_budget:
             bug22.k_budget = time
-            bug22.get_the_prediction_csv()
+            out = bug22.get_the_prediction_csv()
+            if out is None:
+                bug22.write_log('DATE: {} , cant find a predction csv : ID:{} P:{} '.format(bug22.bug_date, idBug, proj),'error')
+                return
             out = bug22.get_fp_budget(time)
             # out indicate that all process pass with a good results and we can move for Gen Test with Evosuite
             if out is None:
-                with open(bug22.root+'log/error.txt0','w') as f:
+                with open(bug22.root+'log/error.txt0','a') as f:
                     f.write("[Error] val={0} in project {2} BUG {1}".format(val, idBug, proj))
-                print "[Error] val={0} in project {2} BUG {1}".format(val, idBug, proj)
+                print "[Error]  in project {2} BUG {1}".format(val, idBug, proj)
                 return
             # bug22.gen_test_copy(path_evo_dir_test) # for debugging
             bg.Defect4J_analysis(bug22)
@@ -454,15 +477,16 @@ def main_wrapper():
     '''
     args = pars_parms()
     print args
-    #args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
-    #        "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '30', '1',
-    #        '100', True, 'class']  # package / class
+    if len(args) == 0:
+        args = ["", "Lang", '/home/ise/Desktop/defect4j_exmple/out/',
+            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '30', '1',
+            '100', True, 'class']  # package / class
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     project_counter = 0
     max = 400
-    start_index = 1
+    start_index = 30
     for i in range(start_index, num_of_bugs):
         if project_counter > max:
             break

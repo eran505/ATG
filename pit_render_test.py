@@ -145,7 +145,7 @@ def mkdir_system(path_root, name, is_del=True):
         if is_del:
             os.system('rm -r {}{}'.format(path_root, name))
         else:
-            print "{}{} is already exist".format(path_root, name)
+            #print "{}{} is already exist".format(path_root, name)
             return '{}{}'.format(path_root, name)
     os.system('mkdir {}{}'.format(path_root, name))
     return '{}{}'.format(path_root, name)
