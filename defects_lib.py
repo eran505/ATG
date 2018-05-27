@@ -476,16 +476,16 @@ def main_wrapper():
     '''
     args = pars_parms()
     print args
-    if len(args) == 0:
-        args = ["", "Lang", '/home/ise/Desktop/defect4j_exmple/out/',
-            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2;10', '1',
-            '100', True, 'package']  # package / class
+    #if len(args) == 0:
+    #    args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
+    #        "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2;10', '1',
+    #        '100', True, 'package']  # package / class
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     project_counter = 0
     max = 400
-    start_index = 30
+    start_index = 1
     for i in range(start_index, num_of_bugs):
         if project_counter > max:
             break
