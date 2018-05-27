@@ -444,7 +444,6 @@ def main_bugger(info, proj, idBug, out_path):
     print "starting.."
     time_budget = get_time_budget(info[5])
     bug22 = Bug_4j(proj, idBug, info, out_path)
-    return
     val = bug22.get_data()
     if val == 0:
         for time in time_budget:
@@ -479,8 +478,8 @@ def main_wrapper():
     print args
     if len(args) == 0:
         args = ["", "Lang", '/home/ise/Desktop/defect4j_exmple/out/',
-            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '30', '1',
-            '100', True, 'class']  # package / class
+            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2;10', '1',
+            '100', True, 'package']  # package / class
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
