@@ -198,15 +198,15 @@ class Bug_4j:
         if os.path.isfile("{}/pom.xml".format(bugg_path)):
             os.system('rm {}'.format("{}/pom.xml".format(bugg_path)))
             if self.p_name == 'Math':
-                os.system('cp /home/ise/eran/repo/ATG/D4J/math/pom.xml {}'.format(bugg_path))
+                os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/math/pom.xml {}'.format(bugg_path))
             elif self.p_name =='Lang':
-                os.system('cp /home/ise/eran/repo/ATG/D4J/lang/pom.xml {}'.format(bugg_path))
+                os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/lang/pom.xml {}'.format(bugg_path))
         if os.path.isfile("{}/pom.xml".format(fixed_path)):
             os.system('rm {}'.format("{}/pom.xml".format(fixed_path)))
             if self.p_name == 'Math':
-                os.system('cp /home/ise/eran/repo/ATG/D4J/math/pom.xml {}'.format(fixed_path))
+                os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/math/pom.xml {}'.format(fixed_path))
             elif self.p_name == 'Lang':
-                os.system('cp /home/ise/eran/repo/ATG/D4J/lang/pom.xml {}'.format(fixed_path))
+                os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/lang/pom.xml {}'.format(fixed_path))
 
 
     def analysis_test(self, dir='buggy', dir_out='results'):  # TODO:hendel the folder with the different time budgets
@@ -476,10 +476,10 @@ def main_wrapper():
     '''
     args = pars_parms()
     print args
-    #if len(args) == 0:
-    #    args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
-    #        "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2;10', '1',
-    #        '100', True, 'package']  # package / class
+    if len(args) == 0:
+        args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
+            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2;10', '1',
+            '100', True, 'package']  # package / class
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
