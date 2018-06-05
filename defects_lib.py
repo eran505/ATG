@@ -612,6 +612,83 @@ def csv_to_dict(path, key_name='FileName', val_name='prediction', delimiter='org
 ##################XML_parser_functions############
 ################################################
 
+
+def get_statistic(path_root):
+    '''
+    get all the static on the bugs folder
+    :param path_root: path
+    :return: CSV
+    '''
+    d_list=[]
+    print ""
+    if os.path.isdir(path_root) is False:
+        mesg = 'problem with the path dir : {}'.format(path_root)
+        print(mesg)
+        return None
+    all_sub_dirs = pt.walk_rec(path_root,[],'P_',lv=-1,file_t=False)
+    if len(all_sub_dirs) == 0:
+        print "no folder to process the {} is empty".format(path_root)
+        return None
+    for sub_dir in all_sub_dirs:
+        print sub_dir
+        miss_classes,size = get_missing_class_pred(sub_dir)
+        res = get_all_test(sub_dir)
+    # process the missing class without predication
+
+def get_missing_class_pred(dir_path):
+    '''
+    handel the file miss_pred.txt in the log dir
+    :param dir_path:
+    :return:
+    '''
+    list_of_missing_pred = []
+    m_dir = dir_path
+    if m_dir[-1] != '/':
+        m_dir = m_dir+'/'
+    if os.path.isdir("{}log".format(m_dir)) is True:
+        if os.path.isfile("{}log/missing_pred_class.txt".format(m_dir)) is True:
+            with open("{}log/missing_pred_class.txt".format(m_dir),'r+') as file_i :
+                line_of_class = file_i.readlines()
+                for line in line_of_class:
+                    line = line[:-1]
+                    if str(line) == 'EOF':
+                        break
+                    else:
+                        class_name = str(line).split(' / ')[0]
+                        size = str(line).split(' / ')[1]
+                        list_of_missing_pred.append(class_name)
+        else:
+            return 'missing file'
+    else:
+        return  'no log dir'
+
+    return list_of_missing_pred,size
+
+def get_all_test(dir_path):
+    '''
+    counting the number of test that Evosuite Gen in the dir
+    :param dir_path:
+    :return:
+    '''
+    d_list=[]
+    if os.path.isdir('{}/Evo_Test'.format(dir_path)) is False:
+        return None
+    list_tests = pt.walk_rec('{}/Evo_Test'.format(dir_path),[],'_ESTest.java')
+    for item in list_tests:
+        arr_path = [ x for x in str(item).split('/') if x.__contains__('_exp_') ][0]
+        mode = arr_path.split('_exp_')[0]
+        arr_path = str(item).split('/')
+        index_cut = arr_path.index('Evo_Test')
+        test_name='.'.join(arr_path[index_cut+3:])
+        test_name= test_name[:-5] #remove the suffix .java at the end
+        package = '.'.join(str(test_name).split('.')[:-1])
+        print test_name , mode , package
+        d_test = {'package':package, 'mode':mode, 'test':test_name}
+        d_list.append(d_test)
+
+
+
+
 def wrapper_xml_test_file(list_dirz_path, name):
     """
     getting list dirs in results dir, and parsing them
@@ -726,6 +803,8 @@ def analysis_dir(path_root_dir):
 
 if __name__ == "__main__":
     path_test = '/home/ise/Desktop/defect4j_exmple/out'
+    get_statistic(path_test)
+    exit()
     ########################
     # analysis_dir(path_test)
     # exit()
