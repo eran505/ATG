@@ -199,7 +199,7 @@ class Bug_4j:
             os.system('rm {}'.format("{}/pom.xml".format(bugg_path)))
             if self.p_name == 'Math':
                 os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/math/pom.xml {}'.format(bugg_path))
-            elif self.p_name =='Lang':
+            elif self.p_name == 'Lang':
                 os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/lang/pom.xml {}'.format(bugg_path))
         if os.path.isfile("{}/pom.xml".format(fixed_path)):
             os.system('rm {}'.format("{}/pom.xml".format(fixed_path)))
@@ -207,7 +207,6 @@ class Bug_4j:
                 os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/math/pom.xml {}'.format(fixed_path))
             elif self.p_name == 'Lang':
                 os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/lang/pom.xml {}'.format(fixed_path))
-
 
     def analysis_test(self, dir='buggy', dir_out='results'):  # TODO:hendel the folder with the different time budgets
         print ""
@@ -229,7 +228,7 @@ class Bug_4j:
             name_arr = str(arr_path).split('_')
             dir_name_test = "{}_{}_{}".format(name_arr[0], name_arr[-2], name_arr[-1])
 
-            name = "{}_{}".format(java_name ,dir_name_test)
+            name = "{}_{}".format(java_name, dir_name_test)
             command_cp = 'cp -r {}/org {}src/test/java/'.format(test_dir, project_dir)
             os.system(command_cp)
             os.chdir(project_dir)
@@ -352,7 +351,7 @@ class Bug_4j:
         if res != None:
             with open("{}log/err_del.txt".format(self.root), 'a') as f:
                 f.write('{} - problem with missing pred class'.format(res))
-                return None,None
+                return None, None
         dico, d_project_fp = allocate_time_FP(dict_fp, time_per_k=t_budget)
         res_dico = {}
         for key_i in dico.keys():
@@ -403,7 +402,7 @@ class Bug_4j:
         self.write_log('EOF')
         return new_d
 
-    def write_log(self, info,name='missing_pred_class'):
+    def write_log(self, info, name='missing_pred_class'):
         '''
         write to log dir
         :param info:
@@ -438,8 +437,6 @@ def get_time_budget(arr_string):
     return time_budget_arr
 
 
-
-
 def main_bugger(info, proj, idBug, out_path):
     print "starting.."
     time_budget = get_time_budget(info[5])
@@ -450,12 +447,13 @@ def main_bugger(info, proj, idBug, out_path):
             bug22.k_budget = time
             out = bug22.get_the_prediction_csv()
             if out is None:
-                bug22.write_log('DATE: {} , cant find a predction csv : ID:{} P:{} '.format(bug22.bug_date, idBug, proj),'error')
+                bug22.write_log(
+                    'DATE: {} , cant find a predction csv : ID:{} P:{} '.format(bug22.bug_date, idBug, proj), 'error')
                 return
             out = bug22.get_fp_budget(time)
             # out indicate that all process pass with a good results and we can move for Gen Test with Evosuite
             if out is None:
-                with open(bug22.root+'log/error.txt0','a') as f:
+                with open(bug22.root + 'log/error.txt0', 'a') as f:
                     f.write("[Error] val={0} in project {2} BUG {1}".format(val, idBug, proj))
                 print "[Error]  in project {2} BUG {1}".format(val, idBug, proj)
                 return
@@ -478,8 +476,8 @@ def main_wrapper():
     print args
     if len(args) == 0:
         args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
-            "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2;10', '1',
-            '100', True, 'package']  # package / class
+                "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2;10', '1',
+                '100', True, 'package']  # package / class
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
@@ -619,21 +617,42 @@ def get_statistic(path_root):
     :param path_root: path
     :return: CSV
     '''
-    d_list=[]
+    d_list = []
     print ""
     if os.path.isdir(path_root) is False:
         mesg = 'problem with the path dir : {}'.format(path_root)
         print(mesg)
         return None
-    all_sub_dirs = pt.walk_rec(path_root,[],'P_',lv=-1,file_t=False)
+    all_sub_dirs = pt.walk_rec(path_root, [], 'P_', lv=-1, file_t=False)
     if len(all_sub_dirs) == 0:
         print "no folder to process the {} is empty".format(path_root)
         return None
     for sub_dir in all_sub_dirs:
         print sub_dir
-        miss_classes,size = get_missing_class_pred(sub_dir)
+        miss_classes, size = get_missing_class_pred(sub_dir)
         res = get_all_test(sub_dir)
+        tset_res = get_test_res(sub_dir)
     # process the missing class without predication
+
+
+def get_test_res(path_dir):
+    list_d = []
+    if os.path.isdir('{}results'.format(path_dir)) is False:
+        return None
+    all_res = pt.walk_rec('{}results'.format(path_dir), [], '.xml')
+    if len(all_res) == 0:
+        return list_d
+    for file_i in all_res:
+        gen_config = '_'.join(str(file_i).split('/')[-2].split('_')[1:])
+        allocation_mode = gen_config.split('_')[0]
+        time_budget = gen_config.split('_')[1]
+        iter_num = gen_config.split('_')[2]
+        test_name = str(file_i).split('/')[-1]
+        tmp_data = {'iter_num': iter_num, 'time_budget': time_budget, 'allocation_mode': allocation_mode,
+                    'results_name_test': test_name}
+        list_d.append(tmp_data)
+    return list_d
+
 
 def get_missing_class_pred(dir_path):
     '''
@@ -644,10 +663,10 @@ def get_missing_class_pred(dir_path):
     list_of_missing_pred = []
     m_dir = dir_path
     if m_dir[-1] != '/':
-        m_dir = m_dir+'/'
+        m_dir = m_dir + '/'
     if os.path.isdir("{}log".format(m_dir)) is True:
         if os.path.isfile("{}log/missing_pred_class.txt".format(m_dir)) is True:
-            with open("{}log/missing_pred_class.txt".format(m_dir),'r+') as file_i :
+            with open("{}log/missing_pred_class.txt".format(m_dir), 'r+') as file_i:
                 line_of_class = file_i.readlines()
                 for line in line_of_class:
                     line = line[:-1]
@@ -660,9 +679,10 @@ def get_missing_class_pred(dir_path):
         else:
             return 'missing file'
     else:
-        return  'no log dir'
+        return 'no log dir'
 
-    return list_of_missing_pred,size
+    return list_of_missing_pred, size
+
 
 def get_all_test(dir_path):
     '''
@@ -670,23 +690,21 @@ def get_all_test(dir_path):
     :param dir_path:
     :return:
     '''
-    d_list=[]
+    d_list = []
     if os.path.isdir('{}/Evo_Test'.format(dir_path)) is False:
         return None
-    list_tests = pt.walk_rec('{}/Evo_Test'.format(dir_path),[],'_ESTest.java')
+    list_tests = pt.walk_rec('{}/Evo_Test'.format(dir_path), [], '_ESTest.java')
     for item in list_tests:
-        arr_path = [ x for x in str(item).split('/') if x.__contains__('_exp_') ][0]
+        arr_path = [x for x in str(item).split('/') if x.__contains__('_exp_')][0]
         mode = arr_path.split('_exp_')[0]
         arr_path = str(item).split('/')
         index_cut = arr_path.index('Evo_Test')
-        test_name='.'.join(arr_path[index_cut+3:])
-        test_name= test_name[:-5] #remove the suffix .java at the end
+        test_name = '.'.join(arr_path[index_cut + 3:])
+        test_name = test_name[:-5]  # remove the suffix .java at the end
         package = '.'.join(str(test_name).split('.')[:-1])
-        print test_name , mode , package
-        d_test = {'package':package, 'mode':mode, 'test':test_name}
+        print test_name, mode, package
+        d_test = {'package': package, 'mode': mode, 'test': test_name}
         d_list.append(d_test)
-
-
 
 
 def wrapper_xml_test_file(list_dirz_path, name):
@@ -707,9 +725,11 @@ def wrapper_xml_test_file(list_dirz_path, name):
             ans_income['project'] = str(name_dir_father).split('_')[1]
             ans_income['bug_ID'] = str(name_dir_father).split('_')[-1]
             ans_income['father_dir'] = name_dir_father
-            time_b = str(dir_name).split('_')[1][2:]
-            mode_allocation = str(dir_name).split('_')[0]
+            pack = str(dir_name).split('_')[0]
+            time_b = str(dir_name).split('_')[2][2:]
+            mode_allocation = str(dir_name).split('_')[1]
             iter_num = str(dir_name).split('_')[-1][3:]
+            ans_income['package'] = pack
             ans_income['time_budget'] = time_b
             ans_income['allocation_mode'] = mode_allocation
             ans_income['iteration_num'] = iter_num
@@ -782,7 +802,7 @@ def analysis_dir(path_root_dir):
         if dir_item[-1] == '/':
             dir_item = dir_item[:-1]
         if os.path.isdir("{}/results".format(dir_item)):
-            res_files = pt.walk_rec("{}/results".format(dir_item), [], rec='Res', file_t=False)
+            res_files = pt.walk_rec("{}/results".format(dir_item), [], rec='org', file_t=False)
             if len(res_files) == 0:
                 list_dir_empty.append(dir_item)
             else:
@@ -803,8 +823,10 @@ def analysis_dir(path_root_dir):
 
 if __name__ == "__main__":
     path_test = '/home/ise/Desktop/defect4j_exmple/out'
-    get_statistic(path_test)
+    path_test = '/home/ise/Def4J/tran2/'
+    analysis_dir(path_test)
     exit()
+    get_statistic(path_test)
     ########################
     # analysis_dir(path_test)
     # exit()
