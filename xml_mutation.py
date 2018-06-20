@@ -355,12 +355,35 @@ def add_all_big(root_p):
     avg_col = ['ID']
     list_cols = list(big_df_all)
     list_cols = [x for x in list_cols if str(x).__contains__('Avg')]
-    avg_col.extend(list_cols )
+    avg_col.extend(list_cols)
     df_avg = big_df_all[avg_col]
     make_graph(df_avg,avg_col,root_p)
     flush_csv(root_p, df_avg, 'big_AVG_df')
     flush_csv(root_p,big_df_all,'big_all_df')
 
+
+def add_all_big_df(root_p):
+    list_p = pit_render_test.walk(root_p,'big_df')
+    if len(list_p) > 0 :
+        big_df_all = pd.read_csv(list_p[0],index_col=0)
+    else:
+        print "didnt find any big_df Dataframe in path:{}".format(root_p)
+        return
+    for p in list_p[1:]:
+        df = pd.read_csv(p,index_col=0)
+        big_df_all = pd.merge(big_df_all,df,on=['ID'],how='outer')
+        print "all_df: {}".format(len(big_df_all))
+    return big_df_all
+
+def ana_big_df_all(big_df_all,root_p):
+    avg_col = ['ID']
+    list_cols = list(big_df_all)
+    list_cols = [x for x in list_cols if str(x).__contains__('Avg')]
+    avg_col.extend(list_cols)
+    df_avg = big_df_all[avg_col]
+    make_graph(df_avg,avg_col,root_p)
+    flush_csv(root_p, df_avg, 'big_AVG_df')
+    flush_csv(root_p,big_df_all,'big_all_df')
 
 
 def make_graph(df,cols,out,action='mean'):

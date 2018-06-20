@@ -8,6 +8,8 @@ from contextlib import contextmanager
 import budget_generation as bg
 import fail_cleaner as fc
 
+import numpy as np
+
 project_dict = {}
 root_dir = '~/'
 
@@ -476,7 +478,7 @@ def main_wrapper():
     print args
     if len(args) == 0:
         args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
-                "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '2;10', '1',
+                "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '7', '1',
                 '100', True, 'package']  # package / class
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
@@ -815,18 +817,43 @@ def analysis_dir(path_root_dir):
         list_dico_data.extend(x)
     df = pd.DataFrame(list_dico_data)
     if path_root_dir[-1] != '/':
-        df.to_csv('{}/out.csv'.format(out_df_path))
+        df.to_csv('{}/out.csv'.format(out_df_path), sep=';')
     else:
-        df.to_csv('{}out.csv'.format(out_df_path))
+        df.to_csv('{}out.csv'.format(out_df_path) , sep=';')
     print "Done !"
 
+def memreg_all_df(dir_path):
+    '''
+    merge all df in dir and exiting the program
+    :param dir_path:
+    :return:
+    '''
+    df_list={}
+    list_csv = pt.walk_rec(dir_path,[],'.csv')
+    for item in list_csv:
+        if str(item).split('/')[-1] == 'all_dfs.csv':
+            continue
+        time_budget = str(item).split('/')[-1][:-4].split('_')[-1][1:]
+        project_name = str(item).split('/')[-1][:-4].split('_')[-2]
+        df = pd.read_csv(item, sep=';', index_col=0)
+        df_list['{}_{}'.format(project_name,time_budget)] = df
+    for ky in df_list.keys():
+        print df_list[ky].shape
+        df_list[ky]['binary_bug_err'] = np.where(df_list[ky]['err'] > 0 ,1,0)  #| df_list[ky]['fail'] > 0 )
+        df_list[ky]['binary_bug_fail'] = np.where(df_list[ky]['fail'] > 0, 1, 0)
+        col_name = list(df_list[ky])
+    df_big = pd.concat(df_list.values())
+    if dir_path[-1]=='/':
+        df_big.to_csv('{}all_dfs.csv'.format(dir_path), sep=';')
+    else:
+        df_big.to_csv('{}/all_dfs.csv'.format(dir_path), sep=';')
+    exit()
 
 if __name__ == "__main__":
-    path_test = '/home/ise/Desktop/defect4j_exmple/out'
-    path_test = '/home/ise/Def4J/tran2/'
-    analysis_dir(path_test)
-    exit()
-    get_statistic(path_test)
+    #path_test = '/home/ise/Desktop/defect4j_exmple/d4j_csv/'
+    #memreg_all_df(path_test)
+    #exit()
+    #get_statistic(path_test)
     ########################
     # analysis_dir(path_test)
     # exit()

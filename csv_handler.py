@@ -1,50 +1,96 @@
 
 
-
+import numpy as np
 import sys,os
 import  pit_render_test
+import pandas as pd
 
-def copy_pacakge(dir,out):
-    if os.path.exists(dir+"/commons-math3-3.5-src/target/pit-reports/"):
-        os.system("cp -r "+dir+"/commons-math3-3.5-src/target/pit-reports/"+" "+out)
+import xml_mutation as xm
 
-def copy_mutation(dir,out):
-    walker=pit_render_test.walker(dir)
-    list_dir = walker.walk("ALL",False,-1)
-    os.system("cp "+dir+"/FP_budget_time.csv "+out)
-    for dir in list_dir :
-        name_dir = str(dir).split("/")[-1]
-        if os.path.exists(out+name_dir):
-            os.system("rm -r " +out+name_dir)
-        os.makedirs(out+name_dir)
-        copy_pacakge(dir,out+name_dir+"/")
+def find_biggest_time_b(df,debug=False):
+    '''
+    finding the max key with zero nan values as the upper bound for kill-able mutation
+    :param df:
+    :param debug:
+    :return:
+    '''
+    list_col = list(df)
+    list_col = [x for x in list_col if str(x).startswith('t=')]
+    list_col = [x for x in list_col if str(x).__contains__('Sum')]
+    #list_col_fp = [x for x in list_col if str(x).__contains__('FP')]
+    list_col_uni = [x for x in list_col if str(x).__contains__('_U')]
+    all_size = len(df)
+    if debug:
+        print 'all_size :{}'.format(all_size)
+    d={}
+    for x in list_col_uni:
+        time_b = str(x).split('_')[0]
+        mode = str(x).split('_')[-1]
+        count_row = df[x].count()
+        count_nan = all_size - count_row
+        d[x] = {'t':time_b,'mode':mode,'size':count_row,'nan':count_nan}
+    list_candid = []
+    max_key = None
+    for k in d.keys():
+        if float(d[k]['nan'] ) > 0 :
+            del d[k]
+            continue
+        else:
+            if debug:
+                print '{}:{}'.format(k, d[k])
+        if max_key is None:
+            max_key=k
+        else:
+            if int(d[max_key]['t'][2:]) < int(d[k]['t'][2:]):
+                max_key=k
+    if debug:
+        print '---max_key----'
+        print '{}:{}'.format(max_key, d[max_key])
+    return max_key
 
 
-def main_csv(path_csv) :
-    if os.path.exists(path_csv+"data_mutation"):
-        os.system("rm -r "+path_csv+"data_mutation")
-    os.makedirs(path_csv+"data_mutation")
-    walker=pit_render_test.walker(path_csv)
-    list_dir = walker.walk("09",False,0)
-    out = path_csv +"data_mutation/"
-    for dir in list_dir :
-        name_dir = str(dir).split("/")[-1]
-        if os.path.exists(out+name_dir):
-            os.system("rm -r " +out+name_dir)
-        os.makedirs(out+name_dir)
-        copy_mutation(dir,out+name_dir+"/")
+def remove_unkillable(df_old,debug=False,out='/home/ise/Desktop'):
+    '''
+    this function aggregate all uniform column (only the Sum) and all zero rows is been remove from the Data_frame
+    :param df_old: the Data_frame
+    :param debug:
+    :param out: the dir output
+    :return: None (write to the disk csv file )
+    '''
+    list_col = list(df_old)
+    print list_col
+    list_col = [x for x in list_col if str(x).__contains__('Sum')]
+    list_col_uni = [x for x in list_col if str(x).__contains__('_U')]
+    list_col_uni.append('ID')
+    df = df_old[list_col_uni]
+    print list(df)
+    print df.dtypes
+    df['sum_all']=0.0
+    for x in list_col_uni:
+        if x =='ID':
+            continue
+        df[x]=df[x].astype(np.float64)
+    df['sum_all'] = df.sum(axis=1)
+    if debug:
+        print df['sum_all']
+    #print pd.value_counts(df['sum_all'].values, sort=False)
+    print '--'*88
+    val_zero =  df['sum_all'][df['sum_all'] == 0.0].count()
+    df_filter = df[df['sum_all'] > 0]
+    print 100-float(len(df_filter))/float(len(df))*100
+    df_filter_ID = df_filter['ID']
+    print df_filter_ID
+    df_cut = df_old[df_old['ID'].isin(df_filter_ID)]
+    df_cut = df_cut.loc[:, ~df_cut.columns.str.contains('^Unnamed')]
+    df_cut.to_csv('{}/df_cut.csv'.format(out))
+    return df_cut
 
-    print "done !"
-def main_info(path_p):
-    all
-    with open(path_p) as f:
-        content = f.readlines()
-        a = [x for x in content if x != '\n']
-        for x in a:
 
-            arr = x.split(" ")
-            arr=arr[:2]
-            print arr
+def remvoe_unkillable_mutations(csv_big,debug=False):
+    df = pd.read_csv(csv_big)
+    #res = find_biggest_time_b(df,False)
+    df_cut = remove_unkillable(df,debug,'/home/ise/Desktop/dir_test')
+    xm.ana_big_df_all(df_cut,'/home/ise/Desktop/dir_test')
 
 
 def init_script():
@@ -52,15 +98,18 @@ def init_script():
     if len(sys.argv) == 3 :
         mode = sys.argv[1]
         if mode == 'info':
-            main_info(sys.argv[2])
+            pass
         elif mode == "csv":
-            main_csv(sys.argv[2])
+            pass
         else :
             print('error no mode ')
     else:
         print 'Usage : -csv [path] '
 
 if __name__ == "__main__":
+    csv_p='/home/ise/eran/lang/big_all_df.csv'
+    remvoe_unkillable_mutations(csv_p,True)
+    exit()
     init_script()
 
 
