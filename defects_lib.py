@@ -177,10 +177,10 @@ class Bug_4j:
             day = data_time[-2:]
             str_data_bug = "{}_{}_{}".format(year, month, day)
             # for Debug ----------------------------------------------------------------
-            with open("/home/ise/Desktop/time_d4j.txt", "a") as myfile:
-                myfile.write('\n')
-                myfile.write(str_data_bug)
-            print 'date : %s' % str_data_bug
+            #with open("/home/ise/Desktop/time_d4j.txt", "a") as myfile:
+            #    myfile.write('\n')
+            #    myfile.write(str_data_bug)
+            #print 'date : %s' % str_data_bug
             # for Debug -----------------------------------------------------------------
             y = result[x + len("List of modified sources:"):].replace("-", "").replace(" ", "").split('\n')
             for y1 in y:
@@ -460,6 +460,10 @@ def main_bugger(info, proj, idBug, out_path):
                 print "[Error]  in project {2} BUG {1}".format(val, idBug, proj)
                 return
             # bug22.gen_test_copy(path_evo_dir_test) # for debugging
+            for klass in bug22.modified_class:
+                bug22.write_log(str(klass),'bug_classes')
+            if bug22.mod == 'info':
+                return
             bg.Defect4J_analysis(bug22)
         if bug22.clean_flaky:
             bug22.clean_flaky_test()
@@ -477,14 +481,14 @@ def main_wrapper():
     args = pars_parms()
     print args
     if len(args) == 0:
-        args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/out/',
+        args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/ex2/',
                 "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '7', '1',
-                '100', True, 'package']  # package / class
+                '100', True, 'info']  # package / class / info
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     project_counter = 0
-    max = 400
+    max = 26
     start_index = 1
     for i in range(start_index, num_of_bugs):
         if project_counter > max:
@@ -849,7 +853,97 @@ def memreg_all_df(dir_path):
         df_big.to_csv('{}/all_dfs.csv'.format(dir_path), sep=';')
     exit()
 
+
+def check_FP_prediction_vs_reality(project_name):
+    '''
+    this function check if the real Bug probability is the same as the FP probability,
+    by making CSV and computing the mean over all the package classes
+    :return: CSV
+    '''
+    print ""
+    num_of_bugs = project_dict[project_name]["num_bugs"]
+    d_list=[]
+    for i in range(1,num_of_bugs):
+        args = ["", project_name, '/home/ise/Desktop/defect4j_exmple/ex/',
+                "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '7', '1',
+                '100', True, 'info']  # package / class
+        bug_object = Bug_4j(pro_name=project_name,bug_id=i,info_args=args,root_dir='')
+        buggy_fixed_date = bug_object.bug_date
+        buggy_class = bug_object.modified_class
+        d={'id':i , 'mod_class':buggy_class , 'data_fix':buggy_fixed_date}
+        d_list.append(d)
+    print '/'*200
+    for it in d_list:
+        print it
+    print "check_FP_prediction_vs_reality --> done"
+    exit()
+
+
+def  get_FP_csv_by_ID(dir, flag='apache'):
+    list_dir = pt.walk_rec(dir,[],'P_',lv=-2,file_t=False)
+    d_list=[]
+    for dir_i in list_dir:
+        dir_name =  str(dir_i).split('/')[-1]
+        list_dir = pt.walk_rec(dir_i, [], 'FP_Allocation_budget', lv=-2, file_t=True)
+        id = str(dir_name).split('_')[3]
+        if len(list_dir) != 1:
+            print "[Error] ID:{} = No FP_csv file in dir: {}".format(id,dir_i)
+            continue
+        list_dir_bugyy = pt.walk_rec(dir_i, [], 'bug_classes.txt', lv=-2, file_t=True)
+        if len(list_dir_bugyy) != 1:
+            print "[Error]  ID:{} = No bug_classes file in dir: {}".format(id,dir_i)
+            continue
+        project = str(dir_name).split('_')[1]
+        d_list.append({'ID':id,'proj':project,'csv_FP':list_dir[0], 'buggy':list_dir_bugyy[0],'dir_path':dir_i})
+    for x in d_list:
+        if x['ID'] == '26':
+            print ""
+        with open(x['buggy'],'r+') as f:
+            classes_bug = f.readlines()
+            l=[]
+            l_package =set()
+            for klass in classes_bug:
+                klass = klass[:-1]
+                pack = '.'.join(str(klass).split('.')[:-1])
+                if flag == 'apache':
+                    pack = '.'.join(str(pack).split('.')[4:])
+                    klass = '.'.join(str(klass).split('.')[4:])
+                l_package.add(pack)
+                l.append(klass)
+            #print l_package
+            x['bugs']=l
+            x['package'] = list(l_package)
+        df = pd.read_csv(x['csv_FP'])
+        if flag == 'apache':
+            df['packages'] = df['class'].apply(get_package_name_appche)
+        else:
+            df['packages'] = df['class'].apply(get_package_name)
+        df.to_csv('{}/ex.csv'.format(x['dir_path']))
+        values = x['package']
+        #if x['ID'] ==str(26):
+        #    print values[0]
+        #    print (df.loc[df['packages'] == values[0]])
+        df_filter = df.loc[df['packages'].isin(values)]
+        df_filter.to_csv('{}/filter_df.csv'.format(x['dir_path']))
+        print "ID:{} Filter:{}  old:{}".format(x['ID'],df_filter.shape,df.shape)
+        x['df']=df
+    print 'done'
+
+    exit()
+
+def get_package_name(name):
+    res = '.'.join(str(name).split('.')[:-1])
+    return res
+
+def get_package_name_appche(name):
+    res = '.'.join(str(name).split('.')[4:-1])
+    #print(res)
+    return res
+
 if __name__ == "__main__":
+    get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
+    before_op()
+    #check_FP_prediction_vs_reality('Math')
     #path_test = '/home/ise/Desktop/defect4j_exmple/d4j_csv/'
     #memreg_all_df(path_test)
     #exit()
@@ -858,5 +952,4 @@ if __name__ == "__main__":
     # analysis_dir(path_test)
     # exit()
     ##################
-    before_op()
     main_wrapper()
