@@ -83,14 +83,18 @@ def remove_unkillable(df_old,debug=False,out='/home/ise/Desktop'):
     df_cut = df_old[df_old['ID'].isin(df_filter_ID)]
     df_cut = df_cut.loc[:, ~df_cut.columns.str.contains('^Unnamed')]
     df_cut.to_csv('{}/df_cut.csv'.format(out))
+    diff = len(df_old) - len(df_cut)
+    precnet = float(len(df_cut))/float(len(df_old))*100
+    with open('{}/diff.txt'.format(out),'w') as f:
+        f.write('old:{}\ncut:{}\ndiff:{}\npercentage_change:{}'.format(len(df_old),len(df_cut),diff,precnet))
     return df_cut
 
 
-def remvoe_unkillable_mutations(csv_big,debug=False):
+def remvoe_unkillable_mutations(csv_big,debug=False,proj='proj'):
     df = pd.read_csv(csv_big)
     #res = find_biggest_time_b(df,False)
-    df_cut = remove_unkillable(df,debug,'/home/ise/Desktop/dir_test')
-    xm.ana_big_df_all(df_cut,'/home/ise/Desktop/dir_test')
+    df_cut = remove_unkillable(df,debug,'/home/ise/Desktop/dir_test/{}'.format(proj))
+    xm.ana_big_df_all(df_cut,'/home/ise/Desktop/dir_test/{}'.format(proj))
 
 
 def init_script():
@@ -108,7 +112,9 @@ def init_script():
 
 if __name__ == "__main__":
     csv_p='/home/ise/eran/lang/big_all_df.csv'
-    remvoe_unkillable_mutations(csv_p,True)
+    remvoe_unkillable_mutations(csv_p, True, 'LANG')
+    csv_p='/home/ise/MATH/big_all_df.csv'
+    remvoe_unkillable_mutations(csv_p,True,'MATH')
     exit()
     init_script()
 

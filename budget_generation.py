@@ -582,8 +582,8 @@ def Defect4J_analysis(obj_BUG):
     print ""
     min_time = int(obj_BUG.info[-4])
     max_time = int(obj_BUG.info[-3])
-    buggy_path = str(obj_BUG.root) + "buggy/target/classes/"
-    fixed_path = str(obj_BUG.root) + "fixed/target/classes/"
+    buggy_path = str(obj_BUG.root) + "buggy{}".format(obj_BUG.classes_dir)
+    fixed_path = str(obj_BUG.root) + "fixed{}".format(obj_BUG.classes_dir)
     iter = int(obj_BUG.iteration)
     path_evo = obj_BUG.info[4]
     evo_version = obj_BUG.info[3]

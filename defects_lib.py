@@ -9,8 +9,11 @@ import budget_generation as bg
 import fail_cleaner as fc
 
 import numpy as np
-
+from tempfile import mkstemp
+from shutil import move
+from os import fdopen, remove
 project_dict = {}
+builder_dict={}
 root_dir = '~/'
 
 
@@ -18,11 +21,13 @@ class Bug_4j:
     # b_mod = 'class' / 'package' , to kill the bug
     def __init__(self, pro_name, bug_id, info_args, root_dir,
                  defect4j_root="/home/ise/programs/defects4j/framework/bin/defects4j"
-                 , csv_path='/home/ise/eran/repo/ATG/csv/Most_out_files.csv', b_mod='package', it=1):
+                 , csv_path='/home/ise/eran/repo/ATG/csv/Most_out_files.csv',
+                 b_mod='package', it=1):
         self.root = root_dir
         self.p_name = pro_name
         self.id = bug_id
         self.bug_date = ''
+        self.classes_dir = None
         self.k_budget = None
         self.mod = info_args[-1]  # package // class
         self.fp_dico = None
@@ -43,12 +48,38 @@ class Bug_4j:
             raise Exception(m_error)
         return True
 
+    def ant_build_pre_process(self):
+        sig=1
+        if os.path.isfile('{}fixed/build.xml'.format(self.root)):
+            self.replace('{}fixed/build.xml'.format(self.root),
+                         '<fail if="mockito.tests.failed" message="Tests failed."/>', '<!-- eran -->')
+            self.replace('{}buggy/build.xml'.format(self.root),
+                         '<fail if="mockito.tests.failed" message="Tests failed."/>', '<!-- eran -->')
+            sig = self.compile_data_builder('ant', 'clean compile')
+            if sig == 0:
+                project_dict['Mockito']['src']='ant'
+        return sig
+
     def get_data(self, builder):
         self.check_out_data('f')
         self.check_out_data('b')
         self.rm_all_test(self.root)
         sig = self.compile_data_builder(builder)
+        if sig == 1:
+            sig = self.ant_build_pre_process()
         return sig
+
+    def replace(self, file_path, pattern, subst):
+        # Create temp file
+        fh, abs_path = mkstemp()
+        with fdopen(fh, 'w') as new_file:
+            with open(file_path) as old_file:
+                for line in old_file:
+                    new_file.write(line.replace(pattern, subst))
+        # Remove original file
+        remove(file_path)
+        # Move new file
+        move(abs_path, file_path)
 
     def rm_all_test(self, path):
         dirs = ['buggy', 'fixed']
@@ -62,8 +93,10 @@ class Bug_4j:
                 os.system('rm -r {}'.format(dir_org))
             elif os.path.isdir(dir_test):
                 os.system('rm -r {}/* '.format(dir_test))
-            #elif os.path.isdir(dir_gradle):
-            #    os.system('rm -r {}/* '.format(dir_gradle))
+            elif os.path.isdir(dir_gradle):
+                res = pt.walk_rec(path,[],'GitHubTicketFetcherTest')
+                for x in res:
+                    os.system('rm  {}'.format(x))
             else:
                 print "[Error] no Test dir : {}".format(dir_test)
 
@@ -85,20 +118,22 @@ class Bug_4j:
         process.wait()
         return process.returncode
 
-    def compile_data_builder(self, builder='mvn'):
+    def compile_data_builder(self, builder='mvn', command='install'):
         # TODO : modfiy pom by project name
         self.modfiy_pom()
         print "compiling..."
         path_p = '{}fixed'.format(self.root)
         self.add_main_dir_src(path_p)
         os.chdir(path_p)
-        os.system('mkdir log_dir')
-        sig_f = self.init_shell_script('{0} install >> log_dir/{0}_install_command.txt 2>&1'.format(builder))
+        if os.path.isdir('{}/log_dir'.format(path_p)) is False:
+            os.system('mkdir log_dir')
+        sig_f = self.init_shell_script('{0} {1} >> log_dir/{0}_install_command.txt 2>&1'.format(builder,command))
         path_p = '{}buggy'.format(self.root)
         self.add_main_dir_src(path_p)
         os.chdir(path_p)
-        os.system('mkdir log_dir')
-        sig_b = self.init_shell_script('{0} install >> log_dir/{0}_install_command.txt 2>&1'.format(builder))
+        if os.path.isdir('{}/log_dir'.format(path_p)) is False:
+            os.system('mkdir log_dir')
+        sig_b = self.init_shell_script('{0} {1} >> log_dir/{0}_install_command.txt 2>&1'.format(builder,command))
         if sig_b == 1:
             return 1
         elif sig_f == 1:
@@ -266,9 +301,11 @@ class Bug_4j:
         list_csv = pt.walk_rec(csv_paths, [], '.csv')
         for csv_item in list_csv:
             if len(str(csv_item)) > 10:
-                name = csv_item[-9:]
-                name = str(name[:-4]).split('_')
-                date_i = name[1] + name[0]
+                date_string = str(csv_item)[:-4].split('_')[3:]
+                date_string.reverse()
+                if len(date_string) == 2 :
+                    date_string.append('00')
+                date_i = ''.join(date_string)
                 num_date, bol = _intTryParse(date_i)
                 if bol:
                     d[num_date] = csv_item
@@ -278,7 +315,8 @@ class Bug_4j:
                 print "[Error] in parsing the csv date {}".format(csv_item)
 
         arr_date = self.bug_date.split('_')
-        num_date = arr_date[0][-2:] + arr_date[1]
+        arr_date[0]= arr_date[0][-2:] # make the yeat from XXXX to XX format
+        num_date = ''.join(arr_date)
         num_date, bol = _intTryParse(num_date)
         if bol is False:
             raise Exception('[Error] cant parse the date bug !!! {}'.format(self.bug_date))
@@ -298,8 +336,9 @@ class Bug_4j:
 
     def get_fp_budget(self, b_per_class):
         list_packages = self.infected_packages
+        path_to_class= builder_dict[project_dict[self.p_name]['src']]
         dico, project_allocation = self.cal_fp_allocation_budget(list_packages, self.csvFP,
-                                                                 "{}fixed/target/classes/org/".format(self.root),
+                                                                 "{}fixed{}".format(self.root,path_to_class),
                                                                  b_per_class)
         if dico is None:
             return None
@@ -350,12 +389,15 @@ class Bug_4j:
             bol_math3 = True
         else:
             bol_math3 = False
-        dict_fp = csv_to_dict(FP_csv_path, math3=bol_math3)
+        dict_fp = csv_to_dict(FP_csv_path, project_name=self.p_name, math3=bol_math3)
+
         self.mereg_dicos(dict_fp, all_classes, FP_csv_path)
         res = self.remove_unknown_classes(dict_fp)
         if res != None:
             with open("{}log/err_del.txt".format(self.root), 'a') as f:
-                f.write('{} - problem with missing pred class'.format(res))
+                f.write('{} @#@ problem with missing pred class'.format(res))
+                f.write("\nPACKAGE:{}\nCLASS:{}\n".format(self.infected_packages,self.modified_class))
+                f.close()
                 return None, None
         dico, d_project_fp = allocate_time_FP(dict_fp, time_per_k=t_budget)
         res_dico = {}
@@ -374,7 +416,6 @@ class Bug_4j:
         ctr_in = 0
         memort_csvs = None
         ctr_unknow = 0
-        unknown = 0.00001
         new_d = {}
         before_size = len(list_klass)
 
@@ -420,12 +461,17 @@ class Bug_4j:
 
 
 def before_op():
-    project_dict['Chart'] = {'project_name': "JFreechart", "num_bugs": 26}
+    project_dict['Chart'] = {'project_name': "JFreechart", "num_bugs": 26, }
     project_dict['Closure'] = {'project_name': "Closure compiler", "num_bugs": 133}
-    project_dict['Lang'] = {'project_name': "Apache commons-lang", "num_bugs": 65}
-    project_dict['Math'] = {'project_name': "Apache commons-math", "num_bugs": 106}
-    project_dict['Mockito'] = {'project_name': "Mockito", "num_bugs": 38}
+    project_dict['Lang'] = {'project_name': "Apache commons-lang", "num_bugs": 65,
+                            'src':'mvn','csv_prefix':['src\\org\\','src\\main\\java\\']}
+    project_dict['Math'] = {'project_name': "Apache commons-math", "num_bugs": 106, 'src':'mvn','csv_prefix':['src\\org\\','src\\main\\java\\']}
+    project_dict['Mockito'] = {'project_name': "Mockito", "num_bugs": 38, 'src':'gradle','csv_prefix':['src\\org\\']}
     project_dict['Time'] = {'project_name': "Joda-Time", "num_bugs": 27}
+    # ############### builder dict ####################33
+    builder_dict['mvn'] = {'class_p':'/target/classes/org/','evo_p':'/target/classes/'}
+    builder_dict['ant'] = {'class_p':'/target/classes/org/','evo_p':'/target/classes/'}
+    builder_dict['gradle'] = {'class_p':'/build/classes/java/main/org/','evo_p':'/build/classes/java/main/'}
 
 
 def get_time_budget(arr_string):
@@ -461,19 +507,22 @@ def main_bugger(info, proj, idBug, out_path,builder='mvn'):
             out = bug22.get_fp_budget(time)
             # out indicate that all process pass with a good results and we can move for Gen Test with Evosuite
             if out is None:
-                with open(bug22.root + 'log/error.txt0', 'a') as f:
+                with open(bug22.root + 'log/error.txt', 'a') as f:
                     f.write("[Error] val={0} in project {2} BUG {1}".format(val, idBug, proj))
+                    f.write('\ncsv :{}\ndate_bug:{}\n'.format(out,bug22.bug_date))
                 print "[Error]  in project {2} BUG {1}".format(val, idBug, proj)
                 return
             # bug22.gen_test_copy(path_evo_dir_test) # for debugging
             for klass in bug22.modified_class:
                 bug22.write_log(str(klass),'bug_classes')
+            bug22.classes_dir= builder_dict[project_dict[bug22.p_name]['src']]['evo_p']
             if bug22.mod == 'info':
                 return
             bg.Defect4J_analysis(bug22)
-        if bug22.clean_flaky:
-            bug22.clean_flaky_test()
-        bug22.analysis_test()
+        if bug22.p_name != 'Mockito':
+            if bug22.clean_flaky:
+                bug22.clean_flaky_test()
+            bug22.analysis_test()
     else:
         print "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
 
@@ -488,14 +537,14 @@ def main_wrapper():
     print args
     if len(args) == 0:
         args = ["", "Mockito", '/home/ise/Desktop/defect4j_exmple/ex2/',  # Mockito | Math
-                "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '7', '1',
-                '100', True, 'info']  # package / class / info
+                "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '5', '1',
+                '100', True, 'class']  # package / class / info
     proj_name = args[1]
     path_original = copy.deepcopy(args[2])
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     project_counter = 0
-    max = 26
-    start_index = 16
+    max = 555
+    start_index = 23
     for i in range(start_index, num_of_bugs):
         if project_counter > max:
             break
@@ -511,6 +560,7 @@ def main_wrapper():
             print('cant make dir')
             exit(1)
         if proj_name == 'Mockito':
+            project_dict['Mockito']['src']='gradle'
             main_bugger(args, proj_name, i, full_dis, 'gradle')
         else:
             main_bugger(args, proj_name, i, full_dis)
@@ -535,7 +585,7 @@ def look_for_old_pred(class_name, cur_csv, proj_name, mem=None):
         d_csv = {}
         list_csv = pt.walk_rec('/home/ise/eran/repo/ATG/D4J/csvs/{}/'.format(proj_name), [], '.csv')
         for csv_item in list_csv:
-            d_dico = csv_to_dict(csv_item)
+            d_dico = csv_to_dict(csv_item,proj_name)
             d_csv[csv_item] = d_dico
     get_date = str(cur_csv[:-4]).split('_')[-2:]
     for ky in d_csv:
@@ -593,19 +643,23 @@ def allocate_time_FP(dico, time_per_k, upper=120, lower=1):
     return dico, d_fin
 
 
-def csv_to_dict(path, key_name='FileName', val_name='prediction', delimiter='org', prefix_str='src\\main\\java\\',
+def csv_to_dict(path, project_name,key_name='FileName', val_name='prediction', delimiter='org',
                 filter_out='package-info', math3=True):
     dico = {}
-    prefix_str_old_v = 'src\\java\\'  # TODO: need to fix it for all prefix !!!!
+    project_name = str(project_name).title()
+    prefix_arr = project_dict[project_name]['csv_prefix']
     with open(path) as csvfile:
         reader1 = csv.DictReader(csvfile)
         for row in reader1:
             val_i = row[val_name]
             key_i = row[key_name]
-
-            if str(key_i).startswith(prefix_str) is False:
-                if str(key_i).startswith(prefix_str_old_v) is False:
-                    continue
+            stop_bol=True
+            for item in prefix_arr:
+                if str(key_i).startswith(item):
+                    stop_bol=False
+                    break
+            if stop_bol:
+                continue
             # key_i= key_i.replace('\\','.')
             xs = str(key_i).split('\\')
             indexes = [i for i, x in enumerate(xs) if x == delimiter]
