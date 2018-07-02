@@ -96,17 +96,26 @@ def boundary_budget_allocation(dico, time_per_k, upper, lower, filtering):
 def get_csv_fp(path_project):
     rel_path = '/home/ise/eran/repo/ATG/'
     arr = str(path_project).split('/')
+    name = ''
     print path_project
+    index_repo = arr.index('repo')
+    if index_repo>1:
+        name_project_dir = arr[index_repo+1]
+    else:
+        raise "can not reconaze the project name path:{}" \
+              "\n no repo dir in the path".format(path_project)
     for item in arr:
         if str(item).__contains__('commons-'):
-            name= str(item).split('-')[1]
+            name=str(item).split('-')[1]
             break
     if name.startswith('math'):
         csv_p = 'csv/Most_out_files.csv'
     elif name.startswith('lang'):
         csv_p= 'csv/Most_out_files_35_lang.csv'
+    elif name_project_dir == 'mockito':
+        csv_p = 'csv/Most_out_files_mockito.csv'
     else:
-        raise "cnat reconaze the project name path:{}".format(path_project)
+        raise "can not reconaze the project name path:{}".format(path_project)
     return "{}{}".format(rel_path,csv_p)
 
 def allocate_time_FP(dico, time_per_k, upper, lower, filtering):
@@ -167,28 +176,19 @@ def mkdir_Os(path, name):
     return 'null'
 
 
-def assemble_path_string2(str):
-    cutoff = 0
-    suffix = ""
-    prefix = ""
-    len_str = len(str)
-    word = ''
-    for i in range(len_str - 1, 0, -1):
-        cutoff += 1
-        if str[i] == '/':
-            # word_r = reversed(word)
-            # word = ''.join(word_r)
-            if word == 'classes':
-                prefix = str[0:len_str - cutoff + len(word) + 1]
-                break
-            if len(word) > 1:
-                suffix = word + "." + suffix
-            word = ""
-        else:
-            word = str[i] + word
 
-    return prefix, suffix
-
+def assemble_path_string2(str_i, word_cut='org'):
+    msg = '[Error] the word {} is not in the path:{}'.format(word_cut,str_i)
+    arr_list_path = str(str_i).split('/')
+    index_cut = arr_list_path.index(word_cut)
+    if index_cut > 0:
+        prefix = '/'.join(arr_list_path[:index_cut])
+        suffix = '.'.join(arr_list_path[index_cut:])
+        if len(suffix) < 1 or len(prefix)<1:
+            raise Exception(msg)
+        return prefix, suffix
+    else:
+        raise Exception(msg)
 
 def mereg_dic(list_new, list_org):
     if len(list_new) > len(list_org):
@@ -441,7 +441,7 @@ Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals
         all_p = parms3 + parms4 + parms5
         cut_names = str(cut[1]).split('.')
         pre, suf = assemble_path_string2(cut[0])
-        test = suf + cut_names[0]
+        test = "{}.{}".format(suf,cut_names[0])
         if size_list_class == 0:
             time_budget = b_class
         else:
@@ -476,12 +476,11 @@ def dict_to_csv(mydict, path):
 
 def init_main():
     #curdir=/home/ise/Desktop/test_Gen/home/ise/eran/repo/ATG/budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/Desktop/test_Gen/04_15_13_26_33_t=2_/ exp 1 240 2
+    sys.argv = ['file.py','/home/ise/eran/repo/mockito/build/classes/java/main/org',
+                "evosuite-1.0.5.jar","/home/ise/eran/evosuite/jar/",
+                "/home/ise/Desktop/mock_ex/","exp","1","100","10",'1','U']
 
-    #sys.argv = ['file.py','/home/ise/eran/repo/lang/commons-lang3-3.5-src/target/classes/org/apache/commons/lang3',
-    #            "evosuite-1.0.5.jar","/home/ise/eran/evosuite/jar/",
-    #            "/home/ise/Desktop/test_Gen/04_15_13_26_33_t=10_/","exp","1","100","10",'1','U']
-    #
-   #TODO: comment all the above from this point
+    #TODO: comment all the above from this point
 
     if len(sys.argv) < 3:
         print("miss value ( -target_math -evo_version -vo_path -out_path -csv_file   )")
@@ -502,8 +501,7 @@ def init_main():
     b_klass = int(sys.argv[8])
     rel_path = os.getcwd() + '/'
     if mode == 'FP':
-        budget_dico, d = get_time_fault_prediction(str(rel_path) + 'csv/Most_out_files.csv', 'FileName', 'prediction',
-                                                   v_path, upper_b, lower_b, b_klass)
+        budget_dico, d = get_time_fault_prediction(str(rel_path) + 'csv/Most_out_files.csv', 'FileName', 'prediction',                                               v_path, upper_b, lower_b, b_klass)
     else:
         budget_dico = {}
     const = "345"

@@ -43,11 +43,11 @@ class Bug_4j:
             raise Exception(m_error)
         return True
 
-    def get_data(self):
+    def get_data(self, builder):
         self.check_out_data('f')
         self.check_out_data('b')
         self.rm_all_test(self.root)
-        sig = self.compile_data_maven()
+        sig = self.compile_data_builder(builder)
         return sig
 
     def rm_all_test(self, path):
@@ -57,10 +57,13 @@ class Bug_4j:
             rel_p_only_test = 'src/test'
             dir_org = '{}{}/{}'.format(path, d, rel_p)
             dir_test = '{}{}/{}'.format(path, d, rel_p_only_test)
+            dir_gradle = '{}{}/test'.format(path,d)
             if os.path.isdir(dir_org):
                 os.system('rm -r {}'.format(dir_org))
             elif os.path.isdir(dir_test):
                 os.system('rm -r {}/* '.format(dir_test))
+            #elif os.path.isdir(dir_gradle):
+            #    os.system('rm -r {}/* '.format(dir_gradle))
             else:
                 print "[Error] no Test dir : {}".format(dir_test)
 
@@ -82,7 +85,7 @@ class Bug_4j:
         process.wait()
         return process.returncode
 
-    def compile_data_maven(self):
+    def compile_data_builder(self, builder='mvn'):
         # TODO : modfiy pom by project name
         self.modfiy_pom()
         print "compiling..."
@@ -90,12 +93,12 @@ class Bug_4j:
         self.add_main_dir_src(path_p)
         os.chdir(path_p)
         os.system('mkdir log_dir')
-        sig_f = self.init_shell_script('mvn install >> log_dir/mvn_install_command.txt 2>&1')
+        sig_f = self.init_shell_script('{0} install >> log_dir/{0}_install_command.txt 2>&1'.format(builder))
         path_p = '{}buggy'.format(self.root)
         self.add_main_dir_src(path_p)
         os.chdir(path_p)
         os.system('mkdir log_dir')
-        sig_b = self.init_shell_script('mvn install >> log_dir/mvn_install_command.txt 2>&1')
+        sig_b = self.init_shell_script('{0} install >> log_dir/{0}_install_command.txt 2>&1'.format(builder))
         if sig_b == 1:
             return 1
         elif sig_f == 1:
@@ -439,11 +442,14 @@ def get_time_budget(arr_string):
     return time_budget_arr
 
 
-def main_bugger(info, proj, idBug, out_path):
+def main_bugger(info, proj, idBug, out_path,builder='mvn'):
     print "starting.."
     time_budget = get_time_budget(info[5])
     bug22 = Bug_4j(proj, idBug, info, out_path)
-    val = bug22.get_data()
+    val = bug22.get_data(builder)
+    print "--"*200
+    print val
+    print "--" * 200
     if val == 0:
         for time in time_budget:
             bug22.k_budget = time
@@ -481,7 +487,7 @@ def main_wrapper():
     args = pars_parms()
     print args
     if len(args) == 0:
-        args = ["", "Math", '/home/ise/Desktop/defect4j_exmple/ex2/',
+        args = ["", "Mockito", '/home/ise/Desktop/defect4j_exmple/ex2/',  # Mockito | Math
                 "evosuite-1.0.5.jar", "/home/ise/eran/evosuite/jar/", '7', '1',
                 '100', True, 'info']  # package / class / info
     proj_name = args[1]
@@ -489,7 +495,7 @@ def main_wrapper():
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     project_counter = 0
     max = 26
-    start_index = 1
+    start_index = 16
     for i in range(start_index, num_of_bugs):
         if project_counter > max:
             break
@@ -504,7 +510,10 @@ def main_wrapper():
         if full_dis == 'null':
             print('cant make dir')
             exit(1)
-        main_bugger(args, proj_name, i, full_dis)
+        if proj_name == 'Mockito':
+            main_bugger(args, proj_name, i, full_dis, 'gradle')
+        else:
+            main_bugger(args, proj_name, i, full_dis)
 
 
 def pars_parms():
@@ -879,7 +888,7 @@ def check_FP_prediction_vs_reality(project_name):
     exit()
 
 
-def  get_FP_csv_by_ID(dir, flag='apache'):
+def get_FP_csv_by_ID(dir, flag='apache'):
     list_dir = pt.walk_rec(dir,[],'P_',lv=-2,file_t=False)
     d_list=[]
     for dir_i in list_dir:
@@ -941,7 +950,7 @@ def get_package_name_appche(name):
     return res
 
 if __name__ == "__main__":
-    get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
+    #get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
     before_op()
     #check_FP_prediction_vs_reality('Math')
     #path_test = '/home/ise/Desktop/defect4j_exmple/d4j_csv/'
