@@ -90,6 +90,7 @@ classes modified by the bug fix.
 
 The path to the csv file <class_name,time_budget>
 
+
 =back
 
 =head1 DESCRIPTION
@@ -164,25 +165,33 @@ sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
 my %dict;
 my $FP_PATH = $cmd_opts{k};
 my @data;
-open(my $fh, '<', $FP_PATH) or die "Can't read file '$FP_PATH' [$!]\n";
-while (my $line = <$fh>) {
-    chomp $line;
-    my @fields = split(/,/, $line);
-    #print "data: @data";   
-    #print "fields: @fields";
-    my $size = scalar @fields;
+my $FP_bol=1;
+if($FP_PATH ne 'U')
+{
+    open(my $fh, '<', $FP_PATH) or die "Can't read file '$FP_PATH' [$!]\n";
+    while ((my $line = <$fh>)) {
+        chomp $line;
+        my @fields = split(/,/, $line);
+        #print "data: @data";
+        #print "fields: @fields";
+        my $size = scalar @fields;
 
-    # IF/ELSE STATEMENTS
-    if ($size != 3) 
-    {
-	    print "[Error]\n";
-        print "@fields";
-        exit;
+        # IF/ELSE STATEMENTS
+        if ($size != 3)
+        {
+	        print "[Error]\n";
+            print "@fields";
+            exit;
+        }
+        $dict{trim($fields[0])}=trim($fields[2]);
+
     }
-    $dict{trim(@fields[0])}=trim(@fields[2]);
-    #@keys = keys %dict;
-    #$size = @keys;
 }
+else
+{
+    $FP_bol=0;
+}
+
 ##################################3
 
 my $PID = $cmd_opts{p};
@@ -254,23 +263,26 @@ my $log = "$TMP_DIR/$PID.$VID.$CRITERION.$TID.log";
 foreach my $class (@classes) {
     chomp $class;
     print "$class \n";
-
-    if( exists($dict{$class}))
+    if ($FP_bol==1)
     {
-        my $item =$dict{$class} ;
-        print "--------\n";
-        print "<$class,$item>";
-        print "--------\n";
-        my $time_b = sprintf '%.2d', $item;
-        $BUDGET=$time_b
-    } 
-    else 
-    {
-        print "[Error]\n";
-        my $log_evosuite = "$OUT_DIR/log_evosuite.txt";
-        open(my $fh, '>>', $log_evosuite) or die "Could not open file '$log_evosuite' $!";
-            print $fh "No_FP_Prediction:$class\n";
-            close $fh;
+        if( exists($dict{$class}))
+        {
+            my $item =$dict{$class} ;
+            print "--------\n";
+            print "<$class,$item>";
+            print "--------\n";
+            my $time_b = sprintf '%.2d', $item;
+            $BUDGET=$time_b;
+        }
+        else
+        {
+            print "[Error]\n";
+            my $log_evosuite = "$OUT_DIR/log_evosuite.txt";
+            open(my $fh, '>>', $log_evosuite) or die "Could not open file '$log_evosuite' $!";
+                print $fh "No_FP_Prediction:$class\n";
+                close $fh;
+            next;
+        }
     }
     $LOG->log_msg("Generate tests for: $class : $CRITERION : ${BUDGET}s");
     # Call evosuite with criterion, time, and class name

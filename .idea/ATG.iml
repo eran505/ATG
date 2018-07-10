@@ -4,8 +4,68 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7.14 (~/anaconda2/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file:///etc/perl" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///etc/perl" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file:///usr/lib/x86_64-linux-gnu/perl5/5.22" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///usr/lib/x86_64-linux-gnu/perl5/5.22" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file:///usr/share/perl5" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///usr/share/perl5" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file:///usr/lib/x86_64-linux-gnu/perl/5.22" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///usr/lib/x86_64-linux-gnu/perl/5.22" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file:///usr/share/perl/5.22" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///usr/share/perl/5.22" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file:///usr/lib/x86_64-linux-gnu/perl-base" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///usr/lib/x86_64-linux-gnu/perl-base" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
   <component name="TestRunnerService">
     <option name="PROJECT_TEST_RUNNER" value="Unittests" />
