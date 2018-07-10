@@ -405,11 +405,11 @@ def init_main():
         num=5000
         ch_i = 1
         #get_ID_index_table('/home/ise/tran')
-        out_path = pit_render_test.mkdir_system('/home/ise/eran/random/LANG/by_class/','tran_{}'.format(mod),False)
+        out_path = pit_render_test.mkdir_system('/home/ise/Desktop/tmp/LANG','tran_{}'.format(mod),False)
         p_path = '/home/ise/eran/lang/big_all_df.csv'
-        #p_index = '/home/ise/tran/indexer.csv'
-        p_index = None
+        p_index = '/home/ise/eran/lang/indexer.csv'
         csv_fp_file='/home/ise/eran/repo/ATG/csv/FP_budget_time_lang.csv'
+        #csv_fp_file = '/home/ise/eran/repo/ATG/csv/FP_budget_time_math.csv'
         bugger_obj = bugger(p_path,csv_fp_file,out_path,p_index)
         #bugger_obj.package_separation(num,mod)
         #continue

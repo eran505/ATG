@@ -456,12 +456,15 @@ def packages_agg(path,df_index):
 
 
 def get_ID_index_table(root_path):
-    res = pit_render_test.walk(root_path,'index_er')
+    res = pit_render_test.walk_rec(root_path,[],'index_er')
+    size_res = len(res)
     index_df = pd.DataFrame(columns=['ID','mutatedClass'])
     if len(res)>0:
         index_df = pd.read_csv(res[0],index_col=0)
         print "size:{}".format(len(index_df))
     for csv_p in res[1:]:
+        print size_res
+        size_res=size_res-1
         df=pd.read_csv(csv_p,index_col=0)
         index_df = pd.merge(index_df,df,on=['ID','mutatedClass'],how='outer')
         print "size:{}".format(len(index_df))
@@ -491,8 +494,9 @@ if __name__ == "__main__":
     tran_p = '/home/ise/eran/lang/'
     tran_p = '/home/ise/eran/test_replic/'
 
+    get_ID_index_table('/home/ise/eran/lang/')
     #replication_table(tran_p)
-    #exit()
+    exit()
     #tran_p='/home/ise/eran/lang/rev_exp/'
     #wrapper_class_analysis(tran_p)
     #make_big_csv(tran_p)
