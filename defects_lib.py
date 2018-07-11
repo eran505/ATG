@@ -1125,10 +1125,12 @@ class D4J_tool:
 
         sudo cpan -i DBD::CSV
         '''
+        localtime = time.asctime(time.localtime(time.time()))
+        localtime = str(localtime).replace(":", "")
         print "---test phase----"
         for item in list_test_tar:
             dir_out_bug_i = '/'.join(str(item['path']).split('/')[:-3])
-            out_test_dir = pt.mkdir_system(dir_out_bug_i,'Test_out')
+            out_test_dir = pt.mkdir_system(dir_out_bug_i,'Test_P_{}_B_{}_T_{}_ID_{}'.format(self.p_name,self.bugs,self.time_budget,localtime))
             command_test='{0}/run_bug_detection.pl -d {1}/ -p {2} -o {4} -D'.format(self.root_d4j,item['path'],item['project'],item['version'],out_test_dir)
             process = Popen(shlex.split(command_test), stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
@@ -1149,12 +1151,12 @@ class D4J_tool:
 def init_main():
     out='/home/ise/Desktop/d4j_framework/out/'
     p='Lang'
-    bug='1-3'
+    bug='1-1'
     time_budget='4'
     csv='U'
     scope='class' # all
     obj_d4j = D4J_tool(out_dir=out,project=p,bug_range=bug,time_b=time_budget,csv_fp_path=csv,scope_p=scope)
-    obj_d4j.main_process()
+    #obj_d4j.main_process()
     exit()
 
 if __name__ == "__main__":
