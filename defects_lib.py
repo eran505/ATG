@@ -1122,6 +1122,8 @@ class D4J_tool:
         '''
         /home/ise/programs/defects4j/framework/bin/run_bug_detection.pl
         -d ~/Desktop/d4j_framework/tests/Math/evosuite-branch/0/ -p Math -v 3f -o ~/Desktop/d4j_framework/out/ -D
+
+        sudo cpan -i DBD::CSV
         '''
         print "---test phase----"
         for item in list_test_tar:
