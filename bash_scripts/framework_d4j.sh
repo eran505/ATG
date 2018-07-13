@@ -3,7 +3,7 @@
 
 proj=${1}
 
-python /home/ise/eran/repo/ATG/defects_lib.py -d /home/ise/programs/defects4j/framework/bin -b 1 -r 1-400 -o /home/ise/Desktop/d4j_framework/out/ -t all -p ${proj}-k U
+python /home/ise/eran/repo/ATG/defects_lib.py -d /home/ise/programs/defects4j/framework/bin -b 1 -r 1-400 -o /home/ise/Desktop/d4j_framework/out/ -t all -p ${proj} -k U
 
 python /home/ise/eran/repo/ATG/defects_lib.py -d /home/ise/programs/defects4j/framework/bin -b 5 -r 1-400 -o /home/ise/Desktop/d4j_framework/out/ -t all -p ${proj} -k U
 
