@@ -530,38 +530,6 @@ def main_bugger(info, proj, idBug, out_path,builder='mvn'):
         print "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
 
 
-
-def parser_args(arg):
-    '''
-    helps to split the args to dict
-    :param arg: string args
-    :return: dict
-    '''
-    usage='-p project name\n' \
-          '-o out dir\n' \
-          '-e Evosuite path\n' \
-          '-b time budget\n' \
-          '-l Lower bound time budget\n' \
-          '-u Upper bound time budget\n' \
-          '-t target class/package/all\n' \
-          '-c clean flaky test [T/F]\n' \
-          '-d use defect4j framework\n'
-    dico_args={}
-    array = str(arg).split()
-    i=1
-    while i < len(array):
-        if str(array[i]).startswith('-'):
-            key=array[i][1:]
-            i+=1
-            val=array[i]
-            dico_args[key]=val
-            i += 1
-        else:
-            msg = "the symbol {} is not a valid flag".format(array[i])
-            print(msg)
-            print(usage)
-            raise Exception('[Error] in parsing Args')
-    return dico_args
 def main_wrapper():
     '''
     1. project name
@@ -603,7 +571,6 @@ def main_wrapper():
 
 
 
-
 def look_for_old_pred(class_name, cur_csv, proj_name, mem=None):
     ans = {}
     if mem is not None:
@@ -627,6 +594,8 @@ def look_for_old_pred(class_name, cur_csv, proj_name, mem=None):
     else:
         res = None
     return res, d_csv
+
+
 
 
 def allocate_time_FP(dico, time_per_k, upper=120, lower=1):
@@ -702,11 +671,6 @@ def csv_to_dict(path, project_name,key_name='FileName', val_name='prediction', d
     return dico
 
 
-####################################################
-##################XML_parser_functions############
-################################################
-
-
 def get_statistic(path_root):
     '''
     get all the static on the bugs folder
@@ -729,6 +693,11 @@ def get_statistic(path_root):
         res = get_all_test(sub_dir)
         tset_res = get_test_res(sub_dir)
     # process the missing class without predication
+
+
+####################################################
+##################XML_parser_functions############
+################################################
 
 
 def get_test_res(path_dir):
@@ -1077,12 +1046,17 @@ class D4J_tool:
     def generate_test(self):
         print '----- generate tests phase -----'
         num_of_bugs = project_dict[self.p_name]["num_bugs"]
+
         if str(self.bugs).__contains__('-'):
             lower_bug_id = int(str(self.bugs).split('-')[0])
             upper_bug_id = int(str(self.bugs).split('-')[1])
         else:
             lower_bug_id = int(str(self.bugs))
             upper_bug_id = int(str(self.bugs))
+        if int(upper_bug_id) > int(num_of_bugs):
+            upper_bug_id = int(num_of_bugs)
+        if lower_bug_id > upper_bug_id:
+            lower_bug_id=upper_bug_id
         for i in range(lower_bug_id,upper_bug_id+1):
             for rep_it in range(self.rep):
                 out_dir_bug = self.make_out_dir(self.out,i)
@@ -1121,7 +1095,7 @@ class D4J_tool:
     def run_tests(self,list_test_tar):
         '''
         /home/ise/programs/defects4j/framework/bin/run_bug_detection.pl
-        -d ~/Desktop/d4j_framework/tests/Math/evosuite-branch/0/ -p Math -v 3f -o ~/Desktop/d4j_framework/out/ -D
+        -d ~/Desktop/d4j_framework/test s/Math/evosuite-branch/0/ -p Math -v 3f -o ~/Desktop/d4j_framework/out/ -D
 
         sudo cpan -i DBD::CSV
         '''
@@ -1130,7 +1104,7 @@ class D4J_tool:
         print "---test phase----"
         for item in list_test_tar:
             dir_out_bug_i = '/'.join(str(item['path']).split('/')[:-3])
-            out_test_dir = pt.mkdir_system(dir_out_bug_i,'Test_P_{}_B_{}_T_{}_ID_{}'.format(self.p_name,self.bugs,self.time_budget,localtime))
+            out_test_dir = pt.mkdir_system(dir_out_bug_i,'Test_P_{}_B_{}_T_{}_ID_{}'.format(self.p_name,self.bugs,self.time_budget, str(time.time()%1000).split('.')[0] ))
             command_test='{0}/run_bug_detection.pl -d {1}/ -p {2} -o {4} -D'.format(self.root_d4j,item['path'],item['project'],item['version'],out_test_dir)
             process = Popen(shlex.split(command_test), stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
@@ -1148,15 +1122,50 @@ class D4J_tool:
             f.write('\n')
 
 
+
+def parser_args(arg):
+
+    '''
+    helps to split the args to dict
+    :param arg: string args
+    :return: dict
+    '''
+    usage='-p project name\n' \
+          '-o out dir\n' \
+          '-e Evosuite path\n' \
+          '-b time budget\n' \
+          '-l Lower bound time budget\n' \
+          '-u Upper bound time budget\n' \
+          '-t target class/package/all\n' \
+          '-c clean flaky test [T/F]\n' \
+          '-d use defect4j framework\n' \
+          '-k the csv fp file or U for uniform' \
+          '-r range for bug ids e.g. x-y | x<=y and x,y int '
+    dico_args={}
+    array = arg
+    i=1
+    while i < len(array):
+        if str(array[i]).startswith('-'):
+            key=array[i][1:]
+            i+=1
+            val=array[i]
+            dico_args[key]=val
+            i += 1
+        else:
+            msg = "the symbol {} is not a valid flag".format(array[i])
+            print(msg)
+            print(usage)
+            raise Exception('[Error] in parsing Args')
+    return dico_args
+
+
+
 def init_main():
-    out='/home/ise/Desktop/d4j_framework/out/'
-    p='Lang'
-    bug='1-1'
-    time_budget='4'
-    csv='U'
-    scope='class' # all
-    obj_d4j = D4J_tool(out_dir=out,project=p,bug_range=bug,time_b=time_budget,csv_fp_path=csv,scope_p=scope)
-    #obj_d4j.main_process()
+    #string_std_in='file.py -d /home/ise/programs/defects4j/framework/bin -b 10 -r 1-400 -o /home/ise/Desktop/d4j_framework/out/ -t all -p Lang -k U'
+    #sys.argv = str(string_std_in).split()
+    dico_args = parser_args(sys.argv)
+    obj_d4j = D4J_tool(out_dir=dico_args['o'],project=dico_args['p'],bug_range=dico_args['r'],time_b=dico_args['b'],csv_fp_path=dico_args['k'],scope_p=dico_args['t'])
+    obj_d4j.main_process()
     exit()
 
 if __name__ == "__main__":
