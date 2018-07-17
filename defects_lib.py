@@ -1023,9 +1023,9 @@ class D4J_tool:
         localtime = time.asctime(time.localtime(time.time()))
         localtime = str(localtime).replace(":", "_")
         if index is None:
-            dir_name = "OUT_{0}_{1}".format(self.p_name, str(localtime))
+            dir_name = "OUT_{0}_{1}_T_{2}".format(self.p_name, self.time_budget,str(localtime))
         else:
-            dir_name = "P_{0}_B_{1}_{2}".format(self.p_name,str(index),str(localtime))
+            dir_name = "P_{0}_B_{1}_T_{2}_{3}".format(self.p_name,str(index),self.time_budget,str(localtime))
         full_dis = bg.mkdir_Os(dir_path, dir_name)
         if full_dis == 'null':
             print('cant make dir')
@@ -1137,12 +1137,13 @@ def get_all_results_D4j(root_path,out=None,name='results_D4j'):
         d={}
         bug_id = str(f_folder).split('/')[-1].split('_')[3]
         created = '-'.join(str(f_folder).split('/')[-1].split('_')[4:])
+        time_b = str(f_folder).split('/')[-1].split('_')[3]
         d['bug_id']=bug_id
+        d['time_budget'] = time_b
         d['created'] = created
         test_dir = pt.walk_rec(f_folder,[],'Test_',False,lv=-2)
         if len(test_dir) == 1:
-            time_budget = str(test_dir[0]).split('/')[-1].split('_')[6]
-            d['time_budget']=time_budget
+            #time_budget = str(test_dir[0]).split('/')[-1].split('_')[6]
             out_file = pt.walk_rec(test_dir[0], [], 'bug_detection',lv=-1)[0]
             df_tmp = pd.read_csv(out_file)
             for ky,val in d.iteritems():
