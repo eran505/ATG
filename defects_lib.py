@@ -27,7 +27,7 @@ class Bug_4j:
                  , csv_path='/home/ise/eran/repo/ATG/csv/Most_out_files.csv',
                  b_mod='package', it=1):
         self.root = root_dir
-        self.p_name = pro_name
+        self.p_name = info_args['p']
         self.id = bug_id
         self.bug_date = ''
         self.classes_dir = None
@@ -166,6 +166,7 @@ class Bug_4j:
                                                                                               self.root, var)
         else:
             raise Exception("input to the method can be either 'f' or 'b' ")
+        print "[OS] {}".format(str_command)
         x = os.system(str_command)
         if x == 0:
             return True
@@ -182,10 +183,9 @@ class Bug_4j:
         for item in dir_d4j:
             if os.path.isdir(self.root + item):
                 shutil.rmtree(self.root + item)
-            os.mkdir(self.root + item)
+            pt.mkdir_system(self.root,item)
         self.extract_data()
         self.correspond_package()
-        self.info[2] = self.root
 
     def add_main_dir_src(self, path_project):
         '''
@@ -212,11 +212,16 @@ class Bug_4j:
             stoper = result.find("Root cause in triggering tests")
 
             data_time = result[date_index + len("Revision date (fixed version):"):stoper].replace('-', "")
-            data_time = data_time.replace('\n', "").split()[0]
+            try:
+                data_time = data_time.replace('\n', "").split()[0]
+            except Exception: #TODO: fix it by looking at the comiit id and the date !!!! <------ this fix is very importenet (id 25 mockito [bug])
+                print "[EError] in Date"
+                data_time='20120101'
             year = data_time[:4]
             month = data_time[4:6]
             day = data_time[-2:]
             str_data_bug = "{}_{}_{}".format(year, month, day)
+            print str_data_bug
             # for Debug ----------------------------------------------------------------
             #with open("/home/ise/Desktop/time_d4j.txt", "a") as myfile:
             #    myfile.write('\n')
@@ -339,7 +344,7 @@ class Bug_4j:
 
     def get_fp_budget(self, b_per_class):
         list_packages = self.infected_packages
-        path_to_class= builder_dict[project_dict[self.p_name]['src']]
+        path_to_class= builder_dict[project_dict[self.p_name]['src']]['class_p']
         dico, project_allocation = self.cal_fp_allocation_budget(list_packages, self.csvFP,
                                                                  "{}fixed{}".format(self.root,path_to_class),
                                                                  b_per_class)
@@ -348,10 +353,10 @@ class Bug_4j:
         root_cur = self.root
         if root_cur[-1] != '/':
             root_cur = root_cur + '/'
-        with open('{}{}_budget={}_.csv'.format(self.root, 'FP_Allocation', b_per_class), 'w') as f:
+        with open('{}All_{}_budget={}_.csv'.format(self.root, 'FP_Allocation', b_per_class), 'w') as f:
             f.write('{0},{1},{2}\n'.format('class', 'probability_fp', 'time_budget'))
             [f.write('{0},{1},{2}\n'.format(key, value[0], value[1])) for key, value in project_allocation.items()]
-        with open('{}{}_package_b={}.csv'.format(self.root, 'FP_Allocation', b_per_class), 'w') as f:
+        with open('{}Pack_{}_b={}.csv'.format(self.root, 'FP_Allocation', b_per_class), 'w') as f:
             f.write('{0},{1}\n'.format('class', 'time_budget'))
             [f.write('{0},{1}\n'.format(key, value)) for key, value in dico.items()]
         self.fp_dico = dico
@@ -371,8 +376,8 @@ class Bug_4j:
                 continue
             class_ky = str(klass).split(' ')[0]
             pack = '.'.join(str(klass).split(' ')[0].split('.')[:-1])
-            if pack in self.infected_packages:
-                return 'package'
+            #if pack in self.infected_packages:
+            #    return 'package'
             if klass in self.modified_class:
                 return 'class'
             if class_ky in dico:
@@ -441,11 +446,11 @@ class Bug_4j:
                 else:
                     ans, memort_csvs = look_for_old_pred(klass_i, csv_path, proj_name, memort_csvs)
                 print ans
+                ctr_unknow += 1
                 if ans is None:
                     self.write_log("{} / {}".format(klass_i, len(list_klass)))
                     continue
                 new_d[klass_i] = ans
-                ctr_unknow += 1
         print "merg {} classes out of {}".format(ctr_in, len(list_klass))
         print "unknown class = {} / {}".format(ctr_unknow, len(list_klass))
         self.write_log('EOF')
@@ -493,7 +498,7 @@ def get_time_budget(arr_string):
 
 def main_bugger(info, proj, idBug, out_path,builder='mvn'):
     print "starting.."
-    time_budget = get_time_budget(info[5])
+    time_budget = get_time_budget(info['b'])
     bug22 = Bug_4j(proj, idBug, info, out_path)
     val = bug22.get_data(builder)
     print "--"*200
@@ -507,7 +512,14 @@ def main_bugger(info, proj, idBug, out_path,builder='mvn'):
                 bug22.write_log(
                     'DATE: {} , cant find a predction csv : ID:{} P:{} '.format(bug22.bug_date, idBug, proj), 'error')
                 return
-            out = bug22.get_fp_budget(time)
+            if bug22.mod =='info':
+                if 'z' in bug22.info:
+                    list_str = bug22.info['z']
+                    budget_arr = str(list_str).split(';')
+                    for time_bb in budget_arr:
+                        out = bug22.get_fp_budget(int(time_bb))
+            else:
+                out = bug22.get_fp_budget(time)
             # out indicate that all process pass with a good results and we can move for Gen Test with Evosuite
             if out is None:
                 with open(bug22.root + 'log/error.txt', 'a') as f:
@@ -520,6 +532,8 @@ def main_bugger(info, proj, idBug, out_path,builder='mvn'):
                 bug22.write_log(str(klass),'bug_classes')
             bug22.classes_dir= builder_dict[project_dict[bug22.p_name]['src']]['evo_p']
             if bug22.mod == 'info':
+                #os.system('rm -r {}buggy'.format(bug22.root))
+                #os.system('rm -r {}fixed'.format(bug22.root))
                 return
             bg.Defect4J_analysis(bug22)
         if bug22.p_name != 'Mockito':
@@ -529,30 +543,37 @@ def main_bugger(info, proj, idBug, out_path,builder='mvn'):
     else:
         print "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
 
+def pars_ids(ids_str,num_of_bugs):
+    if str(ids_str).__contains__('-'):
+        lower_bug_id = int(str(ids_str).split('-')[0])
+        upper_bug_id = int(str(ids_str).split('-')[1])
+    else:
+        lower_bug_id = int(str(ids_str))
+        upper_bug_id = int(str(ids_str))
+    if int(upper_bug_id) > int(num_of_bugs):
+        upper_bug_id = int(num_of_bugs)
+    if lower_bug_id > upper_bug_id:
+        lower_bug_id = upper_bug_id
+    return lower_bug_id,upper_bug_id
 
-def main_wrapper():
+def main_wrapper(args=None):
     '''
     1. project name
     2.
     :return:
     '''
-    args = sys.argv
-    if len(args) == 1:
-        args_dict={}
-        args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
-                -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
-                -u 100 -f True -t class"
-    dico_info = parser_args(args)
-    proj_name = dico_info['t']
+    if args is None:
+        args = sys.argv
+    dico_info = parser_args(args.split())
+    proj_name = dico_info['p']
     path_original = dico_info['o']
     num_of_bugs = project_dict[proj_name]["num_bugs"]
-    project_counter = 0
-    max = 555
-    start_index = 23
-    for i in range(start_index, num_of_bugs):
-        if project_counter > max:
-            break
-        project_counter += 1
+    if 'r' in dico_info:
+        low_id,up_idw = pars_ids(dico_info['r'],num_of_bugs)
+    else:
+        low_id = 1
+        up_id = 25
+    for i in range(low_id, up_id):
         print "*" * 50
         print "project:{} | i={} ".format(proj_name, i)
         print "*" * 50
@@ -568,6 +589,9 @@ def main_wrapper():
             main_bugger(dico_info, proj_name, i, full_dis, 'gradle')
         else:
             main_bugger(dico_info, proj_name, i, full_dis)
+    if dico_info['t'] == 'info':
+        rm_dir_by_name(dico_info['o'] ,'fixed')
+        rm_dir_by_name(dico_info['o'] ,'buggy')
 
 
 
@@ -1016,6 +1040,28 @@ class D4J_tool:
         self.out=None
         self.time_budget = time_b
 
+    def analysis_existing_test_suite(self,path_to_dir):
+        dico_list = []
+        project_name = str(path_to_dir).split('/')[-1]
+        bug_dirs = pt.walk_rec(path_to_dir, [], '', False, lv=-1)
+        for bug_dir_i in bug_dirs:
+            bug_id = str(bug_dir_i).split('/')[-1]
+            p_path =  '{}/{}/evosuite-branch'.format(bug_dir_i,project_name)
+            print p_path
+            all_test = pt.walk_rec(p_path, [],'',False,lv=-1)
+            for test_dir in all_test:
+                name_rep = str(test_dir).split('/')[-1]
+                #os.system("rm {0}/*.bz2".format(test_dir))
+                #tar_command ='tar -cvjSf {0}/{1}-{2}f-evosuite-branch.{3}.tar.bz2 {0}/*'.format(test_dir,project_name,bug_id,name_rep)
+                #print tar_command
+                #os.system(tar_command)
+                rel_path = test_dir
+                test_out= pt.mkdir_system('{}/'.format(test_dir),'TEST_results_B_{}'.format(bug_id))
+                dico_list.append({'log':test_out,'output':test_out,'project':project_name,'path':rel_path,'version':bug_id})
+                self.run_tests(dico_list)
+                dico_list=[]
+
+
     def make_out_dir(self,dir_path,index=None):
         '''
         crate the relevant bug dir
@@ -1032,6 +1078,12 @@ class D4J_tool:
             exit(1)
         return full_dis
 
+    def make_fp_csv(self):
+        args_input = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
+            -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 2;3;5;10;20 -l 1\
+            -u 100 -f True -t info -r {0} -z 2;3;5;10;20 ".format(self.bugs)
+        main_wrapper()
+
     def main_process(self,path=None):
         if path is None:
             if self.root_d4j[-1]=='/':
@@ -1043,10 +1095,18 @@ class D4J_tool:
         out_list = self.get_all_tests()
         self.run_tests(out_list)
 
+    def process_str_time_budget(self,str_time):
+        if str(str_time).__contains__(';'):
+            arr = str(str_time).split(';')
+            arr = [int(x) for x in arr]
+            return arr
+        else:
+            return [int(str_time)]
+
     def generate_test(self):
         print '----- generate tests phase -----'
         num_of_bugs = project_dict[self.p_name]["num_bugs"]
-
+        list_times = self.process_str_time_budget(self.time_budget)
         if str(self.bugs).__contains__('-'):
             lower_bug_id = int(str(self.bugs).split('-')[0])
             upper_bug_id = int(str(self.bugs).split('-')[1])
@@ -1058,20 +1118,22 @@ class D4J_tool:
         if lower_bug_id > upper_bug_id:
             lower_bug_id=upper_bug_id
         for i in range(lower_bug_id,upper_bug_id+1):
-            for rep_it in range(self.rep):
-                out_dir_bug = self.make_out_dir(self.out,i)
-                append=''
-                if self.scope == 'all':
-                    append=' -A'
-                evosuite_command='{0}/run_evosuite.pl -p {1} -v {2}f -n {3}' \
+            for time_bud in list_times:
+                for rep_it in range(self.rep):
+                    out_dir_bug = self.make_out_dir(self.out,i)
+                    append=''
+                    if self.scope == 'all':
+                        append=' -A'
+                    out_folder = pt.mkdir_system(out_dir_bug,'t={}'.format(time_bud))
+                    evosuite_command='{0}/run_evosuite.pl -p {1} -v {2}f -n {3}' \
                              ' -o {4} -b {5} -c branch -k {6}'.format(self.root_d4j,
-                        self.p_name,str(i),rep_it,out_dir_bug,self.time_budget,self.csv_fp)
-                evosuite_command=evosuite_command+append
-                process = Popen(shlex.split(evosuite_command), stdout=PIPE, stderr=PIPE)
-                stdout, stderr = process.communicate()
-                self.write_log(out_dir_bug, evosuite_command, 'evosuite_command.log')
-                self.write_log(out_dir_bug,stdout,'evosuite_stdout.log')
-                self.write_log(out_dir_bug, stderr, 'evosuite_stderr.log')
+                        self.p_name,str(i),rep_it,out_folder,time_bud,self.csv_fp)
+                    evosuite_command=evosuite_command+append
+                    process = Popen(shlex.split(evosuite_command), stdout=PIPE, stderr=PIPE)
+                    stdout, stderr = process.communicate()
+                    self.write_log(out_dir_bug, evosuite_command, 'evosuite_command.log')
+                    self.write_log(out_dir_bug,stdout,'evosuite_stdout.log')
+                    self.write_log(out_dir_bug, stderr, 'evosuite_stderr.log')
         
     def get_all_tests(self):
         '''
@@ -1099,12 +1161,14 @@ class D4J_tool:
 
         sudo cpan -i DBD::CSV
         '''
-        localtime = time.asctime(time.localtime(time.time()))
-        localtime = str(localtime).replace(":", "")
         print "---test phase----"
         for item in list_test_tar:
-            dir_out_bug_i = '/'.join(str(item['path']).split('/')[:-3])
-            out_test_dir = pt.mkdir_system(dir_out_bug_i,'Test_P_{}_B_{}_T_{}_ID_{}'.format(self.p_name,self.bugs,self.time_budget, str(time.time()%1000).split('.')[0] ))
+            if 'output' not in item:
+                dir_out_bug_i = '/'.join(str(item['path']).split('/')[:-3])
+                out_test_dir = pt.mkdir_system(dir_out_bug_i,'Test_P_{}_B_{}_T_{}_ID_{}'.format(self.p_name,self.bugs,self.time_budget, str(time.time()%1000).split('.')[0] ))
+            else:
+                dir_out_bug_i = item['log']
+                out_test_dir=item['output']
             command_test='{0}/run_bug_detection.pl -d {1}/ -p {2} -o {4} -D'.format(self.root_d4j,item['path'],item['project'],item['version'],out_test_dir)
             process = Popen(shlex.split(command_test), stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
@@ -1122,6 +1186,11 @@ class D4J_tool:
             f.write('\n')
 
 
+
+def wrapper_get_all_results_D4j(root):
+    all_OUT = pt.walk_rec(root,[],"OUT",False)
+    for x_path in all_OUT:
+        get_all_results_D4j(x_path)
 
 def get_all_results_D4j(root_path,out=None,name='results_D4j'):
     '''
@@ -1194,18 +1263,59 @@ def parser_args(arg):
 
 
 def init_main():
-    #string_std_in='file.py -d /home/ise/programs/defects4j/framework/bin -b 10 -r 1-400 -o /home/ise/Desktop/d4j_framework/out/ -t all -p Lang -k U'
-    #sys.argv = str(string_std_in).split()
+    string_std_in='file.py -d /home/ise/programs/defects4j/framework/bin -b 10 -r 1-400 -o /home/ise/Desktop/d4j_framework/out/ -t all -p Lang -k U'
+    sys.argv = str(string_std_in).split()
+
     dico_args = parser_args(sys.argv)
     obj_d4j = D4J_tool(out_dir=dico_args['o'],project=dico_args['p'],bug_range=dico_args['r'],time_b=dico_args['b'],csv_fp_path=dico_args['k'],scope_p=dico_args['t'])
+    obj_d4j.analysis_existing_test_suite('/home/ise/eran/oracle_d4j/Lang')
     obj_d4j.main_process()
     exit()
 
+def rm_dir_by_name(root,name=None):
+    if name is None:
+        name ='fixed'
+    all_res = pt.walk_rec(root,[],name,False)
+    for x in all_res:
+        final_command = 'rm -r {}'.format(x)
+        process = Popen(shlex.split(final_command), stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        print "----stdout----"
+        print stdout
+        print "----stderr----"
+        print stderr
+
+
+def info_dir_to_csv_dict(root):
+    d={}
+    all_dirs = pt.walk_rec(root,[],'P_',False,lv=-1)
+    for dir in all_dirs:
+        name = str(dir).split('/')[-1]
+        bug_id = str(name).split('_')[3]
+        all_csvs = pt.walk_rec(dir,[],'.csv')
+        ALL_csv = [x for x in all_csvs if str(x).split('/')[-1].__contains__('All')]
+        d_budget_all={}
+        d_budget_pack = {}
+        for item_all in ALL_csv:
+            time_budget = str(item_all).split('/')[-1].split('=')[1].split('.')[0]
+            d_budget_all[time_budget]=item_all
+        PACK_csv = [x for x in all_csvs if str(x).split('/')[-1].__contains__('Pack')]
+        for item_pack in PACK_csv:
+            time_budget = str(item_pack).split('/')[-1].split('=')[1].split('.')[0]
+            d_budget_pack[time_budget]=item_pack
+        d[bug_id]={'ALL:':d_budget_all,'PACK':d_budget_pack}
+    return d
+
 if __name__ == "__main__":
+    args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
+            -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
+            -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
+
     before_op()
-    get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/OUT_Mockito_Sat_Jul_14_05_36_01_2018')
+    wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
+    #main_wrapper(args)
     exit()
-    init_main()
+    #init_main()
     #get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
     #check_FP_prediction_vs_reality('Math')
     #path_test = '/home/ise/Desktop/defect4j_exmple/d4j_csv/'
@@ -1216,4 +1326,3 @@ if __name__ == "__main__":
     # analysis_dir(path_test)
     # exit()
     ##################
-    main_wrapper()
