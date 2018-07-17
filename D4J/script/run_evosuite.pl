@@ -268,15 +268,12 @@ foreach my $class (@classes) {
         if( exists($dict{$class}))
         {
             my $item =$dict{$class} ;
-            print "--------\n";
-            print "<$class,$item>";
-            print "--------\n";
+            print "<$class,$item>\n";
             my $time_b = sprintf '%.2d', $item;
             $BUDGET=$time_b;
         }
         else
         {
-            print "[Error]\n";
             my $log_evosuite = "$OUT_DIR/log_evosuite.txt";
             open(my $fh, '>>', $log_evosuite) or die "Could not open file '$log_evosuite' $!";
                 print $fh "No_FP_Prediction:$class\n";

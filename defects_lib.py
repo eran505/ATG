@@ -569,7 +569,7 @@ def main_wrapper(args=None):
     path_original = dico_info['o']
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     if 'r' in dico_info:
-        low_id,up_idw = pars_ids(dico_info['r'],num_of_bugs)
+        low_id,up_id = pars_ids(dico_info['r'],num_of_bugs)
     else:
         low_id = 1
         up_id = 25
@@ -1028,12 +1028,15 @@ class D4J_tool:
     '''
     this class is a wrapper for Defect4j framework
     '''
-    def __init__(self,out_dir,project,bug_range,time_b,csv_fp_path,
-                 scope_p='all',d4j_path='/home/ise/programs/defects4j/framework/bin',rep=1):
+    def __init__(self,out_dir,project,bug_range,time_b,csv_fp_path,info_d,
+                 scope_p='all',d4j_path='/home/ise/programs/defects4j/framework/bin',rep=1,mode='FP'):
         self.root_d4j=d4j_path
         self.bugs =bug_range
         self.p_name=project
         self.rep = rep
+        self.mode = mode
+        self.info = info_d
+        self.FP_dico=None
         self.out_root=out_dir
         self.scope=scope_p
         self.csv_fp=csv_fp_path
@@ -1068,10 +1071,11 @@ class D4J_tool:
         '''
         localtime = time.asctime(time.localtime(time.time()))
         localtime = str(localtime).replace(":", "_")
+        localtime = str(localtime).replace(" ", "_")
         if index is None:
-            dir_name = "OUT_{0}_{1}_T_{2}".format(self.p_name, self.time_budget,str(localtime))
+            dir_name = "OUT_{0}_D_{1}".format(self.p_name,str(localtime))
         else:
-            dir_name = "P_{0}_B_{1}_T_{2}_{3}".format(self.p_name,str(index),self.time_budget,str(localtime))
+            dir_name = "P_{0}_{1}_D_{2}".format(self.p_name,str(index),str(localtime))
         full_dis = bg.mkdir_Os(dir_path, dir_name)
         if full_dis == 'null':
             print('cant make dir')
@@ -1079,10 +1083,12 @@ class D4J_tool:
         return full_dis
 
     def make_fp_csv(self):
-        args_input = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
-            -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 2;3;5;10;20 -l 1\
-            -u 100 -f True -t info -r {0} -z 2;3;5;10;20 ".format(self.bugs)
-        main_wrapper()
+        args_input = "py. -p {0} -o {1} \
+            -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b {2} -l 1\
+            -u 100 -f True -t info -r {3} -z {2} ".format(self.p_name,self.info['i'],self.time_budget,self.bugs)
+        if self.info['C'] == '1':
+            main_wrapper(args_input)
+        self.FP_dico = info_dir_to_csv_dict(self.info['i'])
 
     def main_process(self,path=None):
         if path is None:
@@ -1091,6 +1097,7 @@ class D4J_tool:
             self.out = self.make_out_dir(self.out_root)
         else:
             self.out=path
+        self.make_fp_csv()
         self.generate_test()
         out_list = self.get_all_tests()
         self.run_tests(out_list)
@@ -1118,13 +1125,22 @@ class D4J_tool:
         if lower_bug_id > upper_bug_id:
             lower_bug_id=upper_bug_id
         for i in range(lower_bug_id,upper_bug_id+1):
+            property_info = 'B_{}_M_{}'.format(i, self.mode)
+            out_dir_bug = self.make_out_dir(self.out, property_info)
             for time_bud in list_times:
                 for rep_it in range(self.rep):
-                    out_dir_bug = self.make_out_dir(self.out,i)
                     append=''
                     if self.scope == 'all':
                         append=' -A'
                     out_folder = pt.mkdir_system(out_dir_bug,'t={}'.format(time_bud))
+                    if self.mode =='FP':
+                        if str(i) in self.FP_dico:
+                            if 'ALL' in self.FP_dico[str(i)]:
+                                if str(time_bud) in self.FP_dico[str(i)]['ALL']:
+                                    self.csv_fp=self.FP_dico[str(i)]['ALL'][str(time_bud)]
+                    if self.csv_fp == 'U' and self.mode=='FP':
+                        self.write_log(out_dir_bug, 'bug_id:{} project:{} time_budget:{} mode:{}\n'.format(i,self.p_name,time_bud,self.mode), 'missing_test')
+                        continue
                     evosuite_command='{0}/run_evosuite.pl -p {1} -v {2}f -n {3}' \
                              ' -o {4} -b {5} -c branch -k {6}'.format(self.root_d4j,
                         self.p_name,str(i),rep_it,out_folder,time_bud,self.csv_fp)
@@ -1134,7 +1150,7 @@ class D4J_tool:
                     self.write_log(out_dir_bug, evosuite_command, 'evosuite_command.log')
                     self.write_log(out_dir_bug,stdout,'evosuite_stdout.log')
                     self.write_log(out_dir_bug, stderr, 'evosuite_stderr.log')
-        
+
     def get_all_tests(self):
         '''
         collect all test tar that generated in the relevant dir
@@ -1186,7 +1202,6 @@ class D4J_tool:
             f.write('\n')
 
 
-
 def wrapper_get_all_results_D4j(root):
     all_OUT = pt.walk_rec(root,[],"OUT",False)
     for x_path in all_OUT:
@@ -1228,7 +1243,7 @@ def get_all_results_D4j(root_path,out=None,name='results_D4j'):
         result = pd.concat(list_dict)
     else:
         print '[Error] noting found at path: {}'.format(root_path)
-        return 
+        return
     if out[-1] =='/':
         result.to_csv('{}{}.csv'.format(out,name))
     else:
@@ -1252,7 +1267,10 @@ def parser_args(arg):
           '-c clean flaky test [T/F]\n' \
           '-d use defect4j framework\n' \
           '-k the csv fp file or U for uniform' \
-          '-r range for bug ids e.g. x-y | x<=y and x,y int '
+          '-r range for bug ids e.g. x-y | x<=y and x,y int' \
+          '-z to what time budgets to make a predection CSV e.g. 4;5;6' \
+          '-i dir folder where the FP CSV' \
+          '-C crate the info dir or not e.g. 1/0'
     dico_args={}
     array = arg
     i=1
@@ -1273,12 +1291,11 @@ def parser_args(arg):
 
 
 def init_main():
-    string_std_in='file.py -d /home/ise/programs/defects4j/framework/bin -b 10 -r 1-400 -o /home/ise/Desktop/d4j_framework/out/ -t all -p Lang -k U'
+    string_std_in='file.py -i /home/ise/Desktop/info/ -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2;3;5;10 -r 1-332 -o /home/ise/Desktop/d4j_framework/out/ -t class -p Mockito -k U'
     sys.argv = str(string_std_in).split()
-
     dico_args = parser_args(sys.argv)
-    obj_d4j = D4J_tool(out_dir=dico_args['o'],project=dico_args['p'],bug_range=dico_args['r'],time_b=dico_args['b'],csv_fp_path=dico_args['k'],scope_p=dico_args['t'])
-    obj_d4j.analysis_existing_test_suite('/home/ise/eran/oracle_d4j/Lang')
+    obj_d4j = D4J_tool(out_dir=dico_args['o'],project=dico_args['p'],bug_range=dico_args['r'],time_b=dico_args['b'],csv_fp_path=dico_args['k'],scope_p=dico_args['t'],info_d=dico_args)
+    ####obj_d4j.analysis_existing_test_suite('/home/ise/eran/oracle_d4j/Lang')
     obj_d4j.main_process()
     exit()
 
@@ -1303,17 +1320,17 @@ def info_dir_to_csv_dict(root):
         name = str(dir).split('/')[-1]
         bug_id = str(name).split('_')[3]
         all_csvs = pt.walk_rec(dir,[],'.csv')
-        ALL_csv = [x for x in all_csvs if str(x).split('/')[-1].__contains__('All')]
+        ALL_csv = [x for x in all_csvs if str(x).split('/')[-1].__contains__('All_')]
         d_budget_all={}
         d_budget_pack = {}
         for item_all in ALL_csv:
-            time_budget = str(item_all).split('/')[-1].split('=')[1].split('.')[0]
+            time_budget = str(item_all).split('/')[-1].split('=')[1].split('.')[0][:-1]
             d_budget_all[time_budget]=item_all
-        PACK_csv = [x for x in all_csvs if str(x).split('/')[-1].__contains__('Pack')]
+        PACK_csv = [x for x in all_csvs if str(x).split('/')[-1].__contains__('Pack_')]
         for item_pack in PACK_csv:
             time_budget = str(item_pack).split('/')[-1].split('=')[1].split('.')[0]
             d_budget_pack[time_budget]=item_pack
-        d[bug_id]={'ALL:':d_budget_all,'PACK':d_budget_pack}
+        d[bug_id]={'ALL':d_budget_all,'PACK':d_budget_pack}
     return d
 
 if __name__ == "__main__":
@@ -1322,10 +1339,10 @@ if __name__ == "__main__":
             -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
 
     before_op()
-    wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
+    #wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
     #main_wrapper(args)
+    init_main()
     exit()
-    #init_main()
     #get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
     #check_FP_prediction_vs_reality('Math')
     #path_test = '/home/ise/Desktop/defect4j_exmple/d4j_csv/'
