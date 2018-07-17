@@ -1224,7 +1224,11 @@ def get_all_results_D4j(root_path,out=None,name='results_D4j'):
         else:
             continue
         list_dict.append(df_tmp)
-    result = pd.concat(list_dict)
+    if len(list_dict)>1:
+        result = pd.concat(list_dict)
+    else:
+        print '[Error] noting found at path: {}'.format(root_path)
+        return 
     if out[-1] =='/':
         result.to_csv('{}{}.csv'.format(out,name))
     else:
