@@ -1221,6 +1221,8 @@ def get_all_results_D4j(root_path,out=None,name='results_D4j'):
             df_tmp = pd.read_csv(out_file)
             for ky,val in d.iteritems():
                 df_tmp[ky]=val
+        else:
+            continue
         list_dict.append(df_tmp)
     result = pd.concat(list_dict)
     if out[-1] =='/':
