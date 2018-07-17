@@ -1213,7 +1213,11 @@ def get_all_results_D4j(root_path,out=None,name='results_D4j'):
         test_dir = pt.walk_rec(f_folder,[],'Test_',False,lv=-2)
         if len(test_dir) == 1:
             #time_budget = str(test_dir[0]).split('/')[-1].split('_')[6]
-            out_file = pt.walk_rec(test_dir[0], [], 'bug_detection',lv=-1)[0]
+            out_file_l = pt.walk_rec(test_dir[0], [], 'bug_detection',lv=-1)
+            if len(out_file_l) == 1:
+                out_file=out_file_l[0]
+            else:
+                continue
             df_tmp = pd.read_csv(out_file)
             for ky,val in d.iteritems():
                 df_tmp[ky]=val
