@@ -1098,7 +1098,7 @@ class D4J_tool:
         else:
             self.out=path
         self.make_fp_csv()
-        self.generate_test()
+        #self.generate_test()
         out_list = self.get_all_tests()
         self.run_tests(out_list)
 
@@ -1147,9 +1147,9 @@ class D4J_tool:
                     evosuite_command=evosuite_command+append
                     process = Popen(shlex.split(evosuite_command), stdout=PIPE, stderr=PIPE)
                     stdout, stderr = process.communicate()
-                    self.write_log(out_dir_bug, evosuite_command, 'evosuite_command.log')
-                    self.write_log(out_dir_bug,stdout,'evosuite_stdout.log')
-                    self.write_log(out_dir_bug, stderr, 'evosuite_stderr.log')
+                    self.write_log(out_folder, evosuite_command, 'evosuite_command.log')
+                    self.write_log(out_folder,stdout,'evosuite_stdout.log')
+                    self.write_log(out_folder, stderr, 'evosuite_stderr.log')
 
     def get_all_tests(self):
         '''
@@ -1181,11 +1181,12 @@ class D4J_tool:
         for item in list_test_tar:
             if 'output' not in item:
                 dir_out_bug_i = '/'.join(str(item['path']).split('/')[:-3])
-                out_test_dir = pt.mkdir_system(dir_out_bug_i,'Test_P_{}_B_{}_T_{}_ID_{}'.format(self.p_name,self.bugs,self.time_budget, str(time.time()%1000).split('.')[0] ))
+                out_test_dir = pt.mkdir_system(dir_out_bug_i,'Test_P_{}_ID_{}'.format(self.p_name,str(time.time()%1000).split('.')[0] ))
             else:
                 dir_out_bug_i = item['log']
                 out_test_dir=item['output']
             command_test='{0}/run_bug_detection.pl -d {1}/ -p {2} -o {4} -D'.format(self.root_d4j,item['path'],item['project'],item['version'],out_test_dir)
+            print "[OS] {}".format(command_test)
             process = Popen(shlex.split(command_test), stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
             self.write_log(dir_out_bug_i, command_test, 'testing_commands.log')
@@ -1291,12 +1292,12 @@ def parser_args(arg):
 
 
 def init_main():
-    string_std_in='file.py -i /home/ise/Desktop/info/ -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2;3;5;10 -r 1-332 -o /home/ise/Desktop/d4j_framework/out/ -t class -p Mockito -k U'
+    string_std_in='file.py -i /home/ise/Desktop/info/ -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2;3 -r 1-1 -o /home/ise/Desktop/d4j_framework/out/ -t class -p Mockito -k U'
     sys.argv = str(string_std_in).split()
     dico_args = parser_args(sys.argv)
     obj_d4j = D4J_tool(out_dir=dico_args['o'],project=dico_args['p'],bug_range=dico_args['r'],time_b=dico_args['b'],csv_fp_path=dico_args['k'],scope_p=dico_args['t'],info_d=dico_args)
     ####obj_d4j.analysis_existing_test_suite('/home/ise/eran/oracle_d4j/Lang')
-    obj_d4j.main_process()
+    obj_d4j.main_process('/home/ise/Desktop/d4j_framework/out/OUT_Mockito_D_Wed_Jul_18_00_52_09_2018')
     exit()
 
 def rm_dir_by_name(root,name=None):
