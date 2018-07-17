@@ -1123,6 +1123,38 @@ class D4J_tool:
 
 
 
+def get_all_results_D4j(root_path,out=None,name='results_D4j'):
+    '''
+    going over all the folders and collecting the results to a csv
+    :param root_path:
+    :return:
+    '''
+    if out is None:
+        out=root_path
+    list_dict=[]
+    folders=pt.walk_rec(root_path,[],'P_',False,lv=-2)
+    for f_folder in folders:
+        d={}
+        bug_id = str(f_folder).split('/')[-1].split('_')[3]
+        created = '-'.join(str(f_folder).split('/')[-1].split('_')[4:])
+        d['bug_id']=bug_id
+        d['created'] = created
+        test_dir = pt.walk_rec(f_folder,[],'Test_',False,lv=-2)
+        if len(test_dir) == 1:
+            time_budget = str(test_dir[0]).split('/')[-1].split('_')[6]
+            d['time_budget']=time_budget
+            out_file = pt.walk_rec(test_dir[0], [], 'bug_detection',lv=-1)[0]
+            df_tmp = pd.read_csv(out_file)
+            for ky,val in d.iteritems():
+                df_tmp[ky]=val
+        list_dict.append(df_tmp)
+    result = pd.concat(list_dict)
+    if out[-1] =='/':
+        result.to_csv('{}{}.csv'.format(out,name))
+    else:
+        result.to_csv('{}/{}.csv'.format(out, name))
+
+
 def parser_args(arg):
 
     '''
@@ -1170,6 +1202,8 @@ def init_main():
 
 if __name__ == "__main__":
     before_op()
+    get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/OUT_Mockito_Sat_Jul_14_05_36_01_2018')
+    exit()
     init_main()
     #get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
     #check_FP_prediction_vs_reality('Math')
