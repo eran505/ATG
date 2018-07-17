@@ -1185,7 +1185,7 @@ class D4J_tool:
             else:
                 dir_out_bug_i = item['log']
                 out_test_dir=item['output']
-            command_test='{0}/run_bug_detection.pl -d {1}/ -p {2} -o {4} -D'.format(self.root_d4j,item['path'],item['project'],item['version'],out_test_dir)
+            command_test='{0}/run_bug_detection.pl -d {1}/ -p {2} -v {3}f -o {4} -D'.format(self.root_d4j,item['path'],item['project'],item['version'],out_test_dir)
             print "[OS] {}".format(command_test)
             process = Popen(shlex.split(command_test), stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
