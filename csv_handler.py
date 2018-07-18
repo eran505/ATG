@@ -110,7 +110,47 @@ def init_script():
     else:
         print 'Usage : -csv [path] '
 
+
+def first_kill(p_path='/home/ise/eran/lang/big_all_df.csv'):
+    df = pd.read_csv(p_path,index_col=0)
+    get_col_time_budget = list(df)
+    get_col_time_budget = [x for x in get_col_time_budget if str(x).__contains__('t=')]
+    get_col_time_budget_U = [x for x in get_col_time_budget if str(x).__contains__('_U')]
+    for x in get_col_time_budget_U:
+        print x
+    df['First'] = df.apply(my_test2,cols=get_col_time_budget_U, axis=1)
+    df['freq'] = df.apply(my_test1, cols=get_col_time_budget_U, axis=1)
+    df[['ID','First','freq']].to_csv('/home/ise/eran/lang/first_kill.csv')
+    exit()
+
+
+def my_test1(row,cols):
+    l_int=[]
+    for col in cols:
+        if row[col] > 0:
+            time_b = str(col).split('_')[0].split('=')[1]
+            l_int.append(int(time_b))
+    if len(l_int)==0:
+        return 0
+    l_int.sort()
+    return float(len(l_int))/float(len(cols))*100
+
+def my_test2(row,cols):
+    l=[]
+    l_int=[]
+    for col in cols:
+        if row[col] > 0:
+            l.append(col)
+            time_b = str(col).split('_')[0].split('=')[1]
+            l_int.append(int(time_b))
+    if len(l_int)==0:
+        return 0
+    l_int.sort()
+    return l_int[0]
+
+
 if __name__ == "__main__":
+    first_kill()
     csv_p='/home/ise/eran/lang/big_all_df.csv'
     remvoe_unkillable_mutations(csv_p, True, 'LANG')
     csv_p='/home/ise/MATH/big_all_df.csv'
