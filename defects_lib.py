@@ -1255,6 +1255,7 @@ def get_results_junit(root_p,out=None,name='result_df'):
     if out is None:
         out=root_p
     list_df=[]
+    list_df_class=[]
     all_bugs_dir = pt.walk_rec(root_p,[],'P_',False,lv=-1)
     for bug_folder in all_bugs_dir:
         time_folders = pt.walk_rec(bug_folder,[],'t=',False,lv=-1)
@@ -1266,23 +1267,45 @@ def get_results_junit(root_p,out=None,name='result_df'):
             if len(test_dir) == 1:
                 if os.path.isfile("{}/bug_detection".format(test_dir[0])):
                     d = {}
+
                     d['bug_id']=bug_id
                     d['gen_mode']=mode_gen
                     d['time_budget']=time_budget
                     df_tmp = pd.read_csv("{}/bug_detection".format(test_dir[0]))
                     for ky, val in d.iteritems():
                         df_tmp[ky] = val
+                    d_class_tmp= get_fp_time_b(time_dir)
+                    for ky in d_class_tmp.keys():
+                        d_class = {}
+                        d_class['bug_id'] = bug_id
+                        d_class['gen_mode'] = mode_gen
+                        d_class['time_budget'] = time_budget
+                        d_class['class'] = ky
+                        d_class['time_gen'] = d_class_tmp[ky]
+                        list_df_class.append(d_class)
                     list_df.append(df_tmp)
     if len(list_df)==0:
         print "[Error] no results"
         return
     result = pd.concat(list_df)
+    df = pd.DataFrame(list_df_class)
     if out[-1] =='/':
         result.to_csv('{}{}.csv'.format(out,name))
+        df.to_csv('{}{}.csv'.format(out,'class_allocation'))
     else:
         result.to_csv('{}/{}.csv'.format(out, name))
+        df.to_csv('{}/{}.csv'.format(out, 'class_allocation'))
 
-
+def get_fp_time_b(p):
+    d={}
+    if ("{}/loging/evosuite_stdout.log.txt".format(p)):
+        with open("{}/loging/evosuite_stdout.log.txt".format(p), 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line[0]=='<' and line[-2]=='>':
+                    arr=str(line[1:-2]).split(',')
+                    d[arr[0]]=arr[1]
+    return d
 
 def parser_args(arg):
 
