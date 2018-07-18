@@ -1098,7 +1098,7 @@ class D4J_tool:
         else:
             self.out=path
         self.make_fp_csv()
-        #self.generate_test()
+        self.generate_test()
         out_list = self.get_all_tests()
         self.run_tests(out_list)
 
@@ -1150,6 +1150,7 @@ class D4J_tool:
                     self.write_log(out_folder, evosuite_command, 'evosuite_command.log')
                     self.write_log(out_folder,stdout,'evosuite_stdout.log')
                     self.write_log(out_folder, stderr, 'evosuite_stderr.log')
+
 
     def get_all_tests(self):
         '''
@@ -1250,6 +1251,38 @@ def get_all_results_D4j(root_path,out=None,name='results_D4j'):
     else:
         result.to_csv('{}/{}.csv'.format(out, name))
 
+def get_results_junit(root_p,out=None,name='result_df'):
+    if out is None:
+        out=root_p
+    list_df=[]
+    all_bugs_dir = pt.walk_rec(root_p,[],'P_',False,lv=-1)
+    for bug_folder in all_bugs_dir:
+        time_folders = pt.walk_rec(bug_folder,[],'t=',False,lv=-1)
+        bug_id = str(bug_folder).split('/')[-1].split('_')[3]
+        mode_gen = str(bug_folder).split('/')[-1].split('_')[5]
+        for time_dir in time_folders:
+            time_budget = str(time_dir).split('/')[-1].split('=')[1]
+            test_dir = pt.walk_rec(time_dir,[],'Test_',False,lv=-1)
+            if len(test_dir) == 1:
+                if os.path.isfile("{}/bug_detection".format(test_dir[0])):
+                    d = {}
+                    d['bug_id']=bug_id
+                    d['gen_mode']=mode_gen
+                    d['time_budget']=time_budget
+                    df_tmp = pd.read_csv("{}/bug_detection".format(test_dir[0]))
+                    for ky, val in d.iteritems():
+                        df_tmp[ky] = val
+                    list_df.append(df_tmp)
+    if len(list_df)==0:
+        print "[Error] no results"
+        return
+    result = pd.concat(list_df)
+    if out[-1] =='/':
+        result.to_csv('{}{}.csv'.format(out,name))
+    else:
+        result.to_csv('{}/{}.csv'.format(out, name))
+
+
 
 def parser_args(arg):
 
@@ -1292,12 +1325,12 @@ def parser_args(arg):
 
 
 def init_main():
-    string_std_in='file.py -i /home/ise/Desktop/info/ -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2;3 -r 1-1 -o /home/ise/Desktop/d4j_framework/out/ -t class -p Mockito -k U'
+    string_std_in='file.py -i /home/ise/Desktop/info/ -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2;4;6;10;20 -r 1-133 -o /home/ise/Desktop/d4j_framework/out/ -t class -p Mockito -k U'
     sys.argv = str(string_std_in).split()
     dico_args = parser_args(sys.argv)
     obj_d4j = D4J_tool(out_dir=dico_args['o'],project=dico_args['p'],bug_range=dico_args['r'],time_b=dico_args['b'],csv_fp_path=dico_args['k'],scope_p=dico_args['t'],info_d=dico_args)
     ####obj_d4j.analysis_existing_test_suite('/home/ise/eran/oracle_d4j/Lang')
-    obj_d4j.main_process('/home/ise/Desktop/d4j_framework/out/OUT_Mockito_D_Wed_Jul_18_00_52_09_2018')
+    obj_d4j.main_process()
     exit()
 
 def rm_dir_by_name(root,name=None):
@@ -1315,6 +1348,11 @@ def rm_dir_by_name(root,name=None):
 
 
 def info_dir_to_csv_dict(root):
+    '''
+    make form the folder dict with the FP csv path
+    :param root:
+    :return:
+    '''
     d={}
     all_dirs = pt.walk_rec(root,[],'P_',False,lv=-1)
     for dir in all_dirs:
@@ -1340,6 +1378,8 @@ if __name__ == "__main__":
             -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
 
     before_op()
+    get_results_junit('/home/ise/Desktop/d4j_framework/out/OUT_Mockito_D_Wed_Jul_18_01_18_07_2018')
+    exit()
     #wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
     #main_wrapper(args)
     init_main()
