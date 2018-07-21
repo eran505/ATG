@@ -1029,7 +1029,7 @@ class D4J_tool:
     this class is a wrapper for Defect4j framework
     '''
     def __init__(self,out_dir,project,bug_range,time_b,csv_fp_path,info_d,
-                 scope_p='all',d4j_path='/home/ise/programs/defects4j/framework/bin',rep=1,mode='FP'):
+                 scope_p='all',d4j_path='/home/ise/programs/defects4j/framework/bin',rep=1,mode='U'):
         self.root_d4j=d4j_path
         self.bugs =bug_range
         self.p_name=project
@@ -1327,7 +1327,8 @@ def parser_args(arg):
           '-r range for bug ids e.g. x-y | x<=y and x,y int' \
           '-z to what time budgets to make a predection CSV e.g. 4;5;6' \
           '-i dir folder where the FP CSV' \
-          '-C crate the info dir or not e.g. 1/0'
+          '-C crate the info dir or not e.g. 1/0' \
+          '-M mode of the allocation [FP/U]'
     dico_args={}
     array = arg
     i=1
@@ -1348,7 +1349,7 @@ def parser_args(arg):
 
 
 def init_main():
-    string_std_in='file.py -i /home/ise/Desktop/info/ -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2;4;6;10;20 -r 1-133 -o /home/ise/Desktop/d4j_framework/out/ -t class -p Mockito -k U'
+    string_std_in='file.py -i /home/ise/Desktop/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 5;10;40;100 -r 1-133 -o /home/ise/Desktop/d4j_framework/out/ -t all -p Mockito -k U'
     sys.argv = str(string_std_in).split()
     dico_args = parser_args(sys.argv)
     obj_d4j = D4J_tool(out_dir=dico_args['o'],project=dico_args['p'],bug_range=dico_args['r'],time_b=dico_args['b'],csv_fp_path=dico_args['k'],scope_p=dico_args['t'],info_d=dico_args)
@@ -1401,8 +1402,7 @@ if __name__ == "__main__":
             -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
 
     before_op()
-    get_results_junit('/home/ise/Desktop/d4j_framework/out/OUT_Mockito_D_Wed_Jul_18_01_18_07_2018')
-    exit()
+    #get_results_junit('/home/ise/Desktop/d4j_framework/out/OUT_Mockito_D_Wed_Jul_18_01_18_07_2018')
     #wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
     #main_wrapper(args)
     init_main()
