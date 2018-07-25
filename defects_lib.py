@@ -1103,8 +1103,8 @@ class D4J_tool:
         self.run_tests(out_list)
 
     def process_str_time_budget(self,str_time):
-        if str(str_time).__contains__(';'):
-            arr = str(str_time).split(';')
+        if str(str_time).__contains__(':'):
+            arr = str(str_time).split(':')
             arr = [int(x) for x in arr]
             return arr
         else:
@@ -1131,6 +1131,7 @@ class D4J_tool:
                 for rep_it in range(self.rep):
                     append=''
                     if self.scope == 'all':
+                        print "[OS] adding -A to Evosutie generation process"
                         append=' -A'
                     out_folder = pt.mkdir_system(out_dir_bug,'t={}'.format(time_bud))
                     if self.mode =='FP':
@@ -1349,8 +1350,8 @@ def parser_args(arg):
 
 
 def init_main():
-    string_std_in='file.py -i /home/ise/Desktop/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 5;10;40;100 -r 1-133 -o /home/ise/Desktop/d4j_framework/out/ -t all -p Mockito -k U'
-    sys.argv = str(string_std_in).split()
+    #string_std_in='file.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 5;10;40;100 -r 1-133 -o /home/ise/eran/D4j/d4j_framework/out/ -t all -p Mockito -k U'
+    #sys.argv = str(string_std_in).split()
     dico_args = parser_args(sys.argv)
     obj_d4j = D4J_tool(out_dir=dico_args['o'],project=dico_args['p'],bug_range=dico_args['r'],time_b=dico_args['b'],csv_fp_path=dico_args['k'],scope_p=dico_args['t'],info_d=dico_args)
     ####obj_d4j.analysis_existing_test_suite('/home/ise/eran/oracle_d4j/Lang')

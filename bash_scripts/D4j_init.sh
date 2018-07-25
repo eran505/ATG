@@ -2,5 +2,30 @@
 
 ATG="/home/ise/eran/repo/ATG/"
 
-python ${ATG}defects_lib.py Math /home/ise/Desktop/defect4j_exmple/out/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ 2 1 100 True class
+#   project    num_bugs
+#   -------    -------
+#   Lang          65
+#   Chart         26
+#   Closure       133
+#   Math          106
+#   Mockito       38
+#   Time          27
 
+python ${ATG}defects_lib.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 5:10:40:100 -r 1-133 -o /home/ise/eran/D4j/d4j_framework/out/ -t all -p Chart -k U
+
+#    usage='-p project name\n' \
+#          '-o out dir\n' \
+#          '-e Evosuite path\n' \
+#          '-b time budget\n' \
+#          '-l Lower bound time budget\n' \
+#          '-u Upper bound time budget\n' \
+#         '-t target class/package/all\n' \
+#          '-c clean flaky test [T/F]\n' \
+#          '-d use defect4j framework\n' \
+#          '-k the csv fp file or U for uniform' \
+#          '-r range for bug ids e.g. x-y | x<=y and x,y int' \
+#          '-z to what time budgets to make a predection CSV e.g. 4;5;6' \
+#          '-i dir folder where the FP CSV' \
+#          '-C crate the info dir or not e.g. 1/0' \
+#          '-M mode of the allocation [FP/U]'
+#
