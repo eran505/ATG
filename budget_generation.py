@@ -476,9 +476,9 @@ def dict_to_csv(mydict, path):
 
 def init_main():
     #curdir=/home/ise/Desktop/test_Gen/home/ise/eran/repo/ATG/budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/Desktop/test_Gen/04_15_13_26_33_t=2_/ exp 1 240 2
-    sys.argv = ['file.py','/home/ise/eran/repo/mockito/build/classes/java/main/org',
-                "evosuite-1.0.5.jar","/home/ise/eran/evosuite/jar/",
-                "/home/ise/Desktop/mock_ex/","exp","1","100","10",'1','U']
+    #sys.argv = ['file.py','/home/ise/eran/repo/mockito/build/classes/java/main/org',
+    #            "evosuite-1.0.5.jar","/home/ise/eran/evosuite/jar/",
+    #            "/home/ise/Desktop/mock_ex/","exp","1","100","10",'1','U']
 
     #TODO: comment all the above from this point
 

@@ -91,10 +91,14 @@ def remove_unkillable(df_old,debug=False,out='/home/ise/Desktop'):
 
 
 def remvoe_unkillable_mutations(csv_big,debug=False,proj='proj'):
+    print csv_big
     df = pd.read_csv(csv_big)
+    out_dir = pit_render_test.mkdir_system('/'.join(str(csv_big).split('/')[:-1]),'killable_{}'.format(proj),True)
+
     #res = find_biggest_time_b(df,False)
     df_cut = remove_unkillable(df,debug,'/home/ise/Desktop/dir_test/{}'.format(proj))
-    xm.ana_big_df_all(df_cut,'/home/ise/Desktop/dir_test/{}'.format(proj))
+
+    xm.ana_big_df_all(df_cut,out_dir)
 
 
 def init_script():
@@ -150,11 +154,11 @@ def my_test2(row,cols):
 
 
 if __name__ == "__main__":
-    first_kill()
+    #first_kill()
     csv_p='/home/ise/eran/lang/big_all_df.csv'
     remvoe_unkillable_mutations(csv_p, True, 'LANG')
-    csv_p='/home/ise/MATH/big_all_df.csv'
-    remvoe_unkillable_mutations(csv_p,True,'MATH')
+    #csv_p='/home/ise/MATH/big_all_df.csv'
+    #remvoe_unkillable_mutations(csv_p,True,'MATH')
     exit()
     init_script()
 

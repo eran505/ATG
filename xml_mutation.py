@@ -320,9 +320,9 @@ def make_big_csv(root_p):
     for p in list_p:
         print p
         cols = ['ID', 'KILL_Avg_FP', 'KILL_Sum_FP', 'KILL_Avg_U', 'KILL_Sum_U' ]
-        time_b = str(p).split('/')[-2].split('_')[-2]
+        time_b = str(p).split('/')[-2].split('=')[1]
         for j in range(1,len(cols)):
-            cols[j]="{}_{}".format(time_b,cols[j])
+            cols[j]="t={}_{}".format(time_b,cols[j])
         acc = 0
         name = str(p).split('/')[-2].split('_')[-2]
         csv_lists= pit_render_test.walk(p,'.csv')
@@ -492,16 +492,17 @@ import sys
 if __name__ == "__main__":
     tran_p = '/home/ise/tran/'
     tran_p = '/home/ise/eran/lang/'
-    tran_p = '/home/ise/eran/test_replic/'
+    tran_p = '/home/ise/eran/replic_lang/'
 
-    get_ID_index_table('/home/ise/eran/lang/')
+    #get_ID_index_table('/home/ise/eran/lang/')
     #replication_table(tran_p)
-    exit()
+    #exit()
     #tran_p='/home/ise/eran/lang/rev_exp/'
     #wrapper_class_analysis(tran_p)
     #make_big_csv(tran_p)
     #add_all_big(tran_p)
     #exit()
+
     args = sys.argv
     if len(args)>2:
         get_projects(args[1])
