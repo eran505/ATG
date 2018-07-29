@@ -441,7 +441,7 @@ Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals
         all_p = parms3 + parms4 + parms5
         cut_names = str(cut[1]).split('.')
         pre, suf = assemble_path_string2(cut[0])
-        test = "{}.{}".format(suf,cut_names[0])
+        test = "{}{}".format(suf,cut_names[0])
         if size_list_class == 0:
             time_budget = b_class
         else:
@@ -475,6 +475,9 @@ def dict_to_csv(mydict, path):
 
 
 def init_main():
+    #command_input = "bla /home/ise/eran/repo/lang/commons-lang3-3.5-src/target/classes/org/apache/commons/lang3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/eran/lang_15/07_29_16_46_07_t=15_/ exp 1 50 15 2 FP"
+    #arr_comnnad_input = command_input.split()
+    #sys.argv = arr_comnnad_input
     #curdir=/home/ise/Desktop/test_Gen/home/ise/eran/repo/ATG/budget_generation.py /home/ise/eran/repo/common_math/commons-math3-3.5-src/target/classes/org/apache/commons/math3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ /home/ise/Desktop/test_Gen/04_15_13_26_33_t=2_/ exp 1 240 2
     #sys.argv = ['file.py','/home/ise/eran/repo/mockito/build/classes/java/main/org',
     #            "evosuite-1.0.5.jar","/home/ise/eran/evosuite/jar/",
