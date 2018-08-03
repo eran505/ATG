@@ -565,7 +565,9 @@ def main_wrapper(args=None):
     '''
     if args is None:
         args = sys.argv
-    dico_info = parser_args(args.split())
+        dico_info = parser_args(args)
+    else:
+        dico_info = parser_args(args.split())
     proj_name = dico_info['p']
     path_original = dico_info['o']
     if path_original[-1] != '/':
