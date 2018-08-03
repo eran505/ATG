@@ -438,10 +438,12 @@ Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals
         list_class = []
     size_list_class = len(list_class)
     for cut in classes_list:
+        if cut[1].split('.')[1] != 'class':
+            continue
         all_p = parms3 + parms4 + parms5
         cut_names = str(cut[1]).split('.')
         pre, suf = assemble_path_string2(cut[0])
-        test = "{}{}".format(suf,cut_names[0])
+        test = "{}.{}".format(suf,cut_names[0])
         if size_list_class == 0:
             time_budget = b_class
         else:
@@ -551,6 +553,7 @@ def int_exp(args):
     if sys.argv[5] == 'd4j':
         fp_budget = sys.argv[9]
         it = int(sys.argv[10])
+        comp = [sys.argv[11]]
     else:
         csv_path = get_csv_fp(v_path)
         fp_budget, d = get_time_fault_prediction(csv_path, 'FileName', 'prediction',
@@ -583,15 +586,14 @@ def int_exp(args):
 
 def Defect4J_analysis(obj_BUG):
     print ""
-    min_time = int(obj_BUG.info[-4])
-    max_time = int(obj_BUG.info[-3])
+    min_time = int(obj_BUG.info['l'])
+    max_time = int(obj_BUG.info['u'])
     buggy_path = str(obj_BUG.root) + "buggy{}".format(obj_BUG.classes_dir)
     fixed_path = str(obj_BUG.root) + "fixed{}".format(obj_BUG.classes_dir)
     iter = int(obj_BUG.iteration)
-    path_evo = obj_BUG.info[4]
-    evo_version = obj_BUG.info[3]
-    # path_evo = '/home/ise/eran/evosuite/jar/'
-    # evo_version = 'evosuite-1.0.5.jar'
+    evo = obj_BUG.info['e']
+    path_evo = '/'.join(str(evo).split('/')[:-1]) + '/'
+    evo_version = str(evo).split('/')[-1]
     time_list = obj_BUG.k_budget
     out_dir = pt.mkdir_system(obj_BUG.root, 'Evo_Test', False)
     out_dir = out_dir + '/'
@@ -611,16 +613,21 @@ def Defect4J_analysis(obj_BUG):
             out_dir_i = pit_render_test.mkdir_system(out_dir, '.'.join(str(klass).split('/')) ,True)
             out_dir_i += '/'
             sys.argv = ['', "{}{}".format(fixed_path, klass), evo_version, path_evo, out_dir_i, 'd4j', max_time,
-                        min_time, time_list, d_fp, iter]
+                        min_time, time_list, d_fp, iter,obj_BUG.info['M']]
             int_exp(sys.argv)
     elif obj_BUG.mod == 'package':
         for package in modified_package_path:
             out_dir_i = pit_render_test.mkdir_system(out_dir, '.'.join(str(package).split('/')), True)
             out_dir_i += '/'
             sys.argv = ['', "{}{}".format(fixed_path, package), evo_version, path_evo, out_dir_i, 'd4j', max_time,
-                        min_time, time_list, d_fp, iter]
+                        min_time, time_list, d_fp, iter,obj_BUG.info['M']]
             int_exp(sys.argv)
-
+    else:
+        out_dir_i = pit_render_test.mkdir_system(out_dir, "{}_project".format(str(obj_BUG.info['p'])), True)
+        out_dir_i += '/'
+        sys.argv = ['', "{}".format(fixed_path), evo_version, path_evo, out_dir_i, 'd4j', max_time,
+                        min_time, time_list, d_fp, iter, obj_BUG.info['M']]
+        int_exp(sys.argv)
     # TODO: finsh this fucnction make sure that after running the test the run on the fix version and the buggy version
 
 

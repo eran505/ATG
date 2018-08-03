@@ -201,12 +201,11 @@ def main_func(root_p,mod):
     #rev_analysis_by_package(out_path_dir,data_path='/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src/csvs/class')
 
 def get_projects(p_root_path,mod='rev'):
-    list_project = pit_render_test.walk(p_root_path,'commons',False)
     list_project = pit_render_test.walk_rec(p_root_path,[],'commons-',False,-4)
     #list_project = ['/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_U_t=60_it=0_/commons-math3-3.5-src','/home/ise/eran/xml/02_23_17_34_26_t=60_/pit_test/ALL_FP_t=60_it=0_/commons-math3-3.5-src']
     #list_project=[x for x in list_project if str(x).__contains__('t=20')]
     for x in list_project:
-        main_func(x,mod)
+        main_func(x,mod) # going over the ALL dir and make csvs dir and index dir
     if mod!='rev':
         wrapper_class_analysis(p_root_path)
         make_big_csv(p_root_path)
@@ -232,7 +231,7 @@ def merge_all_csvs(root_path):
 
 def read_and_mereg(dico,out_path):
     col=['ID','status']
-    out_dir = pit_render_test.mkdir_system(out_path,'out_xml',True)
+    out_dir = pit_render_test.mkdir_system(out_path,'out_xml_all',True)
     for ky in dico:
         list_df=[]
         for p_csv in dico[ky]:
@@ -240,7 +239,7 @@ def read_and_mereg(dico,out_path):
             for x in str(p_csv).split('/'):
                 if str(x).__contains__('ALL'):
                     name_col=x
-                    time_b = str(x).split('_')[-3]
+                    time_b = str(x).split('t=')[1].split('_')[0]
                     break
             if name_col is None:
                 str_err = "[Error] something wrong with the path {} no ALL dir ".format(p_csv)
@@ -263,8 +262,8 @@ def read_and_mereg(dico,out_path):
 
 def aggregation(m_df,cols,mode,time_budget):
     size_target = len(cols)
-    m_df['{}_KILL_Sum_{}'.format(time_budget,mode)] = m_df[cols].apply(lambda row: my_test(row, cols), axis=1)
-    m_df['{}_KILL_Avg_{}'.format(time_budget,mode)] = m_df['{}_KILL_Sum_{}'.format(time_budget,mode)] / size_target
+    m_df['t={}_KILL_Sum_{}'.format(time_budget,mode)] = m_df[cols].apply(lambda row: my_test(row, cols), axis=1)
+    m_df['t={}_KILL_Avg_{}'.format(time_budget,mode)] = m_df['t={}_KILL_Sum_{}'.format(time_budget,mode)] / size_target
 
 def replication_table(root_p):
     '''
@@ -316,7 +315,7 @@ def replication_table(root_p):
 
 
 def make_big_csv(root_p):
-    list_p = pit_render_test.walk(root_p,'out_xml',False)
+    list_p = pit_render_test.walk(root_p,'out_xml_all',False)
     for p in list_p:
         print p
         cols = ['ID', 'KILL_Avg_FP', 'KILL_Sum_FP', 'KILL_Avg_U', 'KILL_Sum_U' ]
@@ -327,7 +326,7 @@ def make_big_csv(root_p):
         name = str(p).split('/')[-2].split('_')[-2]
         csv_lists= pit_render_test.walk(p,'.csv')
         big_df = pd.DataFrame(columns=cols)
-        p = p[:-8]
+        p = '/'.join(str(p).split('/')[:-1])
         for csv_item in csv_lists:
             print "csv_item =",csv_item
             df = pd.read_csv(csv_item,index_col=0)
@@ -342,7 +341,7 @@ def make_big_csv(root_p):
 
 
 def add_all_big(root_p):
-    list_p = pit_render_test.walk(root_p,'big_df')
+    list_p = pit_render_test.walk_rec(root_p,[],rec='big_df',lv=-4)
     if len(list_p) > 0 :
         big_df_all = pd.read_csv(list_p[0],index_col=0)
     else:
@@ -433,7 +432,7 @@ def my_test(row,tar):
 def wrapper_class_analysis(root_path):
     size_p = len(str(root_path).split('/'))
     list_p = pit_render_test.walk(root_path,'t=',False)
-    list_p = [x for x in list_p if len(str(x).split('/'))<size_p+1 ]
+    list_p = [x for x in list_p if str(x).__contains__('ALL_') is False]
     #list_p = [x for x in list_p if str(x).__contains__('=20_')  ]
     for p in list_p:
         print p
@@ -492,9 +491,13 @@ import sys
 if __name__ == "__main__":
     tran_p = '/home/ise/tran/'
     tran_p = '/home/ise/eran/lang/'
-    tran_p = '/home/ise/eran/replic_lang/'
+    tran_p = '/home/ise/eran/lang/U_lang_15'
 
-    #get_ID_index_table('/home/ise/eran/lang/')
+    #wrapper_class_analysis(tran_p )
+    #make_big_csv(tran_p )
+    #add_all_big(tran_p )
+
+    exit()
     #replication_table(tran_p)
     #exit()
     #tran_p='/home/ise/eran/lang/rev_exp/'
@@ -506,6 +509,8 @@ if __name__ == "__main__":
     args = sys.argv
     if len(args)>2:
         get_projects(args[1])
+        get_ID_index_table(args[1])
     else:
         get_projects(tran_p,'reg') #/home/ise/eran/xml/
+        get_ID_index_table(tran_p)
         pass

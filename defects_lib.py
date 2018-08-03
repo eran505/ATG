@@ -41,7 +41,6 @@ class Bug_4j:
         self.csvFP = csv_path
         self.modified_class = []
         self.infected_packages = []
-        self.clean_flaky = info_args['f']
         self.contractor()
 
     def isValid(self):
@@ -240,8 +239,6 @@ class Bug_4j:
             self.bug_date = str_data_bug
 
     def modfiy_pom(self):
-        if self.p_name == 'Lang':
-            return
         bugg_path = "{}buggy".format(self.root)
         fixed_path = "{}fixed".format(self.root)
         if os.path.isfile("{}/pom.xml".format(bugg_path)):
@@ -538,10 +535,10 @@ def main_bugger(info, proj, idBug, out_path, builder='mvn'):
                 # os.system('rm -r {}fixed'.format(bug22.root))
                 return
             bg.Defect4J_analysis(bug22)
-        if bug22.p_name != 'Mockito':
-            if bug22.clean_flaky:
-                bug22.clean_flaky_test()
-            bug22.analysis_test()
+        #if bug22.p_name != 'Mockito':
+            #if bug22.clean_flaky:
+                #bug22.clean_flaky_test()
+            #bug22.analysis_test()
     else:
         print "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
 
@@ -571,12 +568,15 @@ def main_wrapper(args=None):
     dico_info = parser_args(args.split())
     proj_name = dico_info['p']
     path_original = dico_info['o']
+    if path_original[-1] != '/':
+        path_original = "{}/".format(path_original)
     num_of_bugs = project_dict[proj_name]["num_bugs"]
     if 'r' in dico_info:
         low_id, up_id = pars_ids(dico_info['r'], num_of_bugs)
-    else:
-        low_id = 1
-        up_id = 25
+    if up_id > num_of_bugs:
+        up_id = num_of_bugs
+        if low_id > up_id:
+            low_id=up_id
     for i in range(low_id, up_id):
         print "*" * 50
         print "project:{} | i={} ".format(proj_name, i)
@@ -1427,6 +1427,7 @@ def get_fp_time_b(p):
 
 def parser_args(arg):
     '''
+
     helps to split the args to dict
     :param arg: string args
     :return: dict
@@ -1437,7 +1438,7 @@ def parser_args(arg):
             '-b time budget\n' \
             '-l Lower bound time budget\n' \
             '-u Upper bound time budget\n' \
-            '-t target class/package/all\n' \
+            '-t target class/package/all/project\n' \
             '-c clean flaky test [T/F]\n' \
             '-d use defect4j framework\n' \
             '-k the csv fp file or U for uniform' \
@@ -1537,8 +1538,9 @@ if __name__ == "__main__":
     #exit()
     #get_results_junit(p_path)
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
-    # main_wrapper(args)
-    init_main()
+    args = 'file.py -p Lang -o /home/ise/eran/eran_D4j -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 3 -l 1 -u 100 -t project -c F -k U -r 1-2 -M U -f F'
+    main_wrapper(args)
+    #init_main()
     exit()
     # get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
     # check_FP_prediction_vs_reality('Math')
