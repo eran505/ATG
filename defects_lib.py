@@ -1540,7 +1540,7 @@ if __name__ == "__main__":
     #exit()
     #get_results_junit(p_path)
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
-    args = 'file.py -p Lang -o /home/ise/eran/eran_D4j -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 3 -l 1 -u 100 -t project -c F -k U -r 1-2 -M U -f F'
+    args = 'file.py -p Math -o /home/ise/eran/eran_D4j -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 3 -l 1 -u 100 -t package -c F -k U -r 1-2 -M U -f F'
     main_wrapper()
     #init_main()
     exit()
