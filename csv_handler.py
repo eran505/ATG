@@ -277,7 +277,6 @@ def my_test2(row,cols):
     return l_int[0]
 
 
-
 if __name__ == "__main__":
     csv_p = '/home/ise/eran/lang/U_lang_15/18_00_00_00_00_t=15/replication_kill/all_rep_killable.csv'
     #csv_p='/home/ise/eran/lang/U_lang_15/big_all_df.csv'

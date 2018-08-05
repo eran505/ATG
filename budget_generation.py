@@ -536,6 +536,7 @@ def init_main():
 
 
 def int_exp(args):
+    only_dict=False
     print 'exp...'
     it = 2  # TODO : change it back to two (2)
     comp = ["FP", "U"]
@@ -551,15 +552,19 @@ def int_exp(args):
         comp = [str(sys.argv[10])]
     ###rel_path = os.getcwd() + '/'
     if sys.argv[5] == 'd4j':
-        fp_budget = sys.argv[9]
-        it = int(sys.argv[10])
         comp = [sys.argv[11]]
+        fp_budget = sys.argv[9]
+        uni_budget = sys.argv[9]
+        it = int(sys.argv[10])
+        if 'U' in comp:
+            lower_b = 0
     else:
         csv_path = get_csv_fp(v_path)
         fp_budget, d = get_time_fault_prediction(csv_path, 'FileName', 'prediction',
                                                  v_path, upper_b, lower_b, b_klass)
         dict_to_csv(d, v_dis_path)
-    uni_budget = {}
+    if sys.argv[5] != 'd4j':
+        uni_budget = {}
     target_list = get_all_class_v1(v_path)
 
     for i in range(it):

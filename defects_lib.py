@@ -201,6 +201,48 @@ class Bug_4j:
                 os.system("mv {}/src/java/ {}/src/main/".format(path_project, path_project))
         return
 
+
+    def make_uniform_package_dict(self,delim='org',rec=False):
+        d_classes={}
+        fix_class = self.root+'fixed'
+        if self.info['t'] == 'package':
+            modify = self.infected_packages
+        elif self.info['t'] == 'class':
+            modify = self.modified_class
+        elif self.info['t'] == 'project':
+            modify=[delim]
+        time_b = self.k_budget
+        walking_res = pt.walk_rec(fix_class, [], '.class')
+        res_classes = []
+        print len(walking_res)
+        for item in walking_res:
+            prefix = str(item).split(delim)[-1]
+            prefix = prefix.split('.')[0]
+            prefix = prefix.replace('/', '.')
+            prefix = 'org' + prefix
+            if prefix.__contains__('$') is False:
+                for fault_comp in modify:
+                    if self.info['t'] == 'project':
+                        if prefix.startswith(fault_comp):
+                            res_classes.append(prefix)
+                    elif self.info['t'] == 'package':
+                        if prefix.startswith(fault_comp):
+                            if rec is False:
+                                if len(fault_comp.split('.')) + 1 == len(prefix.split('.')):
+                                    res_classes.append(prefix)
+                            else:
+                                res_classes.append(prefix)
+                    elif self.info['t'] == 'class':
+                        if fault_comp == prefix:
+                            res_classes.append(prefix)
+        print "--res--"
+        for x in res_classes:
+            d_classes[x]=time_b
+        self.fp_dico=d_classes
+        return d_classes
+
+
+
     def extract_data(self):
         if self.isValid():
             str_c = "/home/ise/programs/defects4j/framework/bin/defects4j info -p  {1} -b {0}".format(self.id,
@@ -534,6 +576,8 @@ def main_bugger(info, proj, idBug, out_path, builder='mvn'):
                 # os.system('rm -r {}buggy'.format(bug22.root))
                 # os.system('rm -r {}fixed'.format(bug22.root))
                 return
+            if  info['M'] =='U':
+                bug22.make_uniform_package_dict()
             bg.Defect4J_analysis(bug22)
         #if bug22.p_name != 'Mockito':
             #if bug22.clean_flaky:
@@ -1528,6 +1572,30 @@ def info_dir_to_csv_dict(root):
     return d
 
 
+def make_uniform_package_dict(p='/home/ise/eran/eran_D4j/P_Math_B_1_Sun_Aug__5_15_49_15_2018/fixed', delim='org',rec=False):
+    fix_class = p
+    modify=['org.apache.commons.math3.optimization.direct','org.apache.commons.math3.optimization']
+    walking_res = pt.walk_rec(fix_class, [], '.class')
+    res_classes = []
+    print len(walking_res)
+    for item in walking_res:
+        prefix = str(item).split(delim)[-1]
+        prefix = prefix.split('.')[0]
+        prefix = prefix.replace('/','.')
+        prefix = 'org'+ prefix
+        if prefix.__contains__('$') is False:
+            for fault_comp in modify:
+                if prefix.startswith(fault_comp):
+                    if rec is False:
+                        if len(fault_comp.split('.')) + 1 == len(prefix.split('.')):
+                            res_classes.append(prefix)
+                    else:
+                        res_classes.append(prefix)
+    print "--res--"
+    for x in res_classes:
+        print x
+    return res_classes
+
 if __name__ == "__main__":
     args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
             -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
@@ -1540,8 +1608,9 @@ if __name__ == "__main__":
     #exit()
     #get_results_junit(p_path)
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
+   ### make_uniform_package_dict()
     args = 'file.py -p Math -o /home/ise/eran/eran_D4j -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 3 -l 1 -u 100 -t package -c F -k U -r 1-2 -M U -f F'
-    main_wrapper()
+    main_wrapper(args)
     #init_main()
     exit()
     # get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
