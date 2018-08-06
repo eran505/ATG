@@ -1571,30 +1571,28 @@ def info_dir_to_csv_dict(root):
         d[bug_id] = {'ALL': d_budget_all, 'PACK': d_budget_pack}
     return d
 
+def get_faulty_comp(project_name='Math',out_dir='/home/ise/eran/math'):
+    '''
+    make a CSV with all the faulty comp
+    :param project_name:
+    :param out_dir:
+    :return:
+    '''
+    num_of_bug = project_dict[project_name]['num_bugs']
+    list_of_d=[]
+    for i in range (1,num_of_bug,1):
+        object_bug = Bug_4j(project_name,i,{'t':'info','p':project_name},out_dir)
+        print object_bug.modified_class
+        for modify in object_bug.modified_class:
+            pack = '.'.join(str(modify).split('.')[:-1])
+            list_of_d.append({'package':pack,'bug_ID':i,'CUT':modify,'faulty':1})
+    df=pd.DataFrame(list_of_d)
+    df.to_csv("{}/{}_faulty_comp.csv".format(out_dir,project_name))
+    exit()
 
-def make_uniform_package_dict(p='/home/ise/eran/eran_D4j/P_Math_B_1_Sun_Aug__5_15_49_15_2018/fixed', delim='org',rec=False):
-    fix_class = p
-    modify=['org.apache.commons.math3.optimization.direct','org.apache.commons.math3.optimization']
-    walking_res = pt.walk_rec(fix_class, [], '.class')
-    res_classes = []
-    print len(walking_res)
-    for item in walking_res:
-        prefix = str(item).split(delim)[-1]
-        prefix = prefix.split('.')[0]
-        prefix = prefix.replace('/','.')
-        prefix = 'org'+ prefix
-        if prefix.__contains__('$') is False:
-            for fault_comp in modify:
-                if prefix.startswith(fault_comp):
-                    if rec is False:
-                        if len(fault_comp.split('.')) + 1 == len(prefix.split('.')):
-                            res_classes.append(prefix)
-                    else:
-                        res_classes.append(prefix)
-    print "--res--"
-    for x in res_classes:
-        print x
-    return res_classes
+
+
+
 
 if __name__ == "__main__":
     args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
@@ -1606,6 +1604,7 @@ if __name__ == "__main__":
     p_path = '/home/ise/Desktop/d4j_framework/out/OUT_Time_D_Sat_Jul_21_17_59_42_2018'
     #init_testing_pahse(p_path)
     #exit()
+    get_faulty_comp()
     #get_results_junit(p_path)
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
    ### make_uniform_package_dict()

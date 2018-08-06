@@ -7,7 +7,7 @@ import os
 This script handel the csv operation on the D4J exp
 '''
 
-def uniform_vs_prefect_oracle(csv_path, allocation_mode_name ='allocation_mode'):
+def uniform_vs_prefect_oracle(csv_path, allocation_mode_name ='allocation_mode',name_modfiy='Math_faulty_comp.csv'):
     '''
     this function map between the uniform allocation to the prefect oracle
     '''
@@ -15,14 +15,52 @@ def uniform_vs_prefect_oracle(csv_path, allocation_mode_name ='allocation_mode')
     if os.path.isfile(csv_path) is False:
         msg  = "[Error] invalid csv path -> {}".format(csv_path)
         raise Exception(msg)
-    df = pd.read_csv(csv_path, index_col=0)
+    if csv_path.split('.')[-1] == 'tsv':
+        df = pd.read_csv(csv_path, sep='\t')
+    else:
+        df = pd.read_csv(csv_path)
     #clean all the FP rows
-    df_uniform = df[df[allocation_mode_name] != 'FP' ]
-    df_uniform.to_csv("{}/df_uniform.csv".format(out),sep=';')
-    df_uniform = df_uniform.groupby(['bug_ID']).size().reset_index(name='package_size')
-    df_uniform.to_csv("{}/group_package.csv".format(out),sep=';')
-    print len(df)
-    print len(df_uniform)
+    df = df[df[allocation_mode_name] != 'FP' ]
+    df['rec_package_size'] = df.groupby(['bug_ID','time_budget'])['bug_ID'].transform('count')
+    df.sort_values("bug_ID", inplace=True)
+    df.to_csv("{}/df_uniform.csv".format(out),sep=';')
+    print "df_uniform",len(df)
+    #df['package'] = 'org.' + df['package'].astype(str)
+    df['package'] = df['CUT'].map(lambda a: '.'.join(str(a).split('.')[:-1]))
+    df_modify = pd.read_csv("{}/{}".format(out,name_modfiy), index_col=0)
+    col_list = list(df_modify)
+    col_list.remove('CUT')
+    df_tmp = df_modify[col_list]
+    df = pd.merge(df, df_tmp, on=['package', 'bug_ID'], how='left')
+    df['rec_package_size'] = df.groupby(['bug_ID','time_budget'])['bug_ID'].transform('count')
+    df.drop_duplicates(inplace=True)
+    df = df.fillna({'faulty': 0})
+    df.rename(columns={'faulty': 'faulty_package'}, inplace=True)
+    df = df[df['faulty_package'] > 0 ]
+
+    df['only_package_size'] = df.groupby(['bug_ID','time_budget'])['bug_ID'].transform('count')
+    df['package_err'] = df.groupby(['bug_ID','time_budget'])['err'].transform('sum')
+    df['package_fail'] = df.groupby(['bug_ID', 'time_budget'])['fail'].transform('sum')
+    df.sort_values("bug_ID", inplace=True)
+    df.to_csv("{}/df_middle.csv".format(out), sep=';')
+    print "df_middle", len(df)
+    del df_modify['package']
+    df_merge = pd.merge(df, df_modify, on=['CUT', 'bug_ID'],how='left')
+    df_merge.drop_duplicates(inplace=True,)
+    df_merge = df_merge.fillna({'faulty': 0})
+
+    df_merge['faulty_comp'] = df_merge.groupby(['bug_ID','time_budget'])['faulty'].transform('sum')
+
+    df_merge.to_csv("{}/df_merge.csv".format(out),sep=';')
+    print "df_merge", len(df_merge)
+    #df_merge['only_package_size'] = df_merge.groupby(['bug_ID','time_budget'])['bug_ID'].transform('count')
+    df_merge['prefect_eq_oracle']=df_merge['time_budget']*df_merge['only_package_size']/df_merge['faulty_comp']
+    df_merge.sort_values("bug_ID", inplace=True)
+    df_merge.to_csv("{}/df_merge_clean.csv".format(out),sep=';')
+    df_merge =df_merge[df_merge['faulty']==1]
+    df_merge.to_csv("{}/only_faulty.csv".format(out), sep=';')
+    print "df_merge_clean", len(df_merge)
+
 
 def get_package_csv(root_dir):
     '''
@@ -64,7 +102,7 @@ need to go over all the bug ID and extract the fault class and all its package c
 '''
 
 if __name__ == "__main__":
-    p='/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.csv'
+    p='/home/ise/eran/math/D4J_MATH - Sheet2.tsv'
     #get_package_csv('/home/ise/eran/eran_D4j/MATH_t=2')
     #exit()
     uniform_vs_prefect_oracle(p)
