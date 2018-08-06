@@ -21,6 +21,15 @@ def uniform_vs_prefect_oracle(csv_path, allocation_mode_name ='allocation_mode',
         df = pd.read_csv(csv_path)
     #clean all the FP rows
     df = df[df[allocation_mode_name] != 'FP' ]
+
+    #sum all u mode results
+    df['sum_err'] = df.groupby(['bug_ID','time_budget'])['binary_bug_err'].transform('sum')
+    df['sum_fail'] = df.groupby(['bug_ID', 'time_budget'])['binary_bug_fail'].transform('sum')
+    ####
+    arr_time_budget =  df['time_budget'].unique()
+    print arr_time_budget
+    arr_time_budget = sorted(arr_time_budget)
+    print arr_time_budget
     df['rec_package_size'] = df.groupby(['bug_ID','time_budget'])['bug_ID'].transform('count')
     df.sort_values("bug_ID", inplace=True)
     df.to_csv("{}/df_uniform.csv".format(out),sep=';')
@@ -60,7 +69,69 @@ def uniform_vs_prefect_oracle(csv_path, allocation_mode_name ='allocation_mode',
     df_merge =df_merge[df_merge['faulty']==1]
     df_merge.to_csv("{}/only_faulty.csv".format(out), sep=';')
     print "df_merge_clean", len(df_merge)
+    df_q_deep  = df_merge.copy(deep=True)
+    df_merge['nearest_value'] = df_merge.apply(my_test2,time_budget_arr=arr_time_budget,out=out, df=df_q_deep,axis=1)
 
+    df_merge['orcale_acutalle_time_budget'] = df_merge.apply(my_test1, time_budget_arr=arr_time_budget, out=out, df=df_q_deep, axis=1)
+
+    df_merge = df_merge[df_merge['nearest_value'] >=0 ]
+
+    df_merge['uniform_budget']= df_merge['time_budget']
+
+    df_merge['binary_nearest_value'] = df_merge['nearest_value'].apply(lambda x: 1 if x > 0 else 0)
+
+    df_merge['sum_fail_binary'] = df_merge['sum_fail'].apply(lambda x: 1 if x > 0 else 0)
+
+    df_merge['oracle_%_time_budget'] = df_merge['orcale_acutalle_time_budget']/df_merge['prefect_eq_oracle'] * 100
+
+    df_merge.to_csv("{}/test.csv".format(out), sep=';')
+
+
+
+
+def my_test1(row,time_budget_arr,df,out):
+    id = row['bug_ID']
+    oracle_budet = row['prefect_eq_oracle']
+    time_uni = row['time_budget']
+    tar=-1
+    for time in time_budget_arr:
+
+        if time - oracle_budet == 0:
+            tar=time
+            break
+        elif time - oracle_budet < 0 :
+            tar = time
+        elif time-oracle_budet > 0:
+            break
+    return tar
+
+
+def my_test2(row,time_budget_arr,df,out):
+    id = row['bug_ID']
+    oracle_budet = row['prefect_eq_oracle']
+    time_uni = row['time_budget']
+    tar=-1
+    for time in time_budget_arr:
+        if time - oracle_budet == 0:
+            tar=time
+            break
+        elif time - oracle_budet < 0 :
+            tar = time
+        elif time-oracle_budet > 0:
+            break
+    df_cut = df[df['bug_ID'] == id]
+    df_cut = df_cut[df_cut['time_budget'] == tar]
+    if len(df_cut)>0:
+        arr_time_budget = df_cut['sum_fail'].unique()
+        arr_time_budget = list(set(arr_time_budget))
+        if len(arr_time_budget)!=1:
+            raise Exception('error in my test_2')
+        arr_time_budget = arr_time_budget[0]
+    else:
+        if tar > 0:
+            print "time={} id={}".format(tar,id)
+        arr_time_budget=-1
+    return arr_time_budget
 
 def get_package_csv(root_dir):
     '''
@@ -102,7 +173,8 @@ need to go over all the bug ID and extract the fault class and all its package c
 '''
 
 if __name__ == "__main__":
-    p='/home/ise/eran/math/D4J_MATH - Sheet2.tsv'
+    p='/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.csv'
+    p = '/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.tsv'
     #get_package_csv('/home/ise/eran/eran_D4j/MATH_t=2')
     #exit()
     uniform_vs_prefect_oracle(p)

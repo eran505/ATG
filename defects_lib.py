@@ -1571,7 +1571,7 @@ def info_dir_to_csv_dict(root):
         d[bug_id] = {'ALL': d_budget_all, 'PACK': d_budget_pack}
     return d
 
-def get_faulty_comp(project_name='Math',out_dir='/home/ise/eran/math'):
+def get_faulty_comp(project_name='Math',out_dir='/home/ise/MATH/Defect4J'):
     '''
     make a CSV with all the faulty comp
     :param project_name:
