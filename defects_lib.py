@@ -1604,12 +1604,12 @@ if __name__ == "__main__":
     p_path = '/home/ise/Desktop/d4j_framework/out/OUT_Time_D_Sat_Jul_21_17_59_42_2018'
     #init_testing_pahse(p_path)
     #exit()
-    get_faulty_comp()
+    #get_faulty_comp()
     #get_results_junit(p_path)
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
    ### make_uniform_package_dict()
-    args = 'file.py -p Math -o /home/ise/eran/eran_D4j -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 3 -l 1 -u 100 -t package -c F -k U -r 1-2 -M U -f F'
-    main_wrapper(args)
+    #args = 'file.py -p Math -o /home/ise/eran/eran_D4j -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 3 -l 1 -u 100 -t package -c F -k U -r 1-2 -M U -f F'
+    main_wrapper()
     #init_main()
     exit()
     # get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
