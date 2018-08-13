@@ -28,20 +28,22 @@ class Bug_4j:
                  , csv_path='/home/ise/eran/repo/ATG/csv/Most_out_files.csv',
                  b_mod='package', it=1):
         self.root = root_dir
-        self.p_name = info_args['p']
         self.id = bug_id
         self.bug_date = ''
         self.classes_dir = None
         self.k_budget = None
-        self.mod = info_args['t']  # package // class
         self.fp_dico = None
         self.iteration = it
         self.info = info_args
         self.defects4j = defect4j_root
         self.csvFP = csv_path
         self.modified_class = []
+        self.p_name = pro_name
         self.infected_packages = []
-        self.contractor()
+        if info_args is not None:
+            self.mod = info_args['t']  # package // class
+            self.p_name = info_args['p']
+            self.contractor()
 
     def isValid(self):
         total_bugs = project_dict[self.p_name]['num_bugs']
@@ -67,9 +69,9 @@ class Bug_4j:
         self.check_out_data('f')
         self.check_out_data('b')
         self.rm_all_test(self.root)
-        sig = self.compile_data_builder(builder)
+        sig = self.ant_build_pre_process()
         if sig == 1:
-            sig = self.ant_build_pre_process()
+            sig = self.compile_data_builder(builder)
         return sig
 
     def replace(self, file_path, pattern, subst):
@@ -123,10 +125,12 @@ class Bug_4j:
 
     def compile_data_builder(self, builder='mvn', command='install'):
         # TODO : modfiy pom by project name
-        self.modfiy_pom()
+        if builder == 'mvn':
+            self.modfiy_pom()
         print "compiling..."
         path_p = '{}fixed'.format(self.root)
-        self.add_main_dir_src(path_p)
+        if builder == 'mvn':
+            self.add_main_dir_src(path_p)
         os.chdir(path_p)
         if os.path.isdir('{}/log_dir'.format(path_p)) is False:
             os.system('mkdir log_dir')
@@ -285,16 +289,16 @@ class Bug_4j:
         fixed_path = "{}fixed".format(self.root)
         if os.path.isfile("{}/pom.xml".format(bugg_path)):
             os.system('rm {}'.format("{}/pom.xml".format(bugg_path)))
-            if self.p_name == 'Math':
-                os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/math/pom.xml {}'.format(bugg_path))
-            elif self.p_name == 'Lang':
-                os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/lang/pom.xml {}'.format(bugg_path))
+        if self.p_name == 'Math':
+            os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/math/pom.xml {}'.format(bugg_path))
+        elif self.p_name == 'Lang':
+            os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/lang/pom.xml {}'.format(bugg_path))
         if os.path.isfile("{}/pom.xml".format(fixed_path)):
             os.system('rm {}'.format("{}/pom.xml".format(fixed_path)))
-            if self.p_name == 'Math':
-                os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/math/pom.xml {}'.format(fixed_path))
-            elif self.p_name == 'Lang':
-                os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/lang/pom.xml {}'.format(fixed_path))
+        if self.p_name == 'Math':
+            os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/math/pom.xml {}'.format(fixed_path))
+        elif self.p_name == 'Lang':
+            os.system('cp /home/ise/eran/repo/ATG/D4J/csvs/lang/pom.xml {}'.format(fixed_path))
 
     def analysis_test(self, dir='buggy', dir_out='results'):  # TODO:hendel the folder with the different time budgets
         print ""
@@ -548,43 +552,45 @@ def main_bugger(info, proj, idBug, out_path, builder='mvn'):
     if val == 0:
         for time in time_budget:
             bug22.k_budget = time
-            out = bug22.get_the_prediction_csv()
-            if out is None:
-                bug22.write_log(
-                    'DATE: {} , cant find a predction csv : ID:{} P:{} '.format(bug22.bug_date, idBug, proj), 'error')
-                return
-            if bug22.mod == 'info':
-                if 'z' in bug22.info:
-                    list_str = bug22.info['z']
-                    budget_arr = str(list_str).split(';')
-                    for time_bb in budget_arr:
-                        out = bug22.get_fp_budget(int(time_bb))
-            else:
-                out = bug22.get_fp_budget(time)
-            # out indicate that all process pass with a good results and we can move for Gen Test with Evosuite
-            if out is None:
-                with open(bug22.root + 'log/error.txt', 'a') as f:
-                    f.write("[Error] val={0} in project {2} BUG {1}".format(val, idBug, proj))
-                    f.write('\ncsv :{}\ndate_bug:{}\n'.format(out, bug22.bug_date))
-                print "[Error]  in project {2} BUG {1}".format(val, idBug, proj)
-                return
-            # bug22.gen_test_copy(path_evo_dir_test) # for debugging
+            bug22.classes_dir = builder_dict[project_dict[bug22.p_name]['src']]['evo_p']
             for klass in bug22.modified_class:
                 bug22.write_log(str(klass), 'bug_classes')
-            bug22.classes_dir = builder_dict[project_dict[bug22.p_name]['src']]['evo_p']
-            if bug22.mod == 'info':
-                # os.system('rm -r {}buggy'.format(bug22.root))
-                # os.system('rm -r {}fixed'.format(bug22.root))
-                return
-            if  info['M'] =='U':
+            if info['M'] =='U':
                 bug22.make_uniform_package_dict()
-            bg.Defect4J_analysis(bug22)
+                bg.Defect4J_analysis(bug22)
+            else:
+                out = bug22.get_the_prediction_csv()
+
+                if out is None and bug22.info['M'] != 'U':
+                    bug22.write_log(
+                    'DATE: {} , cant find a predction csv : ID:{} P:{} '.format(bug22.bug_date, idBug, proj), 'error')
+                    return
+                if bug22.mod == 'info':
+                    if 'z' in bug22.info:
+                        list_str = bug22.info['z']
+                        budget_arr = str(list_str).split(';')
+                        for time_bb in budget_arr:
+                            out = bug22.get_fp_budget(int(time_bb))
+                else:
+                    out = bug22.get_fp_budget(time)
+                # out indicate that all process pass with a good results and we can move for Gen Test with Evosuite
+                if out is None and bug22.info['M'] != 'U':
+                    with open(bug22.root + 'log/error.txt', 'a') as f:
+                        f.write("[Error] val={0} in project {2} BUG {1}".format(val, idBug, proj))
+                        f.write('\ncsv :{}\ndate_bug:{}\n'.format(out, bug22.bug_date))
+                    print "[Error]  in project {2} BUG {1}".format(val, idBug, proj)
+                    return
+                if bug22.mod == 'info':
+                    return
+
         #if bug22.p_name != 'Mockito':
             #if bug22.clean_flaky:
                 #bug22.clean_flaky_test()
             #bug22.analysis_test()
     else:
-        print "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
+        msg_err =  "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
+        bug22.write_log(msg_err, 'error_compile')
+        print msg_err
 
 
 def pars_ids(ids_str, num_of_bugs):
@@ -601,6 +607,9 @@ def pars_ids(ids_str, num_of_bugs):
     return lower_bug_id, upper_bug_id
 
 
+
+
+
 def main_wrapper(args=None):
     '''
     1. project name
@@ -612,6 +621,12 @@ def main_wrapper(args=None):
         dico_info = parser_args(args)
     else:
         dico_info = parser_args(args.split())
+    if 'F' in dico_info:
+        if args is None:
+            fix_wrapper()
+        else:
+            fix_wrapper(args)
+        return
     proj_name = dico_info['p']
     path_original = dico_info['o']
     if path_original[-1] != '/':
@@ -623,7 +638,7 @@ def main_wrapper(args=None):
         up_id = num_of_bugs
         if low_id > up_id:
             low_id=up_id
-    for i in range(low_id, up_id):
+    for i in range(low_id, up_id+1):
         print "*" * 50
         print "project:{} | i={} ".format(proj_name, i)
         print "*" * 50
@@ -643,6 +658,40 @@ def main_wrapper(args=None):
         rm_dir_by_name(dico_info['o'], 'fixed')
         rm_dir_by_name(dico_info['o'], 'buggy')
 
+def remve_F_flag(arg):
+    arr = str(arg).split()
+    i=0
+    new_arg=[]
+    while i<len(arr):
+        if arr[i]=='-F':
+            i=i+2
+            continue
+        new_arg.append(arr[i])
+        i+=1
+    return ' '.join(new_arg)
+
+def fix_wrapper(args):
+    args = remve_F_flag(args)
+    if args is None:
+        args = sys.argv
+        dico_info = parser_args(args)
+    else:
+        dico_info = parser_args(args.split())
+    dir_need_fix = get_problamtic_dirs(dico_info['o'])
+    for dir_fixing in dir_need_fix :
+        full_dis = dir_fixing
+        bug_id = str(full_dis).split('/')[-1].split('_')[3]
+        proj_name = str(full_dis).split('/')[-1].split('_')[1]
+        command_rm = 'rm -r {}'.format(full_dis)
+        process = Popen(shlex.split(command_rm), stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        if os.path.isdir(full_dis):
+            msg = 'the dir {} is not deleted'.format(full_dis)
+            raise Exception("msg:{}\n err:{}".format(msg,stderr))
+        args_new = '{0} -r {1}-{1} -p {2}'.format(args,bug_id,proj_name)
+
+        main_wrapper(args_new)
+    exit()
 
 def look_for_old_pred(class_name, cur_csv, proj_name, mem=None):
     ans = {}
@@ -1493,7 +1542,8 @@ def parser_args(arg):
             '-i dir folder where the FP CSV' \
             '-C crate the info dir or not e.g. 1/0' \
             '-M mode of the allocation [FP/U]' \
-            '-T Test again all the dir '
+            '-T Test again all the dir ' \
+            '-F Fix'
     dico_args = {}
     array = arg
     i = 1
@@ -1591,27 +1641,54 @@ def get_faulty_comp(project_name='Math',out_dir='/home/ise/MATH/Defect4J'):
     exit()
 
 
+def test_process(root_dir='P_Lang_B_36_Sun_Aug__5_22_23_19_2018'):
+    name = str(root_dir).split('/')[-1]
+    project_name = str(name).split('_')[1]
+    bug_ID = str(name).split('_')[3]
+    bug_object = Bug_4j(project_name,bug_ID,info_args=None,root_dir=root_dir)
+    print 'done'
+    exit()
 
+def get_problamtic_dirs(root_path):
+    list_dirs = pt.walk_rec(root_path,[],'P_',False,lv=-2)
+    no_log=[]
+    yes_log=[]
+    fix_list=[]
+    for item_dir in list_dirs:
+        if os.path.isdir('{}/Evo_Test'.format(item_dir)):
+            fix_list.append(item_dir)
+            continue
+        else:
+            if os.path.isdir('{}/log'.format(item_dir)):
+                yes_log.append(item_dir)
+            else:
+                no_log.append(item_dir)
+    res = []
+    res.extend(yes_log)
+    res.extend(no_log)
+    return res
 
 
 if __name__ == "__main__":
+    before_op()
     args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
             -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
             -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
 
-    before_op()
     p_path = '/home/ise/eran/D4j/OUT_Time_D_Sat_Jul_21_17_54_36_2018'
     p_path = '/home/ise/Desktop/d4j_framework/out/OUT_Time_D_Sat_Jul_21_17_59_42_2018'
-    #init_testing_pahse(p_path)
-    #exit()
+    p_path = '/home/ise/eran/eran_D4j'
+    #get_problamtic_dirs(p_path)
+
     #get_faulty_comp()
     #get_results_junit(p_path)
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
    ### make_uniform_package_dict()
-    #args = 'file.py -p Math -o /home/ise/eran/eran_D4j -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 3 -l 1 -u 100 -t package -c F -k U -r 1-2 -M U -f F'
+    args = 'file.py -p Lang -F true -o /home/ise/eran/eran_D4j -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 3;2;1 -l 1 -u 100 -t package -c F -k U -r 1-2 -M U -f F'
     main_wrapper()
-    #init_main()
+    #test_process()
     exit()
+    #init_main()
     # get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
     # check_FP_prediction_vs_reality('Math')
     # path_test = '/home/ise/Desktop/defect4j_exmple/d4j_csv/'
