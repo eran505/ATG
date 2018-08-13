@@ -658,7 +658,7 @@ def main_wrapper(args=None):
         rm_dir_by_name(dico_info['o'], 'fixed')
         rm_dir_by_name(dico_info['o'], 'buggy')
 
-def remve_F_flag(arg):
+def remve_F_flag(arr):
     i=0
     new_arg=[]
     while i<len(arr):
@@ -671,7 +671,7 @@ def remve_F_flag(arg):
 
 def fix_wrapper(args):
     if args is None:
-        args = remve_F_flag(args.split())
+        args = remve_F_flag(args)
         args = args.split()
         args = sys.argv
         dico_info = parser_args(args)
