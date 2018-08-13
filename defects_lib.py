@@ -659,7 +659,6 @@ def main_wrapper(args=None):
         rm_dir_by_name(dico_info['o'], 'buggy')
 
 def remve_F_flag(arg):
-    arr = str(arg).split()
     i=0
     new_arg=[]
     while i<len(arr):
@@ -671,11 +670,13 @@ def remve_F_flag(arg):
     return ' '.join(new_arg)
 
 def fix_wrapper(args):
-    args = remve_F_flag(args)
     if args is None:
+        args = remve_F_flag(args.split())
+        args = args.split()
         args = sys.argv
         dico_info = parser_args(args)
     else:
+        args = remve_F_flag(args.split())
         dico_info = parser_args(args.split())
     dir_need_fix = get_problamtic_dirs(dico_info['o'])
     for dir_fixing in dir_need_fix :
@@ -1536,17 +1537,18 @@ def parser_args(arg):
             '-t target class/package/all/project\n' \
             '-c clean flaky test [T/F]\n' \
             '-d use defect4j framework\n' \
-            '-k the csv fp file or U for uniform' \
-            '-r range for bug ids e.g. x-y | x<=y and x,y int' \
-            '-z to what time budgets to make a predection CSV e.g. 4;5;6' \
-            '-i dir folder where the FP CSV' \
-            '-C crate the info dir or not e.g. 1/0' \
-            '-M mode of the allocation [FP/U]' \
-            '-T Test again all the dir ' \
-            '-F Fix'
+            '-k the csv fp file or U for uniform\n' \
+            '-r range for bug ids e.g. x-y | x<=y and x,y int\n' \
+            '-z to what time budgets to make a predection CSV e.g. 4;5;6\n' \
+            '-i dir folder where the FP CSV\n' \
+            '-C crate the info dir or not e.g. 1/0\n' \
+            '-M mode of the allocation [FP/U]\n' \
+            '-T Test again all the dir\n ' \
+            '-F Fix\n'
     dico_args = {}
     array = arg
     i = 1
+    print (arg)
     while i < len(array):
         if str(array[i]).startswith('-'):
             key = array[i][1:]
