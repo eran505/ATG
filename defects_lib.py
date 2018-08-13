@@ -669,7 +669,7 @@ def remve_F_flag(arr):
         i+=1
     return ' '.join(new_arg)
 
-def fix_wrapper(args):
+def fix_wrapper(args=None):
     if args is None:
         args = sys.argv
         args = remve_F_flag(args)
