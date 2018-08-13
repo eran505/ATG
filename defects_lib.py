@@ -671,10 +671,9 @@ def remve_F_flag(arr):
 
 def fix_wrapper(args):
     if args is None:
-        args = remve_F_flag(args)
-        args = args.split()
         args = sys.argv
-        dico_info = parser_args(args)
+        args = remve_F_flag(args)
+        dico_info = parser_args(args.split())
     else:
         args = remve_F_flag(args.split())
         dico_info = parser_args(args.split())
