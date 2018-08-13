@@ -670,6 +670,7 @@ def remve_F_flag(arr):
     return ' '.join(new_arg)
 
 def fix_wrapper(args=None):
+    print 'in args:'.format(args)
     if args is None:
         args = sys.argv
         args = remve_F_flag(args)
@@ -678,18 +679,21 @@ def fix_wrapper(args=None):
         args = remve_F_flag(args.split())
         dico_info = parser_args(args.split())
     dir_need_fix = get_problamtic_dirs(dico_info['o'])
+    print dir_need_fix
     for dir_fixing in dir_need_fix :
         full_dis = dir_fixing
         bug_id = str(full_dis).split('/')[-1].split('_')[3]
         proj_name = str(full_dis).split('/')[-1].split('_')[1]
         command_rm = 'rm -r {}'.format(full_dis)
+        print command_rm
         process = Popen(shlex.split(command_rm), stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
+        print "end"
         if os.path.isdir(full_dis):
             msg = 'the dir {} is not deleted'.format(full_dis)
             raise Exception("msg:{}\n err:{}".format(msg,stderr))
         args_new = '{0} -r {1}-{1} -p {2}'.format(args,bug_id,proj_name)
-
+        print "args_new : {}".format(args_new )
         main_wrapper(args_new)
     exit()
 
@@ -1543,11 +1547,11 @@ def parser_args(arg):
             '-C crate the info dir or not e.g. 1/0\n' \
             '-M mode of the allocation [FP/U]\n' \
             '-T Test again all the dir\n ' \
-            '-F Fix\n'
+            '-F Fix\n' \
+            '-P pass for sudo\n'
     dico_args = {}
     array = arg
     i = 1
-    print (arg)
     while i < len(array):
         if str(array[i]).startswith('-'):
             key = array[i][1:]
