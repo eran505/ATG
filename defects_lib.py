@@ -622,7 +622,7 @@ def main_wrapper(args=None):
     else:
         dico_info = parser_args(args.split())
     if 'F' in dico_info:
-        if args is None:
+        if args == sys.argv:
             fix_wrapper()
         else:
             fix_wrapper(args)
