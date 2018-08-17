@@ -11,7 +11,11 @@ ATG="/home/ise/eran/repo/ATG/"
 #   Mockito       38
 #   Time          27
 
-python ${ATG}defects_lib.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 15:40:100 -r 1-133 -o /home/ise/eran/D4j/d4j_framework/out/ -t all -p Chart -k U
+
+
+sudo env "PATH=$PATH" python ${ATG}defects_lib.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2-5-10-20-40-70 -r 1-2 -o /home/ise/eran/D4j/out/ -t package_only -p Lang -k U
+
+
 
 #    usage='-p project name\n' \
 #          '-o out dir\n' \

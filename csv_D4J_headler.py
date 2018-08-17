@@ -175,6 +175,7 @@ need to go over all the bug ID and extract the fault class and all its package c
 if __name__ == "__main__":
     p='/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.csv'
     p = '/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.tsv'
+    p='/home/ise/eran/math/D4J_MATH - Sheet2.tsv'
     #get_package_csv('/home/ise/eran/eran_D4j/MATH_t=2')
     #exit()
     uniform_vs_prefect_oracle(p)

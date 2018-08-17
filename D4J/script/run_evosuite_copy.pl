@@ -90,12 +90,6 @@ classes modified by the bug fix.
 
 The path to the csv file <class_name,time_budget>
 
-=item -u
-
-txt file path, class to genrate test for [package/infected/all/package_rec]
-
-=item -m
-the mode FP or Uniforme {FP/U}
 
 =back
 
@@ -153,14 +147,13 @@ use Log;
 # Process arguments and issue usage message if necessary.
 #
 my %cmd_opts;
-getopts('p:v:o:n:t:m:u:c:b:a:AD', \%cmd_opts) or pod2usage(1);
+getopts('p:v:o:n:t:c:b:a:k:AD', \%cmd_opts) or pod2usage(1);
 
 pod2usage(1) unless defined $cmd_opts{p} and
                     defined $cmd_opts{v} and
                     defined $cmd_opts{n} and
                     defined $cmd_opts{o} and
-                    defined $cmd_opts{m} and
-                    defined $cmd_opts{u} and
+                    defined $cmd_opts{k} and
                     defined $cmd_opts{c};
 
 
@@ -170,15 +163,11 @@ pod2usage(1) unless defined $cmd_opts{p} and
 #################################
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
 my %dict;
-my @fault_components;
-my $scope_target_path;
-my $FP_PATH;
-my $mode_gen = $cmd_opts{m};
+my $FP_PATH = $cmd_opts{k};
 my @data;
 my $FP_bol=1;
-if($mode_gen ne 'U')
+if($FP_PATH ne 'U')
 {
-    my $FP_PATH = $cmd_opts{u};
     open(my $fh, '<', $FP_PATH) or die "Can't read file '$FP_PATH' [$!]\n";
     while ((my $line = <$fh>)) {
         chomp $line;
@@ -201,16 +190,10 @@ if($mode_gen ne 'U')
 else
 {
     $FP_bol=0;
-    my $scope_target_path = $cmd_opts{u};
-    open(my $fh, '<', $scope_target_path) or die "Can't read file '$scope_target_path' [$!]\n";
-    while ((my $line = <$fh>)) {
-        chomp $line;
-        push @fault_components, $line;
-
-    }
 }
 
 ##################################3
+
 my $PID = $cmd_opts{p};
 # Instantiate project
 my $project = Project::create_project($PID);
@@ -277,10 +260,7 @@ my @classes = <LIST>;
 close(LIST);
 # Iterate over all modified classes
 my $log = "$TMP_DIR/$PID.$VID.$CRITERION.$TID.log";
-
-
-
-foreach my $class (@fault_components) {
+foreach my $class (@classes) {
     chomp $class;
     print "$class \n";
     if ($FP_bol==1)
@@ -301,12 +281,6 @@ foreach my $class (@fault_components) {
             next;
         }
     }
-    
-
-    ##### eran scope target
-    
-    #### end scope target
-
     $LOG->log_msg("Generate tests for: $class : $CRITERION : ${BUDGET}s");
     # Call evosuite with criterion, time, and class name
     my $config = "$UTIL_DIR/evo.config";
