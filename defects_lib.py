@@ -1189,8 +1189,11 @@ class D4J_tool:
                 dico_list = []
 
     def get_map_dir(self,defect_lib = '/home/ise/programs/defects4j/framework/projects'):
-        df = pd.read_csv('{}/{}/dir_map.csv'.format(defect_lib,self.p_name),names=['SHA_ID','class','tests'])
-        self.df_SHA=df
+        if os.path.isfile('{}/{}/dir_map.csv'.format(defect_lib,self.p_name)):
+            df = pd.read_csv('{}/{}/dir_map.csv'.format(defect_lib,self.p_name),names=['SHA_ID','class','tests'])
+            self.df_SHA=df
+        else:
+            self.df_SHA = None
 
     def make_out_dir(self, dir_path, index=None):
         '''
@@ -1224,6 +1227,8 @@ class D4J_tool:
 
     def get_row_sha_df(self,sha_id):
         df = self.df_SHA
+        if df is None:
+            return "source","tests"
         df_res = df.loc[df['SHA_ID'] == sha_id]
         if len(df_res)==0:
             return None,None

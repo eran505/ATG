@@ -13,7 +13,7 @@ ATG="/home/ise/eran/repo/ATG/"
 
 
 
-sudo env "PATH=$PATH" python ${ATG}defects_lib.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2-5-10-20-40-70 -r 1-2 -o /home/ise/eran/D4j/out/ -t package_only -p Lang -k U
+sudo env "PATH=$PATH" python ${ATG}defects_lib.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 20-40-70 -r 3-3 -o /home/ise/eran/D4j/out/ -t package_only -p Chart -k U
 
 
 

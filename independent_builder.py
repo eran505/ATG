@@ -3,7 +3,9 @@ from subprocess import Popen, PIPE, check_call, check_output
 import pit_render_test as pt
 import subprocess
 import shlex
+import sys
 import os.path
+import pandas as pd
 
 def compile_java_class(dir_to_compile, output_dir, dependent_dir):
     """
@@ -23,9 +25,9 @@ def compile_java_class(dir_to_compile, output_dir, dependent_dir):
     dir_to_compile = '{}*'.format(dir_to_compile)
     string_command = "javac {0} -verbose -Xlint -cp {1} -d {2} -s {2} -h {2}".format(dir_to_compile, jars_string,
                                                                                 out_dir)
-    print string_command
-    x = system(string_command)
-    return x
+    print "[OS] {}".format(string_command)
+    os.system(string_command)
+    return
     process = Popen(shlex.split(string_command), stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
     print "----stdout----"
@@ -94,28 +96,75 @@ def make_jar_file(project_dir_path):
     '''
     make a jar file with the builder mvn or ant
     '''
+    fix_dir = '{}/fixed'.format(project_dir_path)
+    log_dir = '{}/log'.format(project_dir_path)
     mvn_builder = False
     ant_builder = False
-    if os.path.isfile('{}/pom.xml'.format(project_dir_path)):
+    if os.path.isfile('{}/pom.xml'.format(fix_dir)):
         mvn_builder=True
-    if os.path.isfile('{}/build.xml'.format(project_dir_path)):
+    if os.path.isfile('{}/build.xml'.format(fix_dir)):
         ant_builder=True
 
-    os.chdir(project_dir_path)
+    os.chdir(fix_dir)
+    out_jar = pt.mkdir_system(project_dir_path,'jar_dir',False)
     if mvn_builder:
         command = 'mvn package -Dmaven.test.skip=true'
-        os.system(command)
-        ans = pt.walk_rec("{}/target".format(project_dir_path),[],'.jar')
+        process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        loging_os_command(log_dir, 'jar_command', stdout, "stdout")
+        loging_os_command(log_dir, 'jar_command', stderr, "stderr")
+        # os.system(command)
+        ans = pt.walk_rec("{}/target".format(fix_dir),[],'.jar')
+        command='mvn dependency:copy-dependencies -DoutputDirectory={}'.format(out_jar)
+        process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        loging_os_command(log_dir, 'copy_dependencies', stdout, "stdout")
+        loging_os_command(log_dir, 'copy_dependencies', stderr, "stderr")
+        #os.system(command)
         if len(ans) == 1:
+            cp_command ='mv {} {}'.format(ans[0], out_jar)
+            print '[OS] {}'.format(cp_command)
+            os.system(cp_command)
             return ans[0]
     if ant_builder:
         command = 'ant jar'
-        os.system(command)
-        ans = pt.walk_rec("{}/target".format(project_dir_path),[],'.jar')
+        process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        loging_os_command(log_dir,'jar_command',stdout,"stdout")
+        loging_os_command(log_dir,'jar_command',stderr,"stderr")
+        # os.system(command)
+        ans = pt.walk_rec("{}/target".format(fix_dir),[],'.jar')
         if len(ans) == 1:
+            cp_command ='mv {} {}'.format(ans[0], out_jar)
+            print '[OS] {}'.format(cp_command)
+            os.system(cp_command)
             return ans[0]
-
     return None
+
+def loging_os_command(path_target,dir_name,msg,file_name):
+    if path_target[-1]=='/':
+        path_target=path_target[:-1]
+    if os.path.isdir("{}/{}".format(path_target,dir_name)) is False:
+        out_d = pt.mkdir_system(path_target,dir_name,False)
+    else:
+        out_d = "{}/{}".format(path_target,dir_name)
+    with open("{}/{}.log".format(out_d,file_name),'w') as f_log:
+        f_log.write("[log] {}\n".format(msg))
+
+
+def wrapper_har_all(p_dir):
+    success_list=[]
+    fail_list=[]
+    all_dirs=pt.walk_rec(p_dir,[],'P_',False)
+    for dir in all_dirs:
+        path_jar = make_jar_file(dir)
+        if path_jar  is None:
+            print "[fail] {} cant make jar".format(dir)
+            fail_list.append(dir)
+        else:
+            success_list.append([dir,path_jar])
+            print "[success] {} the jar path:{}".format(dir,path_jar)
+    print success_list
 
 def copy_and_test(test_dir,project_dir,test_ptefix='src/test/'):
     '''
@@ -140,19 +189,50 @@ def make_test_with_builders(root, dir_test='org'):
 
 
 
+def get_static_dir(root):
+    bug_dir = pt.walk_rec(root,[],'P_',False)
+    list_d=[]
+    for dir_i in bug_dir:
+        time_budget = str(dir_i).split('/')[-2].split('=')[1]
+        proj_name = str(dir_i).split('/')[-2].split('_')[0]
+        bug_id = str(dir_i).split('/')[-1].split('_')[3]
+        evo_dir = os.path.isdir('{}/Evo_Test'.format(dir_i))
+        if evo_dir:
+            evo_dir_num = 1
+            num_test_generated = len(pt.walk_rec('{}/Evo_Test'.format(dir_i),[],'.java'))
+            num_test_generated = num_test_generated/float(2)
+        else:
+            num_test_generated=-1
+            evo_dir_num=0
+        d_i={"time_budget":time_budget ,'proj_name':proj_name, 'bug_id':bug_id,'evo_dir':evo_dir, 'num_test_generated':num_test_generated }
+        list_d.append(d_i)
+    df = pd.DataFrame(list_d)
+    df.to_csv('{}/static.csv'.format(root))
 
 
+
+def parser():
+    args=sys.argv
+    print args
+    if len(args ) <= 1:
+        print "miss args"
+        exit()
+    comnd = args[1]
+    if comnd  == 'stat':
+        get_static_dir(args[2])
+    exit()
 if __name__ == "__main__":
+    parser()
     fix_p='/home/ise/eran/eran_D4j/Lang_t=5/P_Lang_B_36_Mon_Aug_13_22_00_06_2018/fix_jar'
     dir_compile='{}/org/apache/'.format(fix_p)
     out_dir = '{}/out_test'.format(fix_p)
     jar_dir='{}/jars/'.format(fix_p)
     class_dir = '{}/test_classes'.format(fix_p)
-
-
-    #dir_compile = '/home/ise/Desktop/mock_ex/U_exp_mock/org/mockito/'
-    #out_dir = '/home/ise/Desktop/mock_ex'
-    #jar_dir = '/home/ise/Desktop/mock_ex/jars/'
-    #class_dir = '/home/ise/Desktop/mock_ex/test_classes'
-    #compile_java_class(dir_compile, out_dir, jar_dir)
-    test_junit_commandLine(class_dir, jar_dir,out_dir)
+    get_static_dir('/home/ise/eran/eran_D4j/')
+    ##wrapper_har_all('/home/ise/eran/eran_D4j/')
+    dir_compile = '/home/ise/eran/eran_D4j/Lang_t=2/P_Lang_B_36_Mon_Aug_13_22_04_06_2018/Evo_Test/org.apache.commons.lang3.math/U_exp_tMon_Aug_13_22:04:26_2018_t=5_it=0/org/'
+    out_dir = '/home/ise/eran/eran_D4j/Lang_t=2/P_Lang_B_36_Mon_Aug_13_22_04_06_2018'
+    jar_dir = '/home/ise/eran/eran_D4j/Lang_t=2/P_Lang_B_36_Mon_Aug_13_22_04_06_2018/jar_dir'
+    class_dir = '/home/ise/Desktop/mock_ex/test_classes'
+    compile_java_class(dir_compile, out_dir, jar_dir)
+    #test_junit_commandLine(class_dir, jar_dir,out_dir)
