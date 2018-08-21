@@ -199,7 +199,7 @@
 
   <build>
     <sourceDirectory>src/main/java</sourceDirectory>
-    <testSourceDirectory>src/test</testSourceDirectory>
+    <testSourceDirectory>src/test/java</testSourceDirectory>
       <testResources>
         <testResource>
           <directory>src/test</directory>

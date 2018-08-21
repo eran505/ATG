@@ -20,6 +20,62 @@ project_dict = {}
 builder_dict = {}
 root_dir = '~/'
 
+######################TODO:FIXER
+
+def fixer_maven(dir_root):
+    all_dir_time = pt.walk_rec(dir_root,[],file_t=False,rec='P_', lv=-3)
+    no_test_dir=[]
+    for dir_bug in all_dir_time :
+
+        print "--{}--".format(dir_bug)
+        project_name = str(dir_bug).split('/')[-1].split('_')[1]
+        bug_id = str(dir_bug).split('/')[-1].split('_')[3]
+        time_budget = str(dir_bug).split('/')[-2].split('=')[1]
+        if dir_bug[-1]!='/':
+            dir_bug='{}/'.format(dir_bug)
+        dico_info = {"project": project_name, 'bug_ID': bug_id, 'time_budget': time_budget}
+        if os.path.isdir('{}Evo_Test'.format(dir_bug)) is False:
+            no_test_dir.append(dico_info)
+            continue
+        pbject_Bug = Bug_4j(pro_name=project_name,bug_id=bug_id,root_dir=dir_bug,info_args=None)
+        pbject_Bug.modfiy_pom()
+        pbject_Bug.rm_all_test()
+        name_dir_res = 'TEST_results'
+        if os.path.isdir("{}{}".format(dir_bug,name_dir_res)):
+            command_rm = 'rm -r {}{}'.format(dir_bug,name_dir_res)
+            print "[OS] {}".format(command_rm)
+            os.system(command_rm)
+        out_dir_buggy=pbject_Bug.analysis_test('buggy',dir_out=name_dir_res)
+        out_dir_fixed=pbject_Bug.analysis_test('fixed',dir_out=name_dir_res)
+
+        files_fix = pt.walk_rec(out_dir_fixed,[],'.xml')
+        files_buggy = pt.walk_rec(out_dir_buggy,[], '.xml')
+
+        d_list_fix = []
+        d_list_buggy=[]
+
+        for file_i in files_fix :
+            d_list_fix.append(pars_xml_test_file(file_i,dico_info))
+
+        for file_i in files_buggy:
+            d_list_buggy.append(pars_xml_test_file(file_i,dico_info))
+
+        csv_out_dir = pt.mkdir_system(dir_bug,'csvs',False)
+
+        df_bug = pd.DataFrame(d_list_fix)
+        df_bug.to_csv('{}/fix_TEST.csv'.format(csv_out_dir))
+
+        df_fix = pd.DataFrame(d_list_buggy)
+        df_fix.to_csv('{}/buggy_TEST.csv'.format(csv_out_dir))
+        print ""
+    df_no_test = pd.DataFrame(no_test_dir)
+    df_no_test.to_csv('{}/no_test_gen.csv'.format(dir_root))
+    exit() #TODO:REMOVE IT !!!
+
+
+
+
+#######################
 
 class Bug_4j:
     # b_mod = 'class' / 'package' , to kill the bug
@@ -89,22 +145,23 @@ class Bug_4j:
         # Move new file
         move(abs_path, file_path)
 
-    def rm_all_test(self, path):
+    def rm_all_test(self):
+        path = self.root
         dirs = ['buggy', 'fixed']
         for d in dirs:
             rel_p = 'src/test/org'
             rel_p_only_test = 'src/test'
             dir_org = '{}{}/{}'.format(path, d, rel_p)
             dir_test = '{}{}/{}'.format(path, d, rel_p_only_test)
-            dir_gradle = '{}{}/test'.format(path, d)
+
             if os.path.isdir(dir_org):
                 os.system('rm -r {}'.format(dir_org))
             elif os.path.isdir(dir_test):
                 os.system('rm -r {}/* '.format(dir_test))
-            elif os.path.isdir(dir_gradle):
-                res = pt.walk_rec(path, [], 'GitHubTicketFetcherTest')
-                for x in res:
-                    os.system('rm  {}'.format(x))
+            #elif os.path.isdir():
+            #    res = pt.walk_rec(path, [], 'GitHubTicketFetcherTest')
+            #    for x in res:
+            #        os.system('rm  {}'.format(x))
             else:
                 print "[Error] no Test dir : {}".format(dir_test)
 
@@ -126,20 +183,20 @@ class Bug_4j:
         process.wait()
         return process.returncode
 
-    def compile_data_builder(self, builder='mvn', command='install'):
+    def compile_data_builder(self, builder='mvn', command='install',flag=True):
         # TODO : modfiy pom by project name
         if builder == 'mvn':
             self.modfiy_pom()
         print "compiling..."
         path_p = '{}fixed'.format(self.root)
-        if builder == 'mvn':
+        if builder == 'mvn' and flag:
             bol_dir_fix=self.add_main_dir_src(path_p)
         os.chdir(path_p)
         if os.path.isdir('{}/log_dir'.format(path_p)) is False:
             os.system('mkdir log_dir')
         sig_f = self.init_shell_script('{0} {1} >> log_dir/{0}_install_command.txt 2>&1'.format(builder, command))
         path_p = '{}buggy'.format(self.root)
-        if builder == 'mvn':
+        if builder == 'mvn' and flag:
             bol_dir_buggy=self.add_main_dir_src(path_p)
         os.chdir(path_p)
         if os.path.isdir('{}/log_dir'.format(path_p)) is False:
@@ -323,32 +380,26 @@ class Bug_4j:
         path_dir = "{}{}/src/test/".format(self.root, dir)
         project_dir = "{}{}/".format(self.root, dir)
         command_rm = "rm -r {}src/test/*".format(project_dir)
-        if len(os.listdir("{}src/test/".format(project_dir))):
+        if len(os.listdir("{}src/test/".format(project_dir)))>0:
             os.system(command_rm)
         pt.mkdir_system('{}src/test/'.format(project_dir), 'java')
         for test_dir in evo_test_dir:
             arr_path = str(test_dir).split('/')[-1]
             java_name = str(test_dir).split('/')[-2]
             name_arr = str(arr_path).split('_')
-            dir_name_test = "{}_{}_{}".format(name_arr[0], name_arr[-2], name_arr[-1])
+            dir_name_test = "{}_{}_{}_{}".format(dir,name_arr[0], name_arr[-2], name_arr[-1])
 
             name = "{}_{}".format(java_name, dir_name_test)
             command_cp = 'cp -r {}/org {}src/test/java/'.format(test_dir, project_dir)
             os.system(command_cp)
             os.chdir(project_dir)
-            if dir == 'fixed':
-                fc.cleaning(project_dir, dir_name_test)
-                command_rm = "rm -r {}/org/".format(test_dir)
-                os.system(command_rm)
-                command_mv = "mv {}src/test/java/org/ {}/".format(project_dir, test_dir)
-                os.system(command_mv)
-                continue
             os.system('mvn clean test')
             if os.path.isdir('{}{}/{}'.format(self.root, dir_out, name)) is False:
                 os.system('mkdir {}{}/{}'.format(self.root, dir_out, name))
             os.system('mv {}target/surefire-reports/* {}{}/{}'.format(project_dir, self.root, dir_out, name))
             command_rm = "rm -r {}src/test/java/*".format(project_dir)
             os.system(command_rm)
+            return "{}{}/{}".format(self.root, dir_out, name)
 
     def clean_flaky_test(self):
         self.analysis_test(dir='fixed', dir_out='flaky')
@@ -939,13 +990,17 @@ def wrapper_xml_test_file(list_dirz_path, name):
     return list_acc
 
 
-def pars_xml_test_file(path_file):
+def pars_xml_test_file(path_file,dico=None):
     """
     parsing the xml tree and return the results
     """
-    err = {}
-    failure = {}
+
+    name_test = str(path_file).split('/')[-1].split('_')[0]
     d = {"err": float(0), "fail": float(0), "bug": 'no', 'class_err': [], 'class_fail': []}
+    d['name']=name_test
+    if dico is not None:
+        for ky in dico:
+            d[ky]=dico[ky]
     if os.path.isfile(path_file) is False:
         raise Exception("'[Error] the path: {} is not valid ".format(path_file))
     root_node = xml.etree.ElementTree.parse(path_file).getroot()
@@ -1225,10 +1280,29 @@ class D4J_tool:
             return bol
 
 
+    def get_build_path_by_project(self):
+        '''
+        project that dont have dir_map.csv , the path wehere the java src files and java test files
+        '''
+        src=''
+        test=''
+        if self.p_name == 'Time':
+            src='src/main/java'
+            test='src/test/java'
+        elif self.p_name == 'Chart':
+            src='source'
+            test='source'
+        elif self.p_name == 'Clousre':
+            src='src'
+            test='test'
+
+        return src,test
+
+
     def get_row_sha_df(self,sha_id):
         df = self.df_SHA
         if df is None:
-            return "source","tests"
+            return self.get_build_path_by_project()
         df_res = df.loc[df['SHA_ID'] == sha_id]
         if len(df_res)==0:
             return None,None
@@ -1758,7 +1832,7 @@ def replace_script(d4j_path):
 
 
 def init_main():
-    #string_std_in='file.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2;5;10;20;40;70 -r 1-1 -o /home/ise/eran/D4j/out/ -t target -p Lang -k U'
+    #string_std_in='file.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 1-1 -o /home/ise/eran/D4j/out/ -t target -p Chart -k U'
     #sys.argv = str(string_std_in).split()
     dico_args = parser_args(sys.argv)
     replace_script(dico_args['d'])
@@ -1842,7 +1916,7 @@ def test_process(root_dir='P_Lang_B_36_Sun_Aug__5_22_23_19_2018'):
     bug_ID = str(name).split('_')[3]
     bug_object = Bug_4j(project_name,bug_ID,info_args=None,root_dir=root_dir)
     print 'done'
-    exit()
+
 
 def get_problamtic_dirs(root_path):
     list_dirs = pt.walk_rec(root_path,[],'P_',False,lv=-2)
@@ -1865,6 +1939,17 @@ def get_problamtic_dirs(root_path):
 
 
 
+def main_parser():
+    if sys.argv[1] == 'fixer':
+        fixer_maven(sys.argv[2])
+    elif sys.argv[1] == 'd4j':
+        sys.argv = sys.argv[1:]
+        init_main()
+    elif sys.argv[1] == 'd4j_mvn':
+        sys.argv = sys.argv[1:]
+        main_wrapper()
+    else:
+        print "undfiend command [d4j_mvn / d4j / fixer ] "
 
 
 if __name__ == "__main__":
@@ -1890,9 +1975,11 @@ if __name__ == "__main__":
 
     args = 'file.py -p Lang -F true -o /home/ise/eran/eran_D4j/Lang_t=2/ -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1 -u 100 -t package -c F -k U -r 1-2 -M U -f F'
 
+    main_parser()
+    #fixer_maven(p_path)
     #main_wrapper(args)
 
-    init_main()
+    #init_main()
     #test_process()
     exit()
     # get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")

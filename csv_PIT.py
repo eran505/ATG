@@ -924,16 +924,8 @@ def summarize_rev(classes_list,d,out_p,on_key='KILLED',mod='U'):
 #####################
 
 if __name__ == "__main__":
-    #get_data_df_by_name_v1([{'csv':'/home/eran/Desktop/xxx/mutations_fp1.csv','mode':'FP','budget':10,"it":1},
-    #                        {'csv':'/home/eran/Desktop/xxx/mutations_fp2.csv','mode':'FP','budget':10,"it":2},
-    #                        {'csv':'/home/eran/Desktop/xxx/mutations_u1.csv','mode':'U','budget':10,"it":1},
-    #                        {'csv': '/home/eran/Desktop/xxx/mutations_u2.csv', 'mode': 'U', 'budget': 10, "it": 2}])
-    #exit()/home/ise/eran/new_exp/12_06_15_24_59_t=30_/pit_test/out
-
-    #get_all_class_by_name('/home/ise/Desktop/test_50/pit_test')
-    #exit()
     arr=sys.argv
-    arr = ['py','rev','/home/ise/eran/exp_rev']
+    #arr = ['py','rev','/home/ise/eran/exp_rev']
     if len(arr) == 2:
         if arr[1] == 'f':
             fin_mereg("/home/ise/eran/idel/geometry_pac/")  # data_mutation #new_FP
