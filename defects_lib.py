@@ -1942,6 +1942,8 @@ def get_problamtic_dirs(root_path):
 def main_parser():
     if sys.argv[1] == 'fixer':
         fixer_maven(sys.argv[2])
+    elif sys.argv[1] == 'merg':
+        get_results()
     elif sys.argv[1] == 'd4j':
         sys.argv = sys.argv[1:]
         init_main()
@@ -1952,11 +1954,38 @@ def main_parser():
         print "undfiend command [d4j_mvn / d4j / fixer ] "
 
 
+def get_results(root='/home/ise/eran/eran_D4j'):
+    dirs=pt.walk_rec(root,[],'csvs',False)
+    df_big=None
+    for dir_csv in dirs:
+        files_csv = pt.walk_rec(dir_csv,[],'.csv')
+        if len(files_csv ) > 1 :
+            df_fix = pd.read_csv("{}/fix_TEST.csv".format(dir_csv),index_col=0)
+            print list(df_fix)
+            df_fix.rename(columns={'class_err': 'fix_class_err', 'class_fail': 'fix_class_fail', 'err': 'fix_err', 'fail': 'fix_fail'}, inplace=True)
+            print list(df_fix)
+            del df_fix['bug']
+            df_buggy = pd.read_csv("{}/buggy_TEST.csv".format(dir_csv),index_col=0)
+            print list(df_buggy)
+            df_buggy.rename(columns={'class_err': 'buggy_class_err', 'class_fail': 'buggy_class_fail', 'err': 'buggy_err',
+                                   'fail': 'buggy_fail'}, inplace=True)
+            del df_buggy['bug']
+            print list(df_buggy)
+
+            df_merg = df_buggy.merge(df_fix, on=['bug_ID','time_budget','project','name'], how='outer')
+
+            df_merg.to_csv('{}/merge.csv'.format(dir_csv))
+            if df_big is None:
+                df_big=df_merg
+            else:
+                df_big = pd.concat([df_big,df_merg])
+    if df_big is not None:
+        df_big.to_csv('{}/all_df_merg.csv'.format(root))
+    exit(0)
 if __name__ == "__main__":
     '''
     # sudo env "PATH=$PATH" python
     '''
-
     before_op()
     args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
             -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
