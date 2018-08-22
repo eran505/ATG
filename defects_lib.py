@@ -1955,22 +1955,33 @@ def main_parser():
 
 
 def get_results(root='/home/ise/eran/eran_D4j'):
-    dirs=pt.walk_rec(root,[],'csvs',False)
+    dirs=pt.walk_rec(root,[],'csvs',False,lv=-3)
     df_big=None
+    list_emmpty=[]
+    if len(dirs)==0:
+        print "didnt fine any csvs in path {}".format(root)
     for dir_csv in dirs:
+        print dir_csv
         files_csv = pt.walk_rec(dir_csv,[],'.csv')
-        if len(files_csv ) > 1 :
+        if len(files_csv ) > 1:
             df_fix = pd.read_csv("{}/fix_TEST.csv".format(dir_csv),index_col=0)
-            print list(df_fix)
             df_fix.rename(columns={'class_err': 'fix_class_err', 'class_fail': 'fix_class_fail', 'err': 'fix_err', 'fail': 'fix_fail'}, inplace=True)
-            print list(df_fix)
-            del df_fix['bug']
             df_buggy = pd.read_csv("{}/buggy_TEST.csv".format(dir_csv),index_col=0)
-            print list(df_buggy)
             df_buggy.rename(columns={'class_err': 'buggy_class_err', 'class_fail': 'buggy_class_fail', 'err': 'buggy_err',
                                    'fail': 'buggy_fail'}, inplace=True)
+            d = {"path": dir_csv}
+            is_empty=False
+            if len(df_fix) ==0:
+                is_empty=True
+                d["is_fix_empty"] = 1
+            if len(df_buggy) ==0:
+                d["is_buggy_empty"] = 1
+                is_empty = True
+            if is_empty:
+                list_emmpty.append(d)
+                continue
+            del df_fix['bug']
             del df_buggy['bug']
-            print list(df_buggy)
 
             df_merg = df_buggy.merge(df_fix, on=['bug_ID','time_budget','project','name'], how='outer')
 
@@ -1981,12 +1992,16 @@ def get_results(root='/home/ise/eran/eran_D4j'):
                 df_big = pd.concat([df_big,df_merg])
     if df_big is not None:
         df_big.to_csv('{}/all_df_merg.csv'.format(root))
+    if len(list_emmpty)>0:
+        df_empty = pd.DataFrame(list_emmpty)
+        df_empty.to_csv('{}/is__empty.csv'.format(root))
     exit(0)
 if __name__ == "__main__":
     '''
     # sudo env "PATH=$PATH" python
     '''
     before_op()
+    get_results()
     args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
             -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
             -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
