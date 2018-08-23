@@ -20,47 +20,48 @@ project_dict = {}
 builder_dict = {}
 root_dir = '~/'
 
+
 ######################TODO:FIXER
 
 def fixer_maven(dir_root):
-    all_dir_time = pt.walk_rec(dir_root,[],file_t=False,rec='P_', lv=-3)
-    no_test_dir=[]
-    for dir_bug in all_dir_time :
+    all_dir_time = pt.walk_rec(dir_root, [], file_t=False, rec='P_', lv=-3)
+    no_test_dir = []
+    for dir_bug in all_dir_time:
 
         print "--{}--".format(dir_bug)
         project_name = str(dir_bug).split('/')[-1].split('_')[1]
         bug_id = str(dir_bug).split('/')[-1].split('_')[3]
         time_budget = str(dir_bug).split('/')[-2].split('=')[1]
-        if dir_bug[-1]!='/':
-            dir_bug='{}/'.format(dir_bug)
+        if dir_bug[-1] != '/':
+            dir_bug = '{}/'.format(dir_bug)
         dico_info = {"project": project_name, 'bug_ID': bug_id, 'time_budget': time_budget}
         if os.path.isdir('{}Evo_Test'.format(dir_bug)) is False:
             no_test_dir.append(dico_info)
             continue
-        pbject_Bug = Bug_4j(pro_name=project_name,bug_id=bug_id,root_dir=dir_bug,info_args=None)
+        pbject_Bug = Bug_4j(pro_name=project_name, bug_id=bug_id, root_dir=dir_bug, info_args=None)
         pbject_Bug.modfiy_pom()
         pbject_Bug.rm_all_test()
         name_dir_res = 'TEST_results'
-        if os.path.isdir("{}{}".format(dir_bug,name_dir_res)):
-            command_rm = 'rm -r {}{}'.format(dir_bug,name_dir_res)
+        if os.path.isdir("{}{}".format(dir_bug, name_dir_res)):
+            command_rm = 'rm -r {}{}'.format(dir_bug, name_dir_res)
             print "[OS] {}".format(command_rm)
             os.system(command_rm)
-        out_dir_buggy=pbject_Bug.analysis_test('buggy',dir_out=name_dir_res)
-        out_dir_fixed=pbject_Bug.analysis_test('fixed',dir_out=name_dir_res)
+        out_dir_buggy = pbject_Bug.analysis_test('buggy', dir_out=name_dir_res)
+        out_dir_fixed = pbject_Bug.analysis_test('fixed', dir_out=name_dir_res)
 
-        files_fix = pt.walk_rec(out_dir_fixed,[],'.xml')
-        files_buggy = pt.walk_rec(out_dir_buggy,[], '.xml')
+        files_fix = pt.walk_rec(out_dir_fixed, [], '.xml')
+        files_buggy = pt.walk_rec(out_dir_buggy, [], '.xml')
 
         d_list_fix = []
-        d_list_buggy=[]
+        d_list_buggy = []
 
-        for file_i in files_fix :
-            d_list_fix.append(pars_xml_test_file(file_i,dico_info))
+        for file_i in files_fix:
+            d_list_fix.append(pars_xml_test_file(file_i, dico_info))
 
         for file_i in files_buggy:
-            d_list_buggy.append(pars_xml_test_file(file_i,dico_info))
+            d_list_buggy.append(pars_xml_test_file(file_i, dico_info))
 
-        csv_out_dir = pt.mkdir_system(dir_bug,'csvs',False)
+        csv_out_dir = pt.mkdir_system(dir_bug, 'csvs', False)
 
         df_bug = pd.DataFrame(d_list_fix)
         df_bug.to_csv('{}/fix_TEST.csv'.format(csv_out_dir))
@@ -70,9 +71,7 @@ def fixer_maven(dir_root):
         print ""
     df_no_test = pd.DataFrame(no_test_dir)
     df_no_test.to_csv('{}/no_test_gen.csv'.format(dir_root))
-    exit() #TODO:REMOVE IT !!!
-
-
+    exit()  # TODO:REMOVE IT !!!
 
 
 #######################
@@ -158,7 +157,7 @@ class Bug_4j:
                 os.system('rm -r {}'.format(dir_org))
             elif os.path.isdir(dir_test):
                 os.system('rm -r {}/* '.format(dir_test))
-            #elif os.path.isdir():
+            # elif os.path.isdir():
             #    res = pt.walk_rec(path, [], 'GitHubTicketFetcherTest')
             #    for x in res:
             #        os.system('rm  {}'.format(x))
@@ -183,21 +182,21 @@ class Bug_4j:
         process.wait()
         return process.returncode
 
-    def compile_data_builder(self, builder='mvn', command='install',flag=True):
+    def compile_data_builder(self, builder='mvn', command='install', flag=True):
         # TODO : modfiy pom by project name
         if builder == 'mvn':
             self.modfiy_pom()
         print "compiling..."
         path_p = '{}fixed'.format(self.root)
         if builder == 'mvn' and flag:
-            bol_dir_fix=self.add_main_dir_src(path_p)
+            bol_dir_fix = self.add_main_dir_src(path_p)
         os.chdir(path_p)
         if os.path.isdir('{}/log_dir'.format(path_p)) is False:
             os.system('mkdir log_dir')
         sig_f = self.init_shell_script('{0} {1} >> log_dir/{0}_install_command.txt 2>&1'.format(builder, command))
         path_p = '{}buggy'.format(self.root)
         if builder == 'mvn' and flag:
-            bol_dir_buggy=self.add_main_dir_src(path_p)
+            bol_dir_buggy = self.add_main_dir_src(path_p)
         os.chdir(path_p)
         if os.path.isdir('{}/log_dir'.format(path_p)) is False:
             os.system('mkdir log_dir')
@@ -268,22 +267,22 @@ class Bug_4j:
                 return True
         return False
 
-    def remove_main_dir_src(self,path_project):
+    def remove_main_dir_src(self, path_project):
         if path_project[-1] == '/':
             path_project = path_project[:-1]
         if os.path.isdir("{}/src/main".format(path_project)):
             os.system('mv {0}/src/main/* {0}/src/'.format(path_project))
         return
 
-    def make_uniform_package_dict(self,delim='org',rec=False):
-        d_classes={}
-        fix_class = self.root+'fixed'
+    def make_uniform_package_dict(self, delim='org', rec=False):
+        d_classes = {}
+        fix_class = self.root + 'fixed'
         if self.info['t'] == 'package':
             modify = self.infected_packages
         elif self.info['t'] == 'class':
             modify = self.modified_class
         elif self.info['t'] == 'project':
-            modify=[delim]
+            modify = [delim]
         time_b = self.k_budget
         walking_res = pt.walk_rec(fix_class, [], '.class')
         res_classes = []
@@ -310,11 +309,9 @@ class Bug_4j:
                             res_classes.append(prefix)
         print "--res--"
         for x in res_classes:
-            d_classes[x]=time_b
-        self.fp_dico=d_classes
+            d_classes[x] = time_b
+        self.fp_dico = d_classes
         return d_classes
-
-
 
     def extract_data(self):
         if self.isValid():
@@ -380,14 +377,14 @@ class Bug_4j:
         path_dir = "{}{}/src/test/".format(self.root, dir)
         project_dir = "{}{}/".format(self.root, dir)
         command_rm = "rm -r {}src/test/*".format(project_dir)
-        if len(os.listdir("{}src/test/".format(project_dir)))>0:
+        if len(os.listdir("{}src/test/".format(project_dir))) > 0:
             os.system(command_rm)
         pt.mkdir_system('{}src/test/'.format(project_dir), 'java')
         for test_dir in evo_test_dir:
             arr_path = str(test_dir).split('/')[-1]
             java_name = str(test_dir).split('/')[-2]
             name_arr = str(arr_path).split('_')
-            dir_name_test = "{}_{}_{}_{}".format(dir,name_arr[0], name_arr[-2], name_arr[-1])
+            dir_name_test = "{}_{}_{}_{}".format(dir, name_arr[0], name_arr[-2], name_arr[-1])
 
             name = "{}_{}".format(java_name, dir_name_test)
             command_cp = 'cp -r {}/org {}src/test/java/'.format(test_dir, project_dir)
@@ -618,7 +615,7 @@ def main_bugger(info, proj, idBug, out_path, builder='mvn'):
             bug22.classes_dir = builder_dict[project_dict[bug22.p_name]['src']]['evo_p']
             for klass in bug22.modified_class:
                 bug22.write_log(str(klass), 'bug_classes')
-            if info['M'] =='U':
+            if info['M'] == 'U':
                 bug22.make_uniform_package_dict()
                 bg.Defect4J_analysis(bug22)
             else:
@@ -626,7 +623,8 @@ def main_bugger(info, proj, idBug, out_path, builder='mvn'):
 
                 if out is None and bug22.info['M'] != 'U':
                     bug22.write_log(
-                    'DATE: {} , cant find a predction csv : ID:{} P:{} '.format(bug22.bug_date, idBug, proj), 'error')
+                        'DATE: {} , cant find a predction csv : ID:{} P:{} '.format(bug22.bug_date, idBug, proj),
+                        'error')
                     return
                 if bug22.mod == 'info':
                     if 'z' in bug22.info:
@@ -646,12 +644,12 @@ def main_bugger(info, proj, idBug, out_path, builder='mvn'):
                 if bug22.mod == 'info':
                     return
 
-        #if bug22.p_name != 'Mockito':
-            #if bug22.clean_flaky:
-                #bug22.clean_flaky_test()
-            #bug22.analysis_test()
+        # if bug22.p_name != 'Mockito':
+        # if bug22.clean_flaky:
+        # bug22.clean_flaky_test()
+        # bug22.analysis_test()
     else:
-        msg_err =  "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
+        msg_err = "Error val={0} in project {2} BUG {1}".format(val, idBug, proj)
         bug22.write_log(msg_err, 'error_compile')
         print msg_err
 
@@ -668,9 +666,6 @@ def pars_ids(ids_str, num_of_bugs):
     if lower_bug_id > upper_bug_id:
         lower_bug_id = upper_bug_id
     return lower_bug_id, upper_bug_id
-
-
-
 
 
 def main_wrapper(args=None):
@@ -700,8 +695,8 @@ def main_wrapper(args=None):
     if up_id > num_of_bugs:
         up_id = num_of_bugs
         if low_id > up_id:
-            low_id=up_id
-    for i in range(low_id, up_id+1):
+            low_id = up_id
+    for i in range(low_id, up_id + 1):
         print "*" * 50
         print "project:{} | i={} ".format(proj_name, i)
         print "*" * 50
@@ -721,16 +716,18 @@ def main_wrapper(args=None):
         rm_dir_by_name(dico_info['o'], 'fixed')
         rm_dir_by_name(dico_info['o'], 'buggy')
 
+
 def remve_F_flag(arr):
-    i=0
-    new_arg=[]
-    while i<len(arr):
-        if arr[i]=='-F':
-            i=i+2
+    i = 0
+    new_arg = []
+    while i < len(arr):
+        if arr[i] == '-F':
+            i = i + 2
             continue
         new_arg.append(arr[i])
-        i+=1
+        i += 1
     return ' '.join(new_arg)
+
 
 def fix_wrapper(args=None):
     print 'in args:'.format(args)
@@ -743,7 +740,7 @@ def fix_wrapper(args=None):
         dico_info = parser_args(args.split())
     dir_need_fix = get_problamtic_dirs(dico_info['o'])
     print dir_need_fix
-    for dir_fixing in dir_need_fix :
+    for dir_fixing in dir_need_fix:
         full_dis = dir_fixing
         bug_id = str(full_dis).split('/')[-1].split('_')[3]
         proj_name = str(full_dis).split('/')[-1].split('_')[1]
@@ -754,11 +751,12 @@ def fix_wrapper(args=None):
         print "end"
         if os.path.isdir(full_dis):
             msg = 'the dir {} is not deleted'.format(full_dis)
-            raise Exception("msg:{}\n err:{}".format(msg,stderr))
-        args_new = '{0} -r {1}-{1} -p {2}'.format(args,bug_id,proj_name)
-        print "args_new : {}".format(args_new )
+            raise Exception("msg:{}\n err:{}".format(msg, stderr))
+        args_new = '{0} -r {1}-{1} -p {2}'.format(args, bug_id, proj_name)
+        print "args_new : {}".format(args_new)
         main_wrapper(args_new)
     exit()
+
 
 def look_for_old_pred(class_name, cur_csv, proj_name, mem=None):
     ans = {}
@@ -990,17 +988,17 @@ def wrapper_xml_test_file(list_dirz_path, name):
     return list_acc
 
 
-def pars_xml_test_file(path_file,dico=None):
+def pars_xml_test_file(path_file, dico=None):
     """
     parsing the xml tree and return the results
     """
 
     name_test = str(path_file).split('/')[-1].split('_')[0]
     d = {"err": float(0), "fail": float(0), "bug": 'no', 'class_err': [], 'class_fail': []}
-    d['name']=name_test
+    d['name'] = name_test
     if dico is not None:
         for ky in dico:
-            d[ky]=dico[ky]
+            d[ky] = dico[ky]
     if os.path.isfile(path_file) is False:
         raise Exception("'[Error] the path: {} is not valid ".format(path_file))
     root_node = xml.etree.ElementTree.parse(path_file).getroot()
@@ -1202,17 +1200,17 @@ class D4J_tool:
     def __init__(self, out_dir, project, bug_range, time_b, csv_fp_path, info_d,
                  scope_p='all', d4j_path='/home/ise/programs/defects4j/framework/bin/defects4j', rep=2, mode='U'):
         self.root_d4j = d4j_path
-        self.root_framework_defect4j= '/'.join(str(d4j_path).split('/')[:-2])
+        self.root_framework_defect4j = '/'.join(str(d4j_path).split('/')[:-2])
         self.bugs = bug_range
         self.p_name = project
         self.rep = rep
-        self.df_SHA=None
-        self.modified_class=[]
-        self.bug_date='NULL'
+        self.df_SHA = None
+        self.modified_class = []
+        self.bug_date = 'NULL'
         self.mode = mode
-        self.lower_bug_id=-1
-        self.upper_bug_id=-1
-        self.list_times=None
+        self.lower_bug_id = -1
+        self.upper_bug_id = -1
+        self.list_times = None
         self.info = info_d
         self.FP_dico = None
         self.out_root = out_dir
@@ -1243,10 +1241,10 @@ class D4J_tool:
                 self.run_tests(dico_list)
                 dico_list = []
 
-    def get_map_dir(self,defect_lib = '/home/ise/programs/defects4j/framework/projects'):
-        if os.path.isfile('{}/{}/dir_map.csv'.format(defect_lib,self.p_name)):
-            df = pd.read_csv('{}/{}/dir_map.csv'.format(defect_lib,self.p_name),names=['SHA_ID','class','tests'])
-            self.df_SHA=df
+    def get_map_dir(self, defect_lib='/home/ise/programs/defects4j/framework/projects'):
+        if os.path.isfile('{}/{}/dir_map.csv'.format(defect_lib, self.p_name)):
+            df = pd.read_csv('{}/{}/dir_map.csv'.format(defect_lib, self.p_name), names=['SHA_ID', 'class', 'tests'])
+            self.df_SHA = df
         else:
             self.df_SHA = None
 
@@ -1279,46 +1277,44 @@ class D4J_tool:
             bol = self.get_faulty_classes()
             return bol
 
-
     def get_build_path_by_project(self):
         '''
         project that dont have dir_map.csv , the path wehere the java src files and java test files
         '''
-        src=''
-        test=''
+        src = ''
+        test = ''
         if self.p_name == 'Time':
-            src='src/main/java'
-            test='src/test/java'
+            src = 'src/main/java'
+            test = 'src/test/java'
         elif self.p_name == 'Chart':
-            src='source'
-            test='source'
+            src = 'source'
+            test = 'source'
         elif self.p_name == 'Clousre':
-            src='src'
-            test='test'
+            src = 'src'
+            test = 'test'
 
-        return src,test
+        return src, test
 
-
-    def get_row_sha_df(self,sha_id):
+    def get_row_sha_df(self, sha_id):
         df = self.df_SHA
         if df is None:
             return self.get_build_path_by_project()
         df_res = df.loc[df['SHA_ID'] == sha_id]
-        if len(df_res)==0:
-            return None,None
-        elif len(df_res)==1:
-            return df_res['class'].tolist()[0],df_res['tests'].tolist()[0]
+        if len(df_res) == 0:
+            return None, None
+        elif len(df_res) == 1:
+            return df_res['class'].tolist()[0], df_res['tests'].tolist()[0]
         else:
             raise Exception("get_row_sha_df function found more than one value [Error]")
 
     def get_faulty_classes(self):
         self.write_log(self.out, self.scope, 'scope')
-        for id in range(self.lower_bug_id,self.upper_bug_id+1):
+        for id in range(self.lower_bug_id, self.upper_bug_id + 1):
             self.modified_class = []
             str_c = "/home/ise/programs/defects4j/framework/bin/defects4j info -p  {1} -b {0}".format(id,
                                                                                                       self.p_name)
             result = subprocess.check_output(str_c, shell=True)
-            print '#'*200
+            print '#' * 200
             print result
 
             x = result.find("List of modified sources:")
@@ -1331,13 +1327,15 @@ class D4J_tool:
 
             x_sha_id_end = result.find("Revision date (fixed version):")
 
-            x_sha = result[x_sha_id_start+sha_str_size:x_sha_id_end].replace('-', "").replace('\n','').replace(' ','')
+            x_sha = result[x_sha_id_start + sha_str_size:x_sha_id_end].replace('-', "").replace('\n', '').replace(' ',
+                                                                                                                  '')
             ID_SHA = x_sha
 
-            class_path,tset_path = self.get_row_sha_df(ID_SHA)
+            class_path, tset_path = self.get_row_sha_df(ID_SHA)
             if class_path is None:
                 print ID_SHA
-                self.write_log(self.out,'cant find {} in dir_map.csv BUG_ID: {} {}'.format(ID_SHA,id,self.p_name),name='miss_SHA')
+                self.write_log(self.out, 'cant find {} in dir_map.csv BUG_ID: {} {}'.format(ID_SHA, id, self.p_name),
+                               name='miss_SHA')
                 return False
             data_time = result[date_index + len("Revision date (fixed version):"):stoper].replace('-', "")
             try:
@@ -1354,42 +1352,41 @@ class D4J_tool:
                 if len(y1) > 1:
                     print y1
                     self.modified_class.append(y1)
-            if len(self.modified_class)>1:
+            if len(self.modified_class) > 1:
                 print ""
-            print '#'*200
+            print '#' * 200
             self.bug_date = str_data_bug
-            self.get_all_java_class(id,class_path,tset_path)
-            self.write_faulty(self.out,"bug_{}".format(id),self.modified_class)
+            self.get_all_java_class(id, class_path, tset_path)
+            self.write_faulty(self.out, "bug_{}".format(id), self.modified_class)
 
-
-    def get_all_java_class(self,id,class_path,test_path):
-        out_fix = pt.mkdir_system(self.out,'fixed',True)
-        str_command = self.root_d4j + ' checkout -p {1} -v {0}"f" -w {2}/'.format(id, self.p_name,out_fix)
+    def get_all_java_class(self, id, class_path, test_path):
+        out_fix = pt.mkdir_system(self.out, 'fixed', True)
+        str_command = self.root_d4j + ' checkout -p {1} -v {0}"f" -w {2}/'.format(id, self.p_name, out_fix)
         print '[OS] {}'.format(str_command)
         os.system(str_command)
-        java_class = pt.walk_rec("{}/{}".format(out_fix,class_path),[],'.java')
+        java_class = pt.walk_rec("{}/{}".format(out_fix, class_path), [], '.java')
         package_class = []
         for item in java_class:
-            pack = pt.path_to_package('org',item,-1*len('.java'))
+            pack = pt.path_to_package('org', item, -1 * len('.java'))
             package_class.append(pack)
-        package_class = self.filter_by_scope(package_class,id)
-        self.write_faulty(self.out, "class_{}".format(id),package_class)
+        package_class = self.filter_by_scope(package_class, id)
+        self.write_faulty(self.out, "class_{}".format(id), package_class)
         os_rm_dir(out_fix)
 
-    def get_relevent_classs(self,id):
+    def get_relevent_classs(self, id):
         '''
         get the revent classes -A flag in run_evosuite.pl
         '''
         with open("{}/projects/{}/loaded_classes/{}.src".format(
-                self.root_framework_defect4j,self.p_name,id),'r') as f_src:
+                self.root_framework_defect4j, self.p_name, id), 'r') as f_src:
             lines = f_src.readlines()
             return lines
 
-    def filter_by_name(self,list_candidates,prefix=True):
+    def filter_by_name(self, list_candidates, prefix=True):
         '''
         filter by the scope the project classes
         '''
-        result_klass=[]
+        result_klass = []
         modified_package = []
         for item_i in self.modified_class:
             modified_package.append('.'.join(str(item_i).split('.')[:-1]))
@@ -1405,7 +1402,7 @@ class D4J_tool:
                         continue
         return result_klass
 
-    def filter_by_scope(self,list_classes,id):
+    def filter_by_scope(self, list_classes, id):
         '''
         in which scope to generate test
         :param list_classes:
@@ -1418,26 +1415,24 @@ class D4J_tool:
             return self.modified_class
         elif self.scope == 'test_trace':
             return self.get_relevent_classs(id)
-        elif self.scope =='package_only':
-            return self.filter_by_name(list_classes,False)
-        elif self.scope =='package_rec':
+        elif self.scope == 'package_only':
+            return self.filter_by_name(list_classes, False)
+        elif self.scope == 'package_rec':
             return self.filter_by_name(list_classes, True)
         else:
-            msg='[Error] the scope value is not defined --> [{}]\n' \
-                'project - all classes\n' \
-                'target - only the fault components\n' \
-                'test_trace - all the class in the bug trace\n' \
-                'package_only - only the fault components package\n' \
-                'package_rec - recursively the package with the fault components '.format(self.scope)
+            msg = '[Error] the scope value is not defined --> [{}]\n' \
+                  'project - all classes\n' \
+                  'target - only the fault components\n' \
+                  'test_trace - all the class in the bug trace\n' \
+                  'package_only - only the fault components package\n' \
+                  'package_rec - recursively the package with the fault components '.format(self.scope)
             raise Exception(msg)
 
-    def write_faulty(self,path_out,file_name,list_item):
-        out = pt.mkdir_system(path_out,'fault_components',False)
-        with open("{}/{}.txt".format(out,file_name),'a') as f :
+    def write_faulty(self, path_out, file_name, list_item):
+        out = pt.mkdir_system(path_out, 'fault_components', False)
+        with open("{}/{}.txt".format(out, file_name), 'a') as f:
             for item in list_item:
-                f.write(item+'\n')
-
-
+                f.write(item + '\n')
 
     def main_process(self, path=None):
         if path is None:
@@ -1485,16 +1480,15 @@ class D4J_tool:
             out_dir_bug = self.make_out_dir(self.out, property_info)
             for time_bud in self.list_times:
                 for rep_it in range(self.rep):
-                    out_folder = pt.mkdir_system(out_dir_bug, 't={}'.format(time_bud),False)
-                    targe_file = "{}/fault_components/class_{}.txt".format(self.out,i).replace('//','/')
-
-
+                    out_folder = pt.mkdir_system(out_dir_bug, 't={}'.format(time_bud), False)
+                    targe_file = "{}/fault_components/class_{}.txt".format(self.out, i).replace('//', '/')
 
                     evosuite_command = '{0}/run_evosuite.pl -p {1} -v {2}f -n {3}' \
                                        ' -o {4} -b {5} -c branch -m {7} -u {6}'.format(d4j_dir_bin,
-                                                                                self.p_name, str(i), rep_it, out_folder,
-                                                                                time_bud,targe_file,
-                                                                                     self.mode)
+                                                                                       self.p_name, str(i), rep_it,
+                                                                                       out_folder,
+                                                                                       time_bud, targe_file,
+                                                                                       self.mode)
                     print "[OS] {}".format(evosuite_command)
                     process = Popen(shlex.split(evosuite_command), stdout=PIPE, stderr=PIPE)
                     stdout, stderr = process.communicate()
@@ -1561,13 +1555,15 @@ class D4J_tool:
             f.write(info)
             f.write('\n')
 
+
 def os_rm_dir(path):
-    string_command='rm -r {}'.format(path)
+    string_command = 'rm -r {}'.format(path)
     print "[OS] {}".format(string_command)
     process = Popen(shlex.split(string_command), stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
     print "stderr:\n{}".format(stderr)
     print "stdout:\n{}".format(stdout)
+
 
 def wrapper_get_all_results_D4j(root):
     all_OUT = pt.walk_rec(root, [], "OUT", False)
@@ -1619,19 +1615,20 @@ def get_all_results_D4j(root_path, out=None, name='results_D4j'):
 
 
 def init_testing_pahse(root_p):
-    all_command_test = pt.walk_rec(root_p,[],'testing_commands.log.txt')
+    all_command_test = pt.walk_rec(root_p, [], 'testing_commands.log.txt')
     for command_i_file in all_command_test:
-        with open(command_i_file,'r') as f:
+        with open(command_i_file, 'r') as f:
             command_i = f.readlines()
-            if len(command_i)<1:
+            if len(command_i) < 1:
                 continue
             command_i = command_i[0]
-            command_i  = command_i.replace('//','/')
+            command_i = command_i.replace('//', '/')
             os.system(command_i)
-            #process = Popen(shlex.split(command_i[0]), stdout=PIPE, stderr=PIPE)
-            #stdout, stderr = process.communicate()
-            #print stdout
-            #print stderr
+            # process = Popen(shlex.split(command_i[0]), stdout=PIPE, stderr=PIPE)
+            # stdout, stderr = process.communicate()
+            # print stdout
+            # print stderr
+
 
 def get_results_junit(root_p, out=None, name='result_df'):
     if out is None:
@@ -1647,22 +1644,22 @@ def get_results_junit(root_p, out=None, name='result_df'):
         for time_dir in time_folders:
             time_budget = str(time_dir).split('/')[-1].split('=')[1]
             test_dir = pt.walk_rec(time_dir, [], 'Test_', False, lv=-1)
-            for  item in test_dir:
-                if os.path.isfile("{}/bug_detection".format(item )):
+            for item in test_dir:
+                if os.path.isfile("{}/bug_detection".format(item)):
                     d = {}
                     d['bug_id'] = bug_id
                     d['gen_mode'] = mode_gen
                     d['time_budget'] = time_budget
-                    res = get_deff("{}/bug_detection_log".format(item ))
-                    df_tmp = pd.read_csv("{}/bug_detection".format(item ))
+                    res = get_deff("{}/bug_detection_log".format(item))
+                    df_tmp = pd.read_csv("{}/bug_detection".format(item))
                     for ky, val in d.iteritems():
                         df_tmp[ky] = val
                     d_class_tmp = get_fp_time_b(time_dir)
                     if len(res) > 0:
                         df_tmp['buggy_test_case_fail (diff)'] = res['bug']['tests']
                         df_tmp['fixed_test_case_fail (diff)'] = res['fix']['tests']
-                        #df_tmp['buggy_diff'] = res['bug']['diff']
-                        #df_tmp['fixed_diff'] = res['fix']['diff']
+                        # df_tmp['buggy_diff'] = res['bug']['diff']
+                        # df_tmp['fixed_diff'] = res['fix']['diff']
                     for ky in d_class_tmp.keys():
                         d_class = {}
                         d_class['bug_id'] = bug_id
@@ -1677,10 +1674,10 @@ def get_results_junit(root_p, out=None, name='result_df'):
         return
     result = pd.concat(list_df)
     df = pd.DataFrame(list_df_class)
-    if len(df)==0:
-        bol=False
+    if len(df) == 0:
+        bol = False
     else:
-        bol=True
+        bol = True
     if out[-1] == '/':
         result.to_csv('{}{}.csv'.format(out, name))
         if bol:
@@ -1710,17 +1707,19 @@ def get_deff(dir_path):
     diff_bug, diff_fix = diff_function(d['bug']['path'], d['fix']['path'])
     d['bug']['diff'] = diff_bug
     d['fix']['diff'] = diff_fix
-    d['fix']['tests'] = ':'.join(get_regex_res(diff_fix,'test\d+'))
+    d['fix']['tests'] = ':'.join(get_regex_res(diff_fix, 'test\d+'))
     d['bug']['tests'] = ':'.join(get_regex_res(diff_bug, 'test\d+'))
     return d
 
-def get_regex_res(string_search,pattern):
+
+def get_regex_res(string_search, pattern):
     tmp = re.compile(r'{}'.format(pattern)).search(string_search)
-    arr=[]
+    arr = []
     if tmp is not None:
         for tuple in tmp.regs:
             arr.append(string_search[tuple[0]:tuple[1]])
     return arr
+
 
 def diff_function(file_one, file_two):
     '''
@@ -1739,23 +1738,19 @@ def diff_function(file_one, file_two):
     diff1 = [line for line in f1 if line not in f2]  # lines present only in f1
     diff2 = [line for line in f2 if line not in f1]  # lines present only in f2
 
-    if len(diff2 )>0:
+    if len(diff2) > 0:
         print ""
 
-
-
-
-
     if len(diff1) == 0:
-        diff1=''
+        diff1 = ''
     else:
         diff1 = '\n'.join(diff1)
-        diff1= diff1.replace(',', '|')
+        diff1 = diff1.replace(',', '|')
     if len(diff2) == 0:
-        diff2= ''
+        diff2 = ''
     else:
         diff2 = '\n'.join(diff2)
-        diff2 =diff2.replace(',','|')
+        diff2 = diff2.replace(',', '|')
     doc2.close()
     doc1.close()
 
@@ -1816,35 +1811,37 @@ def parser_args(arg):
             raise Exception('[Error] in parsing Args')
     return dico_args
 
+
 def replace_script(d4j_path):
     '''
     retplcae the scrip pl TODO: change the harcoded path repo ATG
     '''
-    if d4j_path[-1]!='/':
-        d4j_path=d4j_path+'/'
+    if d4j_path[-1] != '/':
+        d4j_path = d4j_path + '/'
     comaand_rm = 'rm {}run_evosuite.pl'.format(d4j_path)
     print "[OS] {}".format(comaand_rm)
     cwd = '/home/ise/eran/repo/ATG'
-    comaand_cp = 'cp {}/D4J/script/run_evosuite.pl {}'.format(cwd,d4j_path)
+    comaand_cp = 'cp {}/D4J/script/run_evosuite.pl {}'.format(cwd, d4j_path)
     print "[OS] {}".format(comaand_cp)
     os.system(comaand_rm)
     os.system(comaand_cp)
 
 
 def init_main():
-    #string_std_in='file.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 1-1 -o /home/ise/eran/D4j/out/ -t target -p Chart -k U'
-    #sys.argv = str(string_std_in).split()
+    # string_std_in='file.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 1-1 -o /home/ise/eran/D4j/out/ -t target -p Chart -k U'
+    # sys.argv = str(string_std_in).split()
     dico_args = parser_args(sys.argv)
     replace_script(dico_args['d'])
     if 'T' in dico_args:
         init_testing_pahse(dico_args['T'])
     elif 'R' in dico_args:
-        all_dir_OUT = pt.walk_rec(dico_args['R'],[],'OUT',False,lv=-2)
+        all_dir_OUT = pt.walk_rec(dico_args['R'], [], 'OUT', False, lv=-2)
         for dir_OUT in all_dir_OUT:
             get_results_junit(dir_OUT)
     else:
-        obj_d4j = D4J_tool(out_dir=dico_args['o'], project=dico_args['p'], bug_range=dico_args['r'], time_b=dico_args['b'],
-                       csv_fp_path=dico_args['k'], scope_p=dico_args['t'], info_d=dico_args)
+        obj_d4j = D4J_tool(out_dir=dico_args['o'], project=dico_args['p'], bug_range=dico_args['r'],
+                           time_b=dico_args['b'],
+                           csv_fp_path=dico_args['k'], scope_p=dico_args['t'], info_d=dico_args)
         obj_d4j.main_process()
     exit()
 
@@ -1861,8 +1858,6 @@ def rm_dir_by_name(root, name=None):
         print stdout
         print "----stderr----"
         print stderr
-
-
 
 
 def info_dir_to_csv_dict(root):
@@ -1890,7 +1885,8 @@ def info_dir_to_csv_dict(root):
         d[bug_id] = {'ALL': d_budget_all, 'PACK': d_budget_pack}
     return d
 
-def get_faulty_comp(project_name='Math',out_dir='/home/ise/MATH/Defect4J'):
+
+def get_faulty_comp(project_name='Math', out_dir='/home/ise/MATH/Defect4J'):
     '''
     make a CSV with all the faulty comp
     :param project_name:
@@ -1898,15 +1894,15 @@ def get_faulty_comp(project_name='Math',out_dir='/home/ise/MATH/Defect4J'):
     :return:
     '''
     num_of_bug = project_dict[project_name]['num_bugs']
-    list_of_d=[]
-    for i in range (1,num_of_bug,1):
-        object_bug = Bug_4j(project_name,i,{'t':'info','p':project_name},out_dir)
+    list_of_d = []
+    for i in range(1, num_of_bug, 1):
+        object_bug = Bug_4j(project_name, i, {'t': 'info', 'p': project_name}, out_dir)
         print object_bug.modified_class
         for modify in object_bug.modified_class:
             pack = '.'.join(str(modify).split('.')[:-1])
-            list_of_d.append({'package':pack,'bug_ID':i,'CUT':modify,'faulty':1})
-    df=pd.DataFrame(list_of_d)
-    df.to_csv("{}/{}_faulty_comp.csv".format(out_dir,project_name))
+            list_of_d.append({'package': pack, 'bug_ID': i, 'CUT': modify, 'faulty': 1})
+    df = pd.DataFrame(list_of_d)
+    df.to_csv("{}/{}_faulty_comp.csv".format(out_dir, project_name))
     exit()
 
 
@@ -1914,15 +1910,15 @@ def test_process(root_dir='P_Lang_B_36_Sun_Aug__5_22_23_19_2018'):
     name = str(root_dir).split('/')[-1]
     project_name = str(name).split('_')[1]
     bug_ID = str(name).split('_')[3]
-    bug_object = Bug_4j(project_name,bug_ID,info_args=None,root_dir=root_dir)
+    bug_object = Bug_4j(project_name, bug_ID, info_args=None, root_dir=root_dir)
     print 'done'
 
 
 def get_problamtic_dirs(root_path):
-    list_dirs = pt.walk_rec(root_path,[],'P_',False,lv=-2)
-    no_log=[]
-    yes_log=[]
-    fix_list=[]
+    list_dirs = pt.walk_rec(root_path, [], 'P_', False, lv=-2)
+    no_log = []
+    yes_log = []
+    fix_list = []
     for item_dir in list_dirs:
         if os.path.isdir('{}/Evo_Test'.format(item_dir)):
             fix_list.appqend(item_dir)
@@ -1938,7 +1934,6 @@ def get_problamtic_dirs(root_path):
     return res
 
 
-
 def main_parser():
     if sys.argv[1] == 'fixer':
         fixer_maven(sys.argv[2])
@@ -1947,6 +1942,8 @@ def main_parser():
     elif sys.argv[1] == 'd4j':
         sys.argv = sys.argv[1:]
         init_main()
+    elif sys.argv[1] == 'not_gen':
+        fix_error_no_gen_test(sys.argv[2])
     elif sys.argv[1] == 'd4j_mvn':
         sys.argv = sys.argv[1:]
         main_wrapper()
@@ -1954,27 +1951,53 @@ def main_parser():
         print "undfiend command [d4j_mvn / d4j / fixer ] "
 
 
+
+def fix_error_no_gen_test(path_to_file):
+    df = pd.read_csv(path_to_file,index_col=0)
+    path_rel='/'.join(str(path_to_file).split('/')[:-1])
+    print list(df)
+    df['command'] = df.apply(bla, axis=1)
+    list_command = df['command'].tolist()
+    with open("{}/D4j_script_no_gen.sh".format(path_rel),'w+') as f:
+        f.write('#!/usr/bin/env bash\n')
+        f.write('\nATG="/home/ise/eran/repo/ATG/"\n\n')
+        for item in list_command:
+            f.write('{}\n\n'.format(item))
+
+
+def bla(row):
+    time = str(row['time_budget'])
+    proj = str(row['project'])
+    id_bug = str(row['bug_ID'])
+    command = 'sudo env "PATH=$PATH" python /home/ise/eran/repo/ATG/defects_lib.py d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b {0} -r {1}-{1} -o /home/ise/eran/D4j/out/ -t package_only -p {2} -k U'.format(time,id_bug,proj)
+    return command
+
 def get_results(root='/home/ise/eran/eran_D4j'):
-    dirs=pt.walk_rec(root,[],'csvs',False,lv=-3)
-    df_big=None
-    list_emmpty=[]
-    if len(dirs)==0:
+    '''
+    this function get the results out of the maven framework d4j after the (fixer_maven-function) process
+    '''
+    dirs = pt.walk_rec(root, [], 'csvs', False, lv=-3)
+    df_big = None
+    list_emmpty = []
+    if len(dirs) == 0:
         print "didnt fine any csvs in path {}".format(root)
     for dir_csv in dirs:
         print dir_csv
-        files_csv = pt.walk_rec(dir_csv,[],'.csv')
-        if len(files_csv ) > 1:
-            df_fix = pd.read_csv("{}/fix_TEST.csv".format(dir_csv),index_col=0)
-            df_fix.rename(columns={'class_err': 'fix_class_err', 'class_fail': 'fix_class_fail', 'err': 'fix_err', 'fail': 'fix_fail'}, inplace=True)
-            df_buggy = pd.read_csv("{}/buggy_TEST.csv".format(dir_csv),index_col=0)
-            df_buggy.rename(columns={'class_err': 'buggy_class_err', 'class_fail': 'buggy_class_fail', 'err': 'buggy_err',
-                                   'fail': 'buggy_fail'}, inplace=True)
+        files_csv = pt.walk_rec(dir_csv, [], '.csv')
+        if len(files_csv) > 1:
+            df_fix = pd.read_csv("{}/fix_TEST.csv".format(dir_csv), index_col=0)
+            df_fix.rename(columns={'class_err': 'fix_class_err', 'class_fail': 'fix_class_fail', 'err': 'fix_err',
+                                   'fail': 'fix_fail'}, inplace=True)
+            df_buggy = pd.read_csv("{}/buggy_TEST.csv".format(dir_csv), index_col=0)
+            df_buggy.rename(
+                columns={'class_err': 'buggy_class_err', 'class_fail': 'buggy_class_fail', 'err': 'buggy_err',
+                         'fail': 'buggy_fail'}, inplace=True)
             d = {"path": dir_csv}
-            is_empty=False
-            if len(df_fix) ==0:
-                is_empty=True
+            is_empty = False
+            if len(df_fix) == 0:
+                is_empty = True
                 d["is_fix_empty"] = 1
-            if len(df_buggy) ==0:
+            if len(df_buggy) == 0:
                 d["is_buggy_empty"] = 1
                 is_empty = True
             if is_empty:
@@ -1983,25 +2006,27 @@ def get_results(root='/home/ise/eran/eran_D4j'):
             del df_fix['bug']
             del df_buggy['bug']
 
-            df_merg = df_buggy.merge(df_fix, on=['bug_ID','time_budget','project','name'], how='outer')
+            df_merg = df_buggy.merge(df_fix, on=['bug_ID', 'time_budget', 'project', 'name'], how='outer')
 
             df_merg.to_csv('{}/merge.csv'.format(dir_csv))
             if df_big is None:
-                df_big=df_merg
+                df_big = df_merg
             else:
-                df_big = pd.concat([df_big,df_merg])
+                df_big = pd.concat([df_big, df_merg])
     if df_big is not None:
         df_big.to_csv('{}/all_df_merg.csv'.format(root))
-    if len(list_emmpty)>0:
+    if len(list_emmpty) > 0:
         df_empty = pd.DataFrame(list_emmpty)
         df_empty.to_csv('{}/is__empty.csv'.format(root))
     exit(0)
+
+
 if __name__ == "__main__":
     '''
     # sudo env "PATH=$PATH" python
     '''
     before_op()
-    get_results()
+    
     args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
             -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
             -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
@@ -2009,22 +2034,22 @@ if __name__ == "__main__":
     p_path = '/home/ise/eran/D4j/OUT_Time_D_Sat_Jul_21_17_54_36_2018'
     p_path = '/home/ise/Desktop/d4j_framework/out/OUT_Time_D_Sat_Jul_21_17_59_42_2018'
     p_path = '/home/ise/eran/eran_D4j'
-    #get_problamtic_dirs(p_path)
+    # get_problamtic_dirs(p_path)
 
-    #get_faulty_comp()
+    # get_faulty_comp()
     #
-    #get_results_junit()
+    # get_results_junit()
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
-   ### make_uniform_package_dict()
+    ### make_uniform_package_dict()
 
     args = 'file.py -p Lang -F true -o /home/ise/eran/eran_D4j/Lang_t=2/ -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1 -u 100 -t package -c F -k U -r 1-2 -M U -f F'
 
     main_parser()
-    #fixer_maven(p_path)
-    #main_wrapper(args)
+    # fixer_maven(p_path)
+    # main_wrapper(args)
 
-    #init_main()
-    #test_process()
+    # init_main()
+    # test_process()
     exit()
     # get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
     # check_FP_prediction_vs_reality('Math')
