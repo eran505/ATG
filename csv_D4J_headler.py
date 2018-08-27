@@ -168,6 +168,8 @@ def get_package_csv(root_dir):
     df.to_csv("{}/info_pakage.csv".format(out))
 
 
+
+
 '''
 need to go over all the bug ID and extract the fault class and all its package class
 '''
