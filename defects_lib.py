@@ -2281,8 +2281,8 @@ if __name__ == "__main__":
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
     ### make_uniform_package_dict()
 
-    args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
-    sys.argv=args.split()
+    #args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
+    #sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)
     # main_wrapper(args)
