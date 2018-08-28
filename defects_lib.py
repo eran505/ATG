@@ -10,7 +10,7 @@ import fail_cleaner as fc
 import shlex
 import re
 from subprocess import Popen, PIPE, check_call, check_output
-
+import util_defects4j as util_d4j
 import numpy as np
 from tempfile import mkstemp
 from shutil import move
@@ -1956,6 +1956,9 @@ def main_parser():
     elif sys.argv[1] == 'd4j_mvn':
         sys.argv = sys.argv[1:]
         main_wrapper()
+    elif sys.argv[1] == 'change_evo':
+        ver = sys.argv[2]
+        util_d4j.change_runtime_and_gen_jars(ver)
     else:
         print "undfiend command [d4j_mvn / d4j / fixer ] "
 
@@ -1966,7 +1969,7 @@ def re_gen_broken_test(csv_path='/home/ise/eran/D4j/oracle/log.csv'):
     df = pd.read_csv(csv_path, index_col=0)
     print len(df)
     df = df[df['msg'] != '[good]']
-    df['command'] = df.apply(bla,scope='target', axis=1)
+    df['command'] = df.apply(bla,scope='package_only', axis=1)
     df.to_csv('{}/log_broken.csv'.format(path_rel))
     list_command = df['command'].tolist()
     with open("{}/D4j_broken_test.sh".format(path_rel),'w+') as f:
@@ -2225,15 +2228,21 @@ def extract_tar(path_in, path_out, f_name ,format_file='bz2',filter_only=None,co
                 tar.add(path_out, arcname='.')
     return bol,msg,filter_only,dico_test
 
-def add_actual_scope_size(bug_id,path_dir):
+def add_actual_scope_size(bug_id,path_dir,scope):
     '''
     add to a dataframe the number of scope that need to be generated
     '''
     lines = None
-    with open('{}/class_{}.txt'.format(path_dir,bug_id),'r+') as f:
-        lines = f.readlines()
-    if lines is not None:
-        return len(lines)
+    if scope == 'package_only' or scope == 'package_rec' :
+        with open('{}/class_{}.txt'.format(path_dir,bug_id),'r+') as f:
+            lines = f.readlines()
+        if lines is not None:
+            return len(lines)
+    elif scope == 'target':
+        with open('{}/bug_{}.txt'.format(path_dir,bug_id),'r+') as f:
+            lines = f.readlines()
+        if lines is not None:
+            return len(lines)
     return None
 
 
@@ -2246,9 +2255,8 @@ if __name__ == "__main__":
     out='/home/ise/eran/D4j/oracle/P_Chart_B_4_M_U_D_Mon_Aug_20_01_02_31_2018/t=5/Chart/evosuite-branch/0'
     faulty_dir = '/home/ise/eran/D4j/out/OUT_Chart_D_Mon_Aug_20_01_02_16_2018/fault_components'
     zip ='/home/ise/eran/D4j/out/OUT_Chart_D_Mon_Aug_20_01_02_16_2018/P_Chart_B_4_M_U_D_Mon_Aug_20_01_02_31_2018/t=5/Chart/evosuite-branch/0/Chart-4f-evosuite-branch.0.tar.bz2'
-    #unzip_get_the_faulty_components('4','Chart',zip,faulty_dir,out)
-    #init_testing_pahse('/home/ise/eran/D4j/oracle','/oracle/','/out/')
-    #exit()
+
+
     args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
             -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
             -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
