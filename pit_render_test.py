@@ -121,12 +121,19 @@ def fix_bug_tests(root):
 
 def path_to_package(first, path, cut):
     arr = []
+    arr_newer=[]
     dim = 0
     while (path.find(first, dim) != -1):
         arr.append(path.find(first, dim))
         dim = path.find(first, dim) + len(first)
     if len(arr) != 1:
-        raise Exception('confilcet in path to package :', path, "with the key:", first)
+        for candidt in arr:
+            if path[candidt-1]=='/' and path[candidt+len(first)] =='/':
+                arr_newer.append(candidt)
+                continue
+        arr = arr_newer
+        if len(arr) != 1:
+            raise Exception('confilcet in path to package :', path, "with the key:", first)
     packa = path[arr[0]:]
     packa = str(packa).replace("/", '.')
     return packa[:cut]
@@ -181,5 +188,5 @@ def lcs(X, Y):
 # end of function lcs
 
 if __name__ == "__main__":
-
-    main(sys)
+    print "--- util script ----"
+    #main(sys)
