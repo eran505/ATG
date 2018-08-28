@@ -2102,7 +2102,7 @@ def wrapper_make_oracle_target_folder(root_package,out_dir_root,copy=True,debug=
             command_rm_test = 'rm -r '
             for dir_test in list_test:
                 print "[OS] {}{}/*".format(command_rm_test,dir_test)
-            os.system('{}{}/*'.format(command_rm_test,dir_test))
+                os.system('{}{}/*'.format(command_rm_test,dir_test))
             BUG_ID = str(bug_dir).split('/')[-1].split('_')[3]
             tar_files = pt.walk_rec(bug_dir,[],'tar.bz2')
             for tar_file in tar_files:
