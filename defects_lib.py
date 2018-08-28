@@ -1966,12 +1966,16 @@ def main_parser():
 
 def re_gen_broken_test(csv_path='/home/ise/eran/D4j/oracle/log.csv'):
     path_rel = '/'.join(str(csv_path).split('/')[:-1])
+    list_command = []
     df = pd.read_csv(csv_path, index_col=0)
     print len(df)
     df = df[df['msg'] != '[good]']
-    df['command'] = df.apply(bla,scope='package_only', axis=1)
-    df.to_csv('{}/log_broken.csv'.format(path_rel))
-    list_command = df['command'].tolist()
+    if len(df) == 0:
+        print "[py] no error test"
+    else:
+        df['command'] = df.apply(bla,scope='package_only', axis=1)
+        df.to_csv('{}/log_broken.csv'.format(path_rel))
+        list_command = df['command'].tolist()
     with open("{}/D4j_broken_test.sh".format(path_rel),'w+') as f:
         f.write('#!/usr/bin/env bash\n')
         f.write('\nATG="/home/ise/eran/repo/ATG/"\n\n')
@@ -2077,7 +2081,7 @@ def wrapper_make_oracle_target_folder(root_package,out_dir_root,copy=True,debug=
         copytree(root_package, out_dir_root)
     print "[py] done copy"
     log_dir_gen =  pt.mkdir_system(out_dir_root,'log_generated_tests',True)
-    file_out = pt.walk_rec(out_dir_root,[],'OUT',False,-1)
+    file_out = pt.walk_rec(out_dir_root,[],'OUT',False,-2)
     for out_dir in file_out:
         if debug:
             print "[Debug] {}".format(out_dir)
@@ -2228,7 +2232,7 @@ def extract_tar(path_in, path_out, f_name ,format_file='bz2',filter_only=None,co
                 tar.add(path_out, arcname='.')
     return bol,msg,filter_only,dico_test
 
-def add_actual_scope_size(bug_id,path_dir,scope):
+def add_actual_scope_size(bug_id,path_dir,scope='package_only'):
     '''
     add to a dataframe the number of scope that need to be generated
     '''
