@@ -1219,6 +1219,42 @@ class D4J_tool:
         self.out = None
         self.time_budget = time_b
 
+
+
+    def main_process(self, path=None):
+        if path is None:
+            if self.root_d4j[-1] == '/':
+                self.root_d4j = self.root_d4j[:-1]
+            self.out = self.make_out_dir(self.out_root)
+        else:
+            self.out = path
+        self.get_bug_rang_id()
+        self.get_map_dir()
+        self.make__csv()
+        self.generate_test()
+        out_list = self.get_all_tests()
+        self.run_tests(out_list)
+
+
+    def test_process(self,path_p):
+        '''
+        This function re_test all directories that hasn't been test yet
+
+        '''
+        self.out = path_p
+        out_list = self.get_all_tests()
+        new_out_list=[]
+        for item in out_list:
+            p_bug_dir = self.get_bug_id_dir_path(item['path'])
+            bol = self.test_dir_exsit(p_bug_dir)
+            if bol:
+                continue
+            new_out_list.append(item)
+        out_list = new_out_list
+        if len(out_list)==0:
+            return
+        self.run_tests(out_list)
+
     def analysis_existing_test_suite(self, path_to_dir):
         dico_list = []
         project_name = str(path_to_dir).split('/')[-1]
@@ -1439,19 +1475,6 @@ class D4J_tool:
             for item in list_item:
                 f.write(item + '\n')
 
-    def main_process(self, path=None):
-        if path is None:
-            if self.root_d4j[-1] == '/':
-                self.root_d4j = self.root_d4j[:-1]
-            self.out = self.make_out_dir(self.out_root)
-        else:
-            self.out = path
-        self.get_bug_rang_id()
-        self.get_map_dir()
-        self.make__csv()
-        self.generate_test()
-        out_list = self.get_all_tests()
-        self.run_tests(out_list)
 
     def process_str_time_budget(self, str_time):
         if str(str_time).__contains__('-'):
@@ -1520,6 +1543,21 @@ class D4J_tool:
             list_tar.append({'f_name': name, 'path': p_path, 'project': name_project, 'version': version,
                              'search_criteria': search_criteria, 'rep': rep_index})
         return list_tar
+
+    def get_bug_id_dir_path(self,path):
+        arr_folder_name = str(path).split('/')
+        ctr=0
+        for name in arr_folder_name :
+            if str(name).startswith('P_'):
+                break
+            ctr += 1
+        return '/'.join(arr_folder_name[:ctr+1])
+
+    def test_dir_exsit(self,path):
+        res = pt.walk_rec(path,[],'Test_P',False,lv=-2)
+        if len(res)>0:
+            return True
+        return False
 
     def run_tests(self, list_test_tar):
         '''
@@ -1630,7 +1668,7 @@ def init_testing_pahse(root_p,replace_new_str=None,replace_old_str=None):
                 if len(command_j ) < 1:
                     continue
                 command_j = command_j.replace('//', '/')
-                print "\n{}stdout:\t".format(command_j)
+                print "[OS] {}".format(command_j)
                 os.system(command_j)
 
 
@@ -1939,34 +1977,6 @@ def get_problamtic_dirs(root_path):
     return res
 
 
-def main_parser():
-    if len(sys.argv) == 1 :
-        print "--- no args given ---"
-        return
-    if sys.argv[1] == 'fixer':
-        fixer_maven(sys.argv[2])
-    elif sys.argv[1] == 'merg':
-        get_results()
-    elif sys.argv[1] == 'res':
-        get_results_junit(sys.argv[2])
-    elif sys.argv[1] == 'd4j':
-        sys.argv = sys.argv[1:]
-        init_main()
-    elif sys.argv[1] == 'oracle':
-        path_rel = '/'.join(str(sys.argv[2]).split('/')[:-1])
-        out_dir_oracle = pt.mkdir_system(path_rel, 'oracle', True)
-        wrapper_make_oracle_target_folder(sys.argv[2], out_dir_oracle)
-    elif sys.argv[1] == 'not_gen':
-        fix_error_no_gen_test(sys.argv[2])
-    elif sys.argv[1] == 'd4j_mvn':
-        sys.argv = sys.argv[1:]
-        main_wrapper()
-    elif sys.argv[1] == 'change_evo':
-        ver = sys.argv[2]
-        util_d4j.change_runtime_and_gen_jars(ver)
-    else:
-        print "undfiend command [d4j_mvn / d4j / fixer ] "
-
 
 
 def re_gen_broken_test(csv_path='/home/ise/eran/D4j/oracle/log.csv'):
@@ -2080,6 +2090,8 @@ def read_scope_test_gen(out_dir):
     return lines
 
 def wrapper_make_oracle_target_folder(root_package,out_dir_root,copy=True,debug=True):
+    if out_dir_root[-1]=='/':
+        out_dir_root=out_dir_root[:-1]
     d_list =[]
     print "[py] starting to copy dir-tree ...."
     if copy:
@@ -2128,6 +2140,9 @@ def wrapper_make_oracle_target_folder(root_package,out_dir_root,copy=True,debug=
     df = pd.DataFrame(d_list)
     df.to_csv('{}/log.csv'.format(out_dir_root))
     re_gen_broken_test('{}/log.csv'.format(out_dir_root))
+    name_new_dir = str(out_dir_root).split('/')[-1]
+    name_old_dir = out_dir_root.split('/')[-1]
+    init_testing_pahse(out_dir_root,name_new_dir,'out')
     return
 
 def log_gen_test(path,list_item,name):
@@ -2255,6 +2270,53 @@ def add_actual_scope_size(bug_id,path_dir,scope='package_only'):
     return None
 
 
+def main_parser():
+    if len(sys.argv) == 1 :
+        print "--- no args given ---"
+        return
+    if sys.argv[1] == 'fixer':
+        fixer_maven(sys.argv[2])
+    elif sys.argv[1] == 'merg':
+        get_results()
+    elif sys.argv[1] == 'res':
+        get_results_junit(sys.argv[2])
+    elif sys.argv[1] == 'd4j':
+        sys.argv = sys.argv[1:]
+        init_main()
+    elif sys.argv[1] == 'oracle':
+        path_rel = '/'.join(str(sys.argv[2]).split('/')[:-1])
+        out_dir_oracle = pt.mkdir_system(path_rel, 'oracle', True)
+        wrapper_make_oracle_target_folder(sys.argv[2], out_dir_oracle)
+    elif sys.argv[1] == 'not_gen':
+        fix_error_no_gen_test(sys.argv[2])
+    elif sys.argv[1] == 'd4j_mvn':
+        sys.argv = sys.argv[1:]
+        main_wrapper()
+    elif sys.argv[1] == 're_test':
+        if len(sys.argv)>2:
+            ver_path = sys.argv[2]
+        else:
+            ver_path = '/home/ise/eran/D4j/out'
+        re_test_OUT_dirs(ver_path)
+    elif sys.argv[1] == 'change_evo':
+        ver = sys.argv[2]
+        util_d4j.change_runtime_and_gen_jars(ver)
+    else:
+        print "undfiend command [d4j_mvn / d4j / fixer ] "
+
+def re_test_OUT_dirs(root_father_out):
+    out_dirs_list = pt.walk_rec(root_father_out,[],'OUT_',False,lv=-2)
+    dico_parm={'r':'','b':'','k':'','t':''}
+    for out_dir in out_dirs_list:
+        p_name = str(out_dir).split('/')[-1].split('_')[1]
+        dico_parm['o']=out_dir
+        dico_parm['p'] = p_name
+        obj_d4j = D4J_tool(out_dir=dico_parm['o'], project=dico_parm['p'], bug_range=dico_parm['r'],
+                           time_b=dico_parm['b'],
+                           csv_fp_path=dico_parm['k'], scope_p=dico_parm['t'], info_d=dico_parm)
+        obj_d4j.test_process(out_dir)
+
+
 
 if __name__ == "__main__":
     '''
@@ -2274,7 +2336,7 @@ if __name__ == "__main__":
     p_path = '/home/ise/Desktop/d4j_framework/out/OUT_Time_D_Sat_Jul_21_17_59_42_2018'
     p_path = '/home/ise/eran/eran_D4j'
     # get_problamtic_dirs(p_path)
-
+    #
     # get_faulty_comp()
     #
     # get_results_junit()
