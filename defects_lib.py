@@ -2297,7 +2297,7 @@ def main_parser():
             p_path = sys.argv[2]
         path_rel = '/'.join(str(p_path).split('/')[:-1])
         out_dir_oracle = pt.mkdir_system(path_rel, 'oracle', True)
-        wrapper_make_oracle_target_folder(sys.argv[2], out_dir_oracle)
+        wrapper_make_oracle_target_folder(p_path, out_dir_oracle)
     elif sys.argv[1] == 'not_gen':
         fix_error_no_gen_test(sys.argv[2])
     elif sys.argv[1] == 'd4j_mvn':
