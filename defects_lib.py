@@ -573,14 +573,15 @@ class Bug_4j:
 
 
 def before_op():
-    project_dict['Chart'] = {'project_name': "JFreechart", "num_bugs": 26, }
-    project_dict['Closure'] = {'project_name': "Closure compiler", "num_bugs": 133}
-    project_dict['Lang'] = {'project_name': "Apache commons-lang", "num_bugs": 65,
+    project_dict['Chart'] = {'project_name': "JFreechart", "num_bugs": 26, 'prefix': 'org'}
+    project_dict['Closure'] = {'project_name': "Closure compiler", "num_bugs": 133, 'prefix': 'com'}
+    project_dict['Lang'] = {'project_name': "Apache commons-lang", "num_bugs": 65, 'prefix': 'org',
                             'src': 'mvn', 'csv_prefix': ['src\\org\\', 'src\\main\\java\\']}
-    project_dict['Math'] = {'project_name': "Apache commons-math", "num_bugs": 106, 'src': 'mvn',
+    project_dict['Math'] = {'project_name': "Apache commons-math", "num_bugs": 106, 'src': 'mvn', 'prefix': 'org',
                             'csv_prefix': ['src\\org\\', 'src\\main\\java\\']}
-    project_dict['Mockito'] = {'project_name': "Mockito", "num_bugs": 38, 'src': 'gradle', 'csv_prefix': ['src\\org\\']}
-    project_dict['Time'] = {'project_name': "Joda-Time", "num_bugs": 27}
+    project_dict['Mockito'] = {'project_name': "Mockito", "num_bugs": 38, 'src': 'gradle', 'prefix': 'org',
+                               'csv_prefix': ['src\\org\\']}
+    project_dict['Time'] = {'project_name': "Joda-Time", 'prefix': 'org', "num_bugs": 27}
     # ############### builder dict ####################33
     builder_dict['mvn'] = {'class_p': '/target/classes/org/', 'evo_p': '/target/classes/'}
     builder_dict['ant'] = {'class_p': '/target/classes/org/', 'evo_p': '/target/classes/'}
@@ -1219,8 +1220,6 @@ class D4J_tool:
         self.out = None
         self.time_budget = time_b
 
-
-
     def main_process(self, path=None):
         if path is None:
             if self.root_d4j[-1] == '/':
@@ -1235,15 +1234,14 @@ class D4J_tool:
         out_list = self.get_all_tests()
         self.run_tests(out_list)
 
-
-    def test_process(self,path_p):
+    def test_process(self, path_p):
         '''
         This function re_test all directories that hasn't been test yet
 
         '''
         self.out = path_p
         out_list = self.get_all_tests()
-        new_out_list=[]
+        new_out_list = []
         for item in out_list:
             p_bug_dir = self.get_bug_id_dir_path(item['path'])
             bol = self.test_dir_exsit(p_bug_dir)
@@ -1251,7 +1249,7 @@ class D4J_tool:
                 continue
             new_out_list.append(item)
         out_list = new_out_list
-        if len(out_list)==0:
+        if len(out_list) == 0:
             return
         self.run_tests(out_list)
 
@@ -1475,7 +1473,6 @@ class D4J_tool:
             for item in list_item:
                 f.write(item + '\n')
 
-
     def process_str_time_budget(self, str_time):
         if str(str_time).__contains__('-'):
             arr = str(str_time).split('-')
@@ -1544,18 +1541,18 @@ class D4J_tool:
                              'search_criteria': search_criteria, 'rep': rep_index})
         return list_tar
 
-    def get_bug_id_dir_path(self,path):
+    def get_bug_id_dir_path(self, path):
         arr_folder_name = str(path).split('/')
-        ctr=0
-        for name in arr_folder_name :
+        ctr = 0
+        for name in arr_folder_name:
             if str(name).startswith('P_'):
                 break
             ctr += 1
-        return '/'.join(arr_folder_name[:ctr+1])
+        return '/'.join(arr_folder_name[:ctr + 1])
 
-    def test_dir_exsit(self,path):
-        res = pt.walk_rec(path,[],'Test_P',False,lv=-2)
-        if len(res)>0:
+    def test_dir_exsit(self, path):
+        res = pt.walk_rec(path, [], 'Test_P', False, lv=-2)
+        if len(res) > 0:
             return True
         return False
 
@@ -1657,20 +1654,19 @@ def get_all_results_D4j(root_path, out=None, name='results_D4j'):
         result.to_csv('{}/{}.csv'.format(out, name))
 
 
-def init_testing_pahse(root_p,replace_new_str=None,replace_old_str=None):
+def init_testing_pahse(root_p, replace_new_str=None, replace_old_str=None):
     all_command_test = pt.walk_rec(root_p, [], 'testing_commands.log.txt')
     for command_i_file in all_command_test:
         with open(command_i_file, 'r') as f:
             command_i = f.readlines()
             for command_j in command_i:
                 if replace_new_str != None:
-                    command_j = str(command_j).replace(replace_old_str,replace_new_str)
-                if len(command_j ) < 1:
+                    command_j = str(command_j).replace(replace_old_str, replace_new_str)
+                if len(command_j) < 1:
                     continue
                 command_j = command_j.replace('//', '/')
                 print "[OS] {}".format(command_j)
                 os.system(command_j)
-
 
 
 def get_results_junit(root_p, out=None, name='result_df'):
@@ -1977,8 +1973,6 @@ def get_problamtic_dirs(root_path):
     return res
 
 
-
-
 def re_gen_broken_test(csv_path='/home/ise/eran/D4j/oracle/log.csv'):
     path_rel = '/'.join(str(csv_path).split('/')[:-1])
     list_command = []
@@ -1988,10 +1982,10 @@ def re_gen_broken_test(csv_path='/home/ise/eran/D4j/oracle/log.csv'):
     if len(df) == 0:
         print "[py] no error test"
     else:
-        df['command'] = df.apply(bla,scope='package_only', axis=1)
+        df['command'] = df.apply(bla, scope='package_only', axis=1)
         df.to_csv('{}/log_broken.csv'.format(path_rel))
         list_command = df['command'].tolist()
-    with open("{}/D4j_broken_test.sh".format(path_rel),'w+') as f:
+    with open("{}/D4j_broken_test.sh".format(path_rel), 'w+') as f:
         f.write('#!/usr/bin/env bash\n')
         f.write('\nATG="/home/ise/eran/repo/ATG/"\n\n')
         for item in list_command:
@@ -1999,24 +1993,26 @@ def re_gen_broken_test(csv_path='/home/ise/eran/D4j/oracle/log.csv'):
 
 
 def fix_error_no_gen_test(path_to_file):
-    df = pd.read_csv(path_to_file,index_col=0)
-    path_rel='/'.join(str(path_to_file).split('/')[:-1])
+    df = pd.read_csv(path_to_file, index_col=0)
+    path_rel = '/'.join(str(path_to_file).split('/')[:-1])
     print list(df)
-    df['command'] = df.apply(bla,scope='package_only', axis=1)
+    df['command'] = df.apply(bla, scope='package_only', axis=1)
     list_command = df['command'].tolist()
-    with open("{}/D4j_script_no_gen.sh".format(path_rel),'w+') as f:
+    with open("{}/D4j_script_no_gen.sh".format(path_rel), 'w+') as f:
         f.write('#!/usr/bin/env bash\n')
         f.write('\nATG="/home/ise/eran/repo/ATG/"\n\n')
         for item in list_command:
             f.write('{}\n\n'.format(item))
 
 
-def bla(row,scope):
+def bla(row, scope):
     time = str(row['time_budget'])
     proj = str(row['project'])
     id_bug = str(row['bug_ID'])
-    command = 'sudo env "PATH=$PATH" python /home/ise/eran/repo/ATG/defects_lib.py d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b {0} -r {1}-{1} -o /home/ise/eran/D4j/out/ -t {3} -p {2} -k U'.format(time,id_bug,proj,scope)
+    command = 'sudo env "PATH=$PATH" python /home/ise/eran/repo/ATG/defects_lib.py d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b {0} -r {1}-{1} -o /home/ise/eran/D4j/out/ -t {3} -p {2} -k U'.format(
+        time, id_bug, proj, scope)
     return command
+
 
 def get_results(root='/home/ise/eran/eran_D4j'):
     '''
@@ -2084,21 +2080,22 @@ def read_scope_test_gen(out_dir):
     '''
     lines = None
     if os.path.isfile('{}/loging/scope.txt'.format(out_dir)):
-        with open('{}/loging/scope.txt'.format(out_dir),'r+') as f:
+        with open('{}/loging/scope.txt'.format(out_dir), 'r+') as f:
             lines = f.readlines()
             lines = lines[0]
     return lines
 
-def wrapper_make_oracle_target_folder(root_package,out_dir_root,copy=True,debug=True):
-    if out_dir_root[-1]=='/':
-        out_dir_root=out_dir_root[:-1]
-    d_list =[]
+
+def wrapper_make_oracle_target_folder(root_package, out_dir_root, copy=True, debug=True):
+    if out_dir_root[-1] == '/':
+        out_dir_root = out_dir_root[:-1]
+    d_list = []
     print "[py] starting to copy dir-tree ...."
     if copy:
         copytree(root_package, out_dir_root)
     print "[py] done copy"
-    log_dir_gen =  pt.mkdir_system(out_dir_root,'log_generated_tests',True)
-    file_out = pt.walk_rec(out_dir_root,[],'OUT',False,-2)
+    log_dir_gen = pt.mkdir_system(out_dir_root, 'log_generated_tests', True)
+    file_out = pt.walk_rec(out_dir_root, [], 'OUT', False, -2)
     for out_dir in file_out:
         if debug:
             print "[Debug] {}".format(out_dir)
@@ -2106,35 +2103,37 @@ def wrapper_make_oracle_target_folder(root_package,out_dir_root,copy=True,debug=
         scope_gen = read_scope_test_gen(out_dir)
         project_name = str(out_dir).split('/')[-1].split('_')[1]
         if os.path.isdir('{}/fault_components'.format(out_dir)):
-            dir_info='{}/fault_components'.format(out_dir)
+            dir_info = '{}/fault_components'.format(out_dir)
         else:
             raise Exception('No dir info: fault_components in path : {}'.format(out_dir))
-        list_bug_dir = pt.walk_rec(out_dir,[],'P_',False,lv=-1)
+        list_bug_dir = pt.walk_rec(out_dir, [], 'P_', False, lv=-1)
         for bug_dir in list_bug_dir:
             if debug:
                 print "[Debug] {}".format(bug_dir)
 
             # ram all TEST folder in the bug_dir
-            list_test = pt.walk_rec(bug_dir,[],'Test',False,lv=-2)
+            list_test = pt.walk_rec(bug_dir, [], 'Test', False, lv=-2)
             command_rm_test = 'rm -r '
             for dir_test in list_test:
-                print "[OS] {}{}/*".format(command_rm_test,dir_test)
-                os.system('{}{}/*'.format(command_rm_test,dir_test))
+                print "[OS] {}{}/*".format(command_rm_test, dir_test)
+                os.system('{}{}/*'.format(command_rm_test, dir_test))
             BUG_ID = str(bug_dir).split('/')[-1].split('_')[3]
-            tar_files = pt.walk_rec(bug_dir,[],'tar.bz2')
+            tar_files = pt.walk_rec(bug_dir, [], 'tar.bz2')
             for tar_file in tar_files:
-                it_number =  str(tar_file).split('/')[-1].split('.')[1]
+                it_number = str(tar_file).split('/')[-1].split('.')[1]
                 out = '/'.join(str(tar_file).split('/')[:-1])
                 time_budget = str(tar_file).split('t=')[1].split('/')[0]
-                d={'project':project_name,'bug_ID':BUG_ID,'time_budget':time_budget,'iteration':it_number}
-                bol,msg,faulty,gen_dico = unzip_get_the_faulty_components(BUG_ID,project_name,tar_file,dir_info,out,rm=True)
-                d['msg']=msg
+                d = {'project': project_name, 'bug_ID': BUG_ID, 'time_budget': time_budget, 'iteration': it_number}
+                bol, msg, faulty, gen_dico = unzip_get_the_faulty_components(BUG_ID, project_name, tar_file, dir_info,
+                                                                             out, rm=True)
+                d['msg'] = msg
                 d['boolean'] = bol
                 d['faulty'] = faulty
-                d['scope']=scope_gen
-                d['actual_scope_size'] = add_actual_scope_size(BUG_ID,dir_info)
+                d['scope'] = scope_gen
+                d['actual_scope_size'] = add_actual_scope_size(BUG_ID, dir_info)
                 d['generated tests'] = len(gen_dico)
-                path_log = log_gen_test(log_dir_gen,gen_dico.keys(),"{}_{}_{}".format(project_name,BUG_ID,it_number))
+                path_log = log_gen_test(log_dir_gen, gen_dico.keys(),
+                                        "{}_{}_{}".format(project_name, BUG_ID, it_number))
                 d['log_test_path'] = path_log
                 d_list.append(d)
     df = pd.DataFrame(d_list)
@@ -2142,17 +2141,20 @@ def wrapper_make_oracle_target_folder(root_package,out_dir_root,copy=True,debug=
     re_gen_broken_test('{}/log.csv'.format(out_dir_root))
     name_new_dir = str(out_dir_root).split('/')[-1]
     name_old_dir = out_dir_root.split('/')[-1]
-    init_testing_pahse(out_dir_root,name_new_dir,'out')
+    init_testing_pahse(out_dir_root, name_new_dir, 'out')
     return
 
-def log_gen_test(path,list_item,name):
+
+def log_gen_test(path, list_item, name):
     with open("{}/{}".format(path, '{}.log'.format(name)), 'a') as f:
         for item in list_item:
             f.write(item)
             f.write('\n')
     return "{}/{}".format(path, '{}.log'.format(name))
 
-def unzip_get_the_faulty_components(bug_id,project_name,path_zip_file,fault_dir_info,path_out,rm=False,debug=True):
+
+def unzip_get_the_faulty_components(bug_id, project_name, path_zip_file, fault_dir_info, path_out, rm=False,
+                                    debug=True):
     '''
     :param bug_id: the bug ID
     :param project_name:  project name
@@ -2163,107 +2165,112 @@ def unzip_get_the_faulty_components(bug_id,project_name,path_zip_file,fault_dir_
     :return:  False or True (indeicated if the function invoke in a good what) msg (info what go wrong) modify_class
     , generated_tests ky_package:[Test,_Test_scaffolding]
     '''
-    modified_classes =[]
+    modified_classes = []
     zip_name = str(path_zip_file).split('/')[-1]
     max_bug_id = project_dict[project_name]['num_bugs']
     if int(bug_id) > max_bug_id:
         msg = "[Error] the max bug id in " \
-              "project: {} is {} ---> bug_id:{}".format(project_name,max_bug_id,bug_id)
+              "project: {} is {} ---> bug_id:{}".format(project_name, max_bug_id, bug_id)
         print msg
-        return False,msg,None,None
-    if os.path.isfile('{}/bug_{}.txt'.format(fault_dir_info,bug_id)) is False:
-        msg="[Error] missing bug_{}.txt file in {}".format(bug_id,fault_dir_info)
+        return False, msg, None, None
+    if os.path.isfile('{}/bug_{}.txt'.format(fault_dir_info, bug_id)) is False:
+        msg = "[Error] missing bug_{}.txt file in {}".format(bug_id, fault_dir_info)
         print msg
-        return False,msg,None,None
-    with open('{}/bug_{}.txt'.format(fault_dir_info,bug_id),'r+') as f_bug:
+        return False, msg, None, None
+    with open('{}/bug_{}.txt'.format(fault_dir_info, bug_id), 'r+') as f_bug:
         for line in f_bug:
             modified_classes.append(line[:-1])
-    if len(modified_classes) < 1 :
-        msg ="[Error] the modified_classes is empty file: {} ".format('{}/bug_{}.txt'.format(bug_id))
+    if len(modified_classes) < 1:
+        msg = "[Error] the modified_classes is empty file: {} ".format('{}/bug_{}.txt'.format(bug_id))
         print msg
-        return False,msg,modified_classes,None
+        return False, msg, modified_classes, None
     if debug:
         print "[Debug] modified_classe:= {}".format(modified_classes)
-    return extract_tar(path_zip_file,path_out,filter_only=modified_classes,f_name=zip_name,del_tar=rm)
+    return extract_tar(path_zip_file, path_out, filter_only=modified_classes, f_name=zip_name, del_tar=rm,
+                       p_name=project_name)
 
 
-def GET_test_generated(path_tests):
-    dico_package_test= {}
+def GET_test_generated(path_tests, p_name):
+    dico_package_test = {}
     suffix = '_ESTest.java'
+    prefix_package = project_dict[p_name]['prefix']
     size_suffix = len(suffix)
     suffix_2 = '_ESTest_scaffolding.java'
     size_suffix_2 = len(suffix_2)
-    tests_res_l = pt.walk_rec(path_tests,[],'.java')
+    tests_res_l = pt.walk_rec(path_tests, [], '.java')
     for file_java in tests_res_l:
         java_name = str(file_java).split('/')[-1]
         if java_name.__contains__('scaffolding'):
-            package=pt.path_to_package('org',file_java,-size_suffix_2)
+            package = pt.path_to_package(prefix_package, file_java, -size_suffix_2)
         else:
-            package = pt.path_to_package('org',file_java,-size_suffix)
+            package = pt.path_to_package(prefix_package, file_java, -size_suffix)
         if package in dico_package_test:
             dico_package_test[package].append(file_java)
         else:
-            dico_package_test[package]=[file_java]
+            dico_package_test[package] = [file_java]
     return dico_package_test
 
-def extract_tar(path_in, path_out, f_name ,format_file='bz2',filter_only=None,compress=True,del_tar=False):
+
+def extract_tar(path_in, path_out, f_name, p_name ,format_file='bz2', filter_only=None, compress=True, del_tar=False,
+                ):
     '''
     this function heandel the process of extracting the zip files
     '''
     import tarfile
-    bol=True
-    msg='null'
-    tar = tarfile.open("{}".format(path_in), "r:{}".format(format_file) )
+    bol = True
+    msg = 'null'
+    tar = tarfile.open("{}".format(path_in), "r:{}".format(format_file))
     tar.extractall(path_out)
     tar.close()
-    dico_test = GET_test_generated(path_out)
+    dico_test = GET_test_generated(path_out, p_name)
     if filter_only is not None:
         ctr_rm = 0
-        for key_pack  in dico_test.keys():
+        for key_pack in dico_test.keys():
             list_path_test = dico_test[key_pack]
-            if key_pack  in filter_only:
+            if key_pack in filter_only:
                 continue
             else:
                 for path_test_i in list_path_test:
                     ctr_rm += 1
-                    command_rm ='rm {}'.format(path_test_i )
+                    command_rm = 'rm {}'.format(path_test_i)
                     print "[OS] {}".format(command_rm)
                     os.system(command_rm)
-        if ctr_rm == len(dico_test.keys())*2:
-            msg='[Error] all java file deleted --> {}'.format(path_in)
+        if ctr_rm == len(dico_test.keys()) * 2:
+            msg = '[Error] all java file deleted --> {}'.format(path_in)
             print msg
-            return False,msg,filter_only,dico_test
-        x = float((len(dico_test.keys())*2) - ctr_rm)/2.0
+            return False, msg, filter_only, dico_test
+        x = float((len(dico_test.keys()) * 2) - ctr_rm) / 2.0
         if x == float(len(filter_only)):
-            bol=True
-            msg='[good]'
+            bol = True
+            msg = '[good]'
         else:
-            bol=False
-            msg='[Error] not all modified_classes generated'
+            bol = False
+            msg = '[Error] not all modified_classes generated'
     if del_tar:
         command_rm = 'rm {}'.format(path_in)
         print '[OS] {}'.format(command_rm)
         os.system(command_rm)
     if compress:
-        dir_compress = pt.walk_rec(path_out,[],'',False,lv=-1)
-        if len(dir_compress )==1:
+        dir_compress = pt.walk_rec(path_out, [], '', False, lv=-1)
+        if len(dir_compress) == 1:
             target = dir_compress[0]
-            with tarfile.open("{}/{}".format(path_out,f_name), "w|{}".format(format_file) ) as tar:
+            with tarfile.open("{}/{}".format(path_out, f_name), "w|{}".format(format_file)) as tar:
                 tar.add(path_out, arcname='.')
-    return bol,msg,filter_only,dico_test
+    return bol, msg, filter_only, dico_test
 
-def add_actual_scope_size(bug_id,path_dir,scope='package_only'):
+
+def add_actual_scope_size(bug_id, path_dir, scope='package_only'):
     '''
     add to a dataframe the number of scope that need to be generated
     '''
     lines = None
-    if scope == 'package_only' or scope == 'package_rec' :
-        with open('{}/class_{}.txt'.format(path_dir,bug_id),'r+') as f:
+    if scope == 'package_only' or scope == 'package_rec':
+        with open('{}/class_{}.txt'.format(path_dir, bug_id), 'r+') as f:
             lines = f.readlines()
         if lines is not None:
             return len(lines)
     elif scope == 'target':
-        with open('{}/bug_{}.txt'.format(path_dir,bug_id),'r+') as f:
+        with open('{}/bug_{}.txt'.format(path_dir, bug_id), 'r+') as f:
             lines = f.readlines()
         if lines is not None:
             return len(lines)
@@ -2271,7 +2278,7 @@ def add_actual_scope_size(bug_id,path_dir,scope='package_only'):
 
 
 def main_parser():
-    if len(sys.argv) == 1 :
+    if len(sys.argv) == 1:
         print "--- no args given ---"
         return
     if sys.argv[1] == 'fixer':
@@ -2293,7 +2300,7 @@ def main_parser():
         sys.argv = sys.argv[1:]
         main_wrapper()
     elif sys.argv[1] == 're_test':
-        if len(sys.argv)>2:
+        if len(sys.argv) > 2:
             ver_path = sys.argv[2]
         else:
             ver_path = '/home/ise/eran/D4j/out'
@@ -2304,12 +2311,13 @@ def main_parser():
     else:
         print "undfiend command [d4j_mvn / d4j / fixer ] "
 
+
 def re_test_OUT_dirs(root_father_out):
-    out_dirs_list = pt.walk_rec(root_father_out,[],'OUT_',False,lv=-2)
-    dico_parm={'r':'','b':'','k':'','t':''}
+    out_dirs_list = pt.walk_rec(root_father_out, [], 'OUT_', False, lv=-2)
+    dico_parm = {'r': '', 'b': '', 'k': '', 't': ''}
     for out_dir in out_dirs_list:
         p_name = str(out_dir).split('/')[-1].split('_')[1]
-        dico_parm['o']=out_dir
+        dico_parm['o'] = out_dir
         dico_parm['p'] = p_name
         obj_d4j = D4J_tool(out_dir=dico_parm['o'], project=dico_parm['p'], bug_range=dico_parm['r'],
                            time_b=dico_parm['b'],
@@ -2317,16 +2325,14 @@ def re_test_OUT_dirs(root_father_out):
         obj_d4j.test_process(out_dir)
 
 
-
 if __name__ == "__main__":
     '''
     # sudo env "PATH=$PATH" python
     '''
     before_op()
-    out='/home/ise/eran/D4j/oracle/P_Chart_B_4_M_U_D_Mon_Aug_20_01_02_31_2018/t=5/Chart/evosuite-branch/0'
+    out = '/home/ise/eran/D4j/oracle/P_Chart_B_4_M_U_D_Mon_Aug_20_01_02_31_2018/t=5/Chart/evosuite-branch/0'
     faulty_dir = '/home/ise/eran/D4j/out/OUT_Chart_D_Mon_Aug_20_01_02_16_2018/fault_components'
-    zip ='/home/ise/eran/D4j/out/OUT_Chart_D_Mon_Aug_20_01_02_16_2018/P_Chart_B_4_M_U_D_Mon_Aug_20_01_02_31_2018/t=5/Chart/evosuite-branch/0/Chart-4f-evosuite-branch.0.tar.bz2'
-
+    zip = '/home/ise/eran/D4j/out/OUT_Chart_D_Mon_Aug_20_01_02_16_2018/P_Chart_B_4_M_U_D_Mon_Aug_20_01_02_31_2018/t=5/Chart/evosuite-branch/0/Chart-4f-evosuite-branch.0.tar.bz2'
 
     args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
             -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
@@ -2343,8 +2349,8 @@ if __name__ == "__main__":
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
     ### make_uniform_package_dict()
 
-    #args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
-    #sys.argv=args.split()
+    # args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
+    # sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)
     # main_wrapper(args)
