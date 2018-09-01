@@ -2291,7 +2291,11 @@ def main_parser():
         sys.argv = sys.argv[1:]
         init_main()
     elif sys.argv[1] == 'oracle':
-        path_rel = '/'.join(str(sys.argv[2]).split('/')[:-1])
+        if len(sys.argv) == 2:
+            p_path ='/home/ise/eran/D4j/out'
+        else:
+            p_path = sys.argv[2]
+        path_rel = '/'.join(str(p_path).split('/')[:-1])
         out_dir_oracle = pt.mkdir_system(path_rel, 'oracle', True)
         wrapper_make_oracle_target_folder(sys.argv[2], out_dir_oracle)
     elif sys.argv[1] == 'not_gen':
