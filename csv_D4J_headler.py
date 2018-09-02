@@ -118,7 +118,7 @@ def merge_oracle_out(p_name='Chart'):
     df_out = pd.read_csv(csv_out,index_col=0)
     log_oracle = pd.read_csv(oracle_dir_log_csv,index_col=0)
     df_acutal_size = pd.read_csv('{}/actual_size.csv'.format(dir_csvs),index_col=0)
-    df_faulty_info = pd.read_csv('/home/ise/eran/D4j/faulty_info.csv',index_col=0)
+    df_faulty_info = pd.read_csv('{}/faulty_info.csv'.format(dir_csvs),index_col=0)
     df_faulty_info.drop(['classes'], axis=1, inplace=True)
 
 
