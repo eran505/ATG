@@ -1670,6 +1670,7 @@ def init_testing_pahse(root_p, replace_new_str=None, replace_old_str=None):
 
 
 def get_results_junit(root_p, out=None, name='result_df'):
+    print root_p
     if root_p[-1]=='/':
         root_p=root_p[:-1]
     if out is None:
