@@ -1778,6 +1778,8 @@ def get_deff(dir_path):
                 d['bug'] = {'path': file_i}
             else:
                 raise Exception("[Error] the log file is not in the correct format -> {}".format(file_i))
+    else:
+        return d
     diff_bug, diff_fix = diff_function(d['bug']['path'], d['fix']['path'])
     d['bug']['diff'] = diff_bug
     d['fix']['diff'] = diff_fix
