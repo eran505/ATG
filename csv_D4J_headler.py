@@ -104,7 +104,7 @@ def uniform_vs_prefect_oracle(csv_path, allocation_mode_name ='allocation_mode',
 
 
 
-def merge_oracle_out(p_name='Chart'):
+def merge_oracle_out(p_name='Chart',zero=False):
     dir_csvs = pt.mkdir_system('/home/ise/eran/D4j','csv_dir',False)
     csv_out = '/home/ise/eran/D4j/out/{}__out.csv'.format(p_name)
     csv_oracle= '/home/ise/eran/D4j/oracle/{}__oracle.csv'.format(p_name)
@@ -145,18 +145,22 @@ def merge_oracle_out(p_name='Chart'):
     df_oracle_out['time_generating_tests'] = df_oracle_out['actual_size'] * df_oracle_out['time_budget']
 
     print len(df_oracle_out)
-
-    df_oracle_out = df_oracle_out[df_oracle_out['test_id']==1]
+    if zero:
+        df_oracle_out = df_oracle_out[df_oracle_out['test_id']==0]
+        append_str = '0'
+    else:
+        append_str = '1'
+        df_oracle_out = df_oracle_out[df_oracle_out['test_id'] == 1]
 
     print len(df_oracle_out)
 
-    df_oracle_out.to_csv('{}/df_oracle_out.csv'.format(dir_csvs))
+    df_oracle_out.to_csv('{}/df_oracle_out_{}.csv'.format(dir_csvs,append_str))
 
     df_oracle_out_target = df_oracle_out[df_oracle_out['scope'] == 'target']
     df_oracle_out_not_target = df_oracle_out[df_oracle_out['scope'] != 'target']
 
-    df_oracle_out_target.to_csv('{}/target.csv'.format(dir_csvs))
-    df_oracle_out_not_target.to_csv('{}/not_target.csv'.format(dir_csvs ))
+    df_oracle_out_target.to_csv('{}/target_{}.csv'.format(dir_csvs,append_str))
+    df_oracle_out_not_target.to_csv('{}/not_target_{}.csv'.format(dir_csvs ,append_str))
 
     df_oracle_out_target['package_info'] = df_oracle_out_target.apply(lambda row: make_comparison(row,df_oracle_out_not_target),axis=1)
 
@@ -164,7 +168,7 @@ def merge_oracle_out(p_name='Chart'):
     df_oracle_out_target['package_time_budget'] = df_oracle_out_target['package_info'].apply(lambda x: str(x).split('|')[1])
     df_oracle_out_target['package_total_time_gen'] = df_oracle_out_target['package_info'].apply(lambda x: str(x).split('|')[2])
     df_oracle_out_target.drop(['package_info'], axis=1, inplace=True)
-    df_oracle_out_target.to_csv('{}/result.csv'.format(dir_csvs))
+    df_oracle_out_target.to_csv('{}/{}_res_{}.csv'.format(dir_csvs,p_name,append_str))
 
 
 
@@ -358,5 +362,6 @@ if __name__ == "__main__":
     #exit()
     args = sys.argv
     if len(args) == 2 :
-        merge_oracle_out(args[1])
+        merge_oracle_out(args[1],False)
+        merge_oracle_out(args[1],True)
     #uniform_vs_prefect_oracle(p)
