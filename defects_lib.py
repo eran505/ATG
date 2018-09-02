@@ -1670,13 +1670,25 @@ def init_testing_pahse(root_p, replace_new_str=None, replace_old_str=None):
 
 
 def get_results_junit(root_p, out=None, name='result_df'):
+    if root_p[-1]=='/':
+        root_p=root_p[:-1]
     if out is None:
         out = '/'.join(str(root_p).split('/')[:-1])
+    dir_name = str(root_p).split('/')[-1]
+    father_dir = str(root_p).split('/')[-2]
+    scope_const = None
+    if father_dir == 'oracle':
+        scope_const = 'target'
+    name = "{}__{}".format(dir_name,father_dir)
     list_df = []
     list_df_class = []
-    name = str(root_p).split('/')[-1]
-    all_bugs_dir = pt.walk_rec(root_p, [], 'P_', False, lv=-2)
+    all_bugs_dir = pt.walk_rec(root_p, [], 'P_', False, lv=-3)
     for bug_folder in all_bugs_dir:
+        OUT_dir = "{}".format('/'.join(str(bug_folder).split('/')[:-1]))
+        if scope_const is None:
+            res_scope = read_scope_test_gen(OUT_dir)
+        else:
+            res_scope = scope_const
         time_folders = pt.walk_rec(bug_folder, [], 't=', False, lv=-1)
         bug_id = str(bug_folder).split('/')[-1].split('_')[3]
         mode_gen = str(bug_folder).split('/')[-1].split('_')[5]
@@ -1686,6 +1698,7 @@ def get_results_junit(root_p, out=None, name='result_df'):
             for item in test_dir:
                 if os.path.isfile("{}/bug_detection".format(item)):
                     d = {}
+                    d['scope'] = res_scope
                     d['bug_id'] = bug_id
                     d['gen_mode'] = mode_gen
                     d['time_budget'] = time_budget
@@ -1697,6 +1710,8 @@ def get_results_junit(root_p, out=None, name='result_df'):
                     if len(res) > 0:
                         df_tmp['buggy_test_case_fail (diff)'] = res['bug']['tests']
                         df_tmp['fixed_test_case_fail (diff)'] = res['fix']['tests']
+                        df_tmp['kill_binary'] = df_tmp.apply(binary_kill, axis=1)
+
                         # df_tmp['buggy_diff'] = res['bug']['diff']
                         # df_tmp['fixed_diff'] = res['fix']['diff']
                     for ky in d_class_tmp.keys():
@@ -1725,6 +1740,25 @@ def get_results_junit(root_p, out=None, name='result_df'):
         result.to_csv('{}/{}.csv'.format(out, name))
         if bol:
             df.to_csv('{}/{}_{}.csv'.format(out, 'class_allocation', name))
+
+
+def binary_kill(row,fix_col='fixed_test_case_fail (diff)',buggy_col='buggy_test_case_fail (diff)'):
+    '''
+    help to crate DataFrame killing col
+    '''
+    if row[fix_col] == '':
+        fix=0
+    else:
+        fix=1
+    if row[buggy_col]=='':
+        buggy=0
+    else:
+        buggy=1
+    if buggy==1 and fix==0:
+        return 1
+    else:
+        return 0
+
 
 
 def get_deff(dir_path):
@@ -2083,6 +2117,8 @@ def read_scope_test_gen(out_dir):
         with open('{}/loging/scope.txt'.format(out_dir), 'r+') as f:
             lines = f.readlines()
             lines = lines[0]
+    if lines[-1]=='\n':
+        lines=lines[:-1]
     return lines
 
 
@@ -2286,7 +2322,16 @@ def main_parser():
     elif sys.argv[1] == 'merg':
         get_results()
     elif sys.argv[1] == 'res':
-        get_results_junit(sys.argv[2])
+        if sys.argv[2] == 'all':
+            res_dir_oracle = pt.walk_rec('/home/ise/eran/D4j/oracle',[],'',False,lv=-1)
+            res_dir_out = pt.walk_rec('/home/ise/eran/D4j/out',[],'',False,lv=-1)
+            res_dir_oracle = [x for x in res_dir_oracle if str(x).split('/')[-1].__contains__('_') is False]
+            res_dir_out  = [x for x in res_dir_out if str(x).split('/')[-1].__contains__('_') is False]
+            all = res_dir_oracle + res_dir_out
+            for path in all :
+                get_results_junit(path)
+        else:
+            get_results_junit(sys.argv[2])
     elif sys.argv[1] == 'd4j':
         sys.argv = sys.argv[1:]
         init_main()
@@ -2354,7 +2399,8 @@ if __name__ == "__main__":
     ### make_uniform_package_dict()
 
     # args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
-    # sys.argv=args.split()
+    #args = 'py res all'
+    #sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)
     # main_wrapper(args)
