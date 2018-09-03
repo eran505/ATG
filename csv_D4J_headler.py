@@ -134,7 +134,7 @@ def merge_oracle_out(p_name='Chart',zero=False):
     df_oracle_out = pd.merge(df_oracle_out ,df_acutal_size,on=['bug_id','project_id','test_id'],how='inner')
     df_oracle_out = pd.merge(df_faulty_info ,df_oracle_out,on=['bug_id','project_id','scope'],how='inner')
 
-
+    df_oracle_out.to_csv('{}/DF_{}.csv'.format(dir_csvs,p_name))
     #TODO: clean all the empty rows wihtout using inner in the merge process
 
 
@@ -175,8 +175,6 @@ def merge_oracle_out(p_name='Chart',zero=False):
 def make_comparison(row_target,df_not_target):
     total_time = row_target['time_generating_tests']
     bug_id = row_target['bug_id']
-    print "bug id = {}".format(bug_id)
-    print 'total_time={}'.format(total_time)
     df_filter = df_not_target.loc[df_not_target['bug_id'] == bug_id]
     # df_filter = df_not_target[df_not_target['bug_id']==bug_id]
     df = df_filter[df_filter['time_generating_tests'] <= total_time ]
@@ -185,9 +183,6 @@ def make_comparison(row_target,df_not_target):
         val = df['time_generating_tests'].argmin()
     else:
         val = df['time_generating_tests'].argmax()
-    print "df_filter : size ==> ",len(df_filter)
-    #val = df['time_generating_tests'].argmax()
-    print df['time_generating_tests'].tolist()
     df = df.loc[val]
     kill = df['kill_binary']
     time = df['time_budget']
