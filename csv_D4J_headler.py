@@ -287,8 +287,9 @@ def get_avg_csv_file(df=None,path_csv_file='/home/ise/eran/out_csvs_D4j/smart/cs
     df.drop_duplicates(inplace=True)
     list_occur = df['count'].unique()
     list_occur = [int(x) for x in list_occur ]
-    max_occur = max(list_occur)
-    for x in range(1,max_occur,1):
+    max_occur = max(list_occur)+1
+    print "MAX X =",max_occur-1
+    for x in range(1,max_occur):
         df["rep_{}".format(x)] = df.apply(lambda row_i : make_rep(row=row_i,val=x),axis=1)
     return df
 
