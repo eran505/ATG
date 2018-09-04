@@ -307,7 +307,11 @@ def make_rep(row,val):
         res =  float(sum_i)/float(count_i)
         return res
     if val <= count_i:
-        return float(sum_i)/float(val)
+        res = float(sum_i)/float(val)
+        if res > 1:
+            return 1
+        else:
+            return res
     return None
 
 def apply_avg_func(row,list_df,list_col):
