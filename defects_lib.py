@@ -1747,11 +1747,11 @@ def binary_kill(row,fix_col='fixed_test_case_fail (diff)',buggy_col='buggy_test_
     '''
     help to crate DataFrame killing col
     '''
-    if row[fix_col] == '':
+    if row[fix_col] == '-':
         fix=0
     else:
         fix=1
-    if row[buggy_col]=='':
+    if row[buggy_col] == '-':
         buggy=0
     else:
         buggy=1
@@ -1785,6 +1785,10 @@ def get_deff(dir_path):
     d['fix']['diff'] = diff_fix
     d['fix']['tests'] = ':'.join(get_regex_res(diff_fix, 'test\d+'))
     d['bug']['tests'] = ':'.join(get_regex_res(diff_bug, 'test\d+'))
+    if len(d['fix']['tests']) == 0:
+        d['fix']['tests']='-'
+    if len(d['bug']['tests']) == 0:
+        d['bug']['tests'] = '-'
     return d
 
 
@@ -1814,16 +1818,15 @@ def diff_function(file_one, file_two):
     diff1 = [line for line in f1 if line not in f2]  # lines present only in f1
     diff2 = [line for line in f2 if line not in f1]  # lines present only in f2
 
-    if len(diff2) > 0:
-        print ""
+
 
     if len(diff1) == 0:
-        diff1 = ''
+        diff1 = '-'
     else:
         diff1 = '\n'.join(diff1)
         diff1 = diff1.replace(',', '|')
     if len(diff2) == 0:
-        diff2 = ''
+        diff2 = '-'
     else:
         diff2 = '\n'.join(diff2)
         diff2 = diff2.replace(',', '|')
@@ -2324,6 +2327,9 @@ def main_parser():
         fixer_maven(sys.argv[2])
     elif sys.argv[1] == 'merg':
         get_results()
+    elif sys.argv[1]=='T':
+        if str(sys.argv[2]).__contains__('oracle'):
+            init_testing_pahse(sys.argv[2],'oracle')
     elif sys.argv[1] == 'res':
         if sys.argv[2] == 'all':
             res_dir_oracle = pt.walk_rec('/home/ise/eran/D4j/oracle',[],'',False,lv=-1)
@@ -2402,8 +2408,8 @@ if __name__ == "__main__":
     ### make_uniform_package_dict()
 
     # args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
-    #args = 'py res all'
-    #sys.argv=args.split()
+   # args = 'py res all'
+   # sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)
     # main_wrapper(args)

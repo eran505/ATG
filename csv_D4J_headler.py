@@ -249,6 +249,69 @@ def get_df_size_actual_out(p_dir_path='/home/ise/D4j/oracle/log_generated_tests'
         print "[Error] no file to process found in the given path : {}".format(p_dir_path)
 
 
+def get_avg_csv_file(path_csv_file='/home/ise/eran/out_csvs_D4j/smart/csv_dir/DF_Mockito.csv',rep=2):
+    import random
+    namnew_col = "kill_rep_{}".format(rep)
+    if rep < 1 :
+        print "rep must be grater then 1 : rep={}".format(rep)
+        return None
+    df = pd.read_csv(path_csv_file,index_col=0)
+    df.to_csv('{}/orginal_df.csv'.format('/home/ise/eran'))
+    list_uniqe = df['test_id'].unique()
+    if rep > len(list_uniqe):
+        print "[msg] rep was grater then the unique val rep equle now to max "
+        rep = len(list_uniqe)
+    group_of_items = list_uniqe  # a sequence or set will work here.
+    num_to_select = rep  # set the number to select here.
+    list_of_random_items = random.sample(group_of_items, num_to_select)
+    print list_of_random_items
+    ky_name_col = ['bug_id','project_id','scope','size_scope','gen_mode','time_budget','actual_size']
+    #ky_name_col.remove('kill_binary')
+    df_it_list = []
+    df= df[['bug_id','project_id','scope','size_scope','gen_mode','kill_binary','time_budget','actual_size']]
+    #for item in list_of_random_items:
+    #    df_it_list.append(df[df['test_id']==item])
+    df_copy = df.copy(deep=True)
+    df_copy.to_csv('{}/df_copy.csv'.format('/home/ise/eran'))
+    df['sum'] = df_copy.groupby(ky_name_col).transform('sum')
+    df['count'] = df_copy.groupby(ky_name_col).transform('count')
+
+    #df.drop_duplicates(inplace=True)
+    #sub_df.to_csv('{}/sub.csv'.format('/home/ise/eran'))
+    #df.to_csv('{}/df_b.csv'.format('/home/ise/eran'))
+    #arr_key = ['bug_id','project_id','scope','size_scope','gen_mode','time_budget','actual_size']
+    #df = df.join(df.groupby(arr_key).sum(), on=arr_key, rsuffix='_r')
+    #df = df.groupby(arr_key).sum()
+    df.to_csv('{}/df.csv'.format('/home/ise/eran'))
+
+    list_col = list(df)
+
+    #for df_i in df_it_list:
+    #    print list(df_i)
+    #df['kill_binary'] = df.apply(lambda row : apply_avg_func(row,df_it_list,list_col),axis=1)
+    exit()
+
+
+
+
+def apply_avg_func(row,list_df,list_col):
+    for col in list_col:
+        for df_i in list_df:
+            df_i.loc[df_i[col] == row[col]]
+    list_kill=[]
+    for df_i in list_df:
+        if len(df_i)==0:
+            continue
+        print "df_i: ",len(df_i)
+        #print df_i.to_csv('{}/df_i.csv'.format('/home/ise/eran'))
+        list_kill.append(df_i['kill_binary'])
+    res_kill=0
+    for kill in list_kill:
+        res_kill+=kill
+    if res_kill>0:
+        return 1
+    return 0
+
 def binary_kill(row,fix_col='fixed_test_case_fail (diff)',buggy_col='buggy_test_case_fail (diff)'):
     if row[fix_col] == '':
         fix=0
@@ -350,12 +413,14 @@ need to go over all the bug ID and extract the fault class and all its package c
 '''
 import sys
 if __name__ == "__main__":
+    #get_avg_csv_file()
     p='/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.csv'
     p = '/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.tsv'
     p='/home/ise/eran/math/D4J_MATH - Sheet2.tsv'
     #get_package_csv('/home/ise/eran/eran_D4j/MATH_t=2')
     #exit()
     args = sys.argv
+    #args ='py Chart'.split()
     if len(args) == 2 :
         merge_oracle_out(args[1],False)
         merge_oracle_out(args[1],True)
