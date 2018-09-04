@@ -165,7 +165,7 @@ def merge_oracle_out(p_name='Chart',Debug=True):
         df_oracle_out_target["package_{}".format(col)] = df_oracle_out_target['package_kill'].apply(lambda val: split_info(val=val,col_name=col))
 
     df_oracle_out_target.to_csv('{}/{}_res.csv'.format(dir_csvs,p_name))
-
+    print "\n\n\n----DONE----\n\n\n"
 
 def split_info(val,col_name):
     arr = str(val).split('|')
