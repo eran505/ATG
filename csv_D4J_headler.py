@@ -104,7 +104,7 @@ def uniform_vs_prefect_oracle(csv_path, allocation_mode_name ='allocation_mode',
 
 
 
-def merge_oracle_out(p_name='Chart',zero=False):
+def merge_oracle_out(p_name='Chart',Debug=True):
     dir_csvs = pt.mkdir_system('/home/ise/eran/D4j','csv_dir',False)
     csv_out = '/home/ise/eran/D4j/out/{}__out.csv'.format(p_name)
     csv_oracle= '/home/ise/eran/D4j/oracle/{}__oracle.csv'.format(p_name)
@@ -133,43 +133,47 @@ def merge_oracle_out(p_name='Chart',zero=False):
     df_oracle_out = pd.concat([df_oracle,df_out])
     df_oracle_out = pd.merge(df_oracle_out ,df_acutal_size,on=['bug_id','project_id','test_id'],how='inner')
     df_oracle_out = pd.merge(df_faulty_info ,df_oracle_out,on=['bug_id','project_id','scope'],how='inner')
-
+    if Debug:
+        print "df_oracle_out Befor clean Nan in [kill_binary] size: {}".format(len(df_oracle_out ))
+    df_oracle_out = df_oracle_out[np.isfinite(df_oracle_out['kill_binary'])]
+    if Debug:
+        print "df_oracle_out After clean Nan in [kill_binary] size: {}".format(len(df_oracle_out ))
     df_oracle_out.to_csv('{}/DF_{}.csv'.format(dir_csvs,p_name))
     #TODO: clean all the empty rows wihtout using inner in the merge process
+    df_oracle_out.to_csv('{}/df_B.csv'.format(dir_csvs))
+    df_oracle_out = get_avg_csv_file(df_oracle_out)
 
-
-    print df_oracle_out['test_id'].unique()
 
     df_oracle_out.loc[df_oracle_out['scope'] == 'target', 'actual_size'] = df_oracle_out['size_scope']
-
     df_oracle_out['time_generating_tests'] = df_oracle_out['actual_size'] * df_oracle_out['time_budget']
 
-    print len(df_oracle_out)
-    if zero:
-        df_oracle_out = df_oracle_out[df_oracle_out['test_id']==0]
-        append_str = '0'
-    else:
-        append_str = '1'
-        df_oracle_out = df_oracle_out[df_oracle_out['test_id'] == 1]
 
-    print len(df_oracle_out)
 
-    df_oracle_out.to_csv('{}/df_oracle_out_{}.csv'.format(dir_csvs,append_str))
+    df_oracle_out.to_csv('{}/df_A.csv'.format(dir_csvs))
+    list_rep = list(df_oracle_out)
+    list_rep = [x for x in list_rep if str(x).__contains__('rep_')]
 
     df_oracle_out_target = df_oracle_out[df_oracle_out['scope'] == 'target']
     df_oracle_out_not_target = df_oracle_out[df_oracle_out['scope'] != 'target']
-
-    df_oracle_out_target.to_csv('{}/target_{}.csv'.format(dir_csvs,append_str))
-    df_oracle_out_not_target.to_csv('{}/not_target_{}.csv'.format(dir_csvs ,append_str))
-
+    df_oracle_out_target.to_csv('{}/target.csv'.format(dir_csvs))
+    df_oracle_out_not_target.to_csv('{}/not_target.csv'.format(dir_csvs))
     df_oracle_out_target['package_info'] = df_oracle_out_target.apply(lambda row: make_comparison(row,df_oracle_out_not_target),axis=1)
+    df_oracle_out_target['package_total_time_gen'] = df_oracle_out_target['package_info'].apply(lambda x: str(x).split('|')[-1])
+    df_oracle_out_target['package_time_budget'] = df_oracle_out_target['package_info'].apply(lambda x: str(x).split('|')[-2])
+    df_oracle_out_target['package_kill'] = df_oracle_out_target['package_info'].apply(lambda x : '|'.join(str(x).split('|')[:-2]))
+    for col in list_rep:
+        df_oracle_out_target["package_{}".format(col)] = df_oracle_out_target['package_kill'].apply(lambda val: split_info(val=val,col_name=col))
 
-    df_oracle_out_target['package_kill'] = df_oracle_out_target['package_info'].apply(lambda x : str(x).split('|')[0])
-    df_oracle_out_target['package_time_budget'] = df_oracle_out_target['package_info'].apply(lambda x: str(x).split('|')[1])
-    df_oracle_out_target['package_total_time_gen'] = df_oracle_out_target['package_info'].apply(lambda x: str(x).split('|')[2])
-    df_oracle_out_target.drop(['package_info'], axis=1, inplace=True)
-    df_oracle_out_target.to_csv('{}/{}_res_{}.csv'.format(dir_csvs,p_name,append_str))
+    df_oracle_out_target.to_csv('{}/{}_res.csv'.format(dir_csvs,p_name))
 
+
+def split_info(val,col_name):
+    arr = str(val).split('|')
+    for x in arr:
+        split_info_val = str(x).split('-')
+        if col_name == split_info_val[0]:
+            return split_info_val[1]
+    return 'err'
 
 
 def make_comparison(row_target,df_not_target):
@@ -183,10 +187,14 @@ def make_comparison(row_target,df_not_target):
         val = df['time_generating_tests'].argmin()
     else:
         val = df['time_generating_tests'].argmax()
-    df = df.loc[val]
-    kill = df['kill_binary']
-    time = df['time_budget']
-    total = df['time_generating_tests']
+    list_rep = list(df)
+    list_rep = [x for x in list_rep if str(x).__contains__('rep_')]
+    res_kill = []
+    for col in list_rep:
+        res_kill.append("{}-{}".format(col,df.loc[val][col]) )
+    kill = '|'.join(res_kill)
+    time = df.loc[val]['time_budget']
+    total = df.loc[val]['time_generating_tests']
     return "{}|{}|{}".format(kill,time,total)
 
 def get_fualty_components(path_dir,out_dir_path):
@@ -249,50 +257,52 @@ def get_df_size_actual_out(p_dir_path='/home/ise/D4j/oracle/log_generated_tests'
         print "[Error] no file to process found in the given path : {}".format(p_dir_path)
 
 
-def get_avg_csv_file(path_csv_file='/home/ise/eran/out_csvs_D4j/smart/csv_dir/DF_Mockito.csv',rep=2):
+def get_avg_csv_file(df=None,path_csv_file='/home/ise/eran/out_csvs_D4j/smart/csv_dir/DF_Mockito.csv'):
     import random
-    namnew_col = "kill_rep_{}".format(rep)
-    if rep < 1 :
-        print "rep must be grater then 1 : rep={}".format(rep)
-        return None
-    df = pd.read_csv(path_csv_file,index_col=0)
-    df.to_csv('{}/orginal_df.csv'.format('/home/ise/eran'))
-    list_uniqe = df['test_id'].unique()
-    if rep > len(list_uniqe):
-        print "[msg] rep was grater then the unique val rep equle now to max "
-        rep = len(list_uniqe)
-    group_of_items = list_uniqe  # a sequence or set will work here.
-    num_to_select = rep  # set the number to select here.
-    list_of_random_items = random.sample(group_of_items, num_to_select)
-    print list_of_random_items
+    if df is None:
+        df = pd.read_csv(path_csv_file, index_col=0)
+    #path_csv_file = '/home/ise/eran/D4j/csv_dir/DF_Chart.csv'
+    #namnew_col = "kill_rep_{}".format(rep)
+    #if rep < 1 :
+    #    print "rep must be grater then 1 : rep={}".format(rep)
+    #    return None
+    #df = pd.read_csv(path_csv_file,index_col=0)
+    #df.to_csv('{}/orginal_df.csv'.format('/home/ise/eran'))
+    #list_uniqe = df['test_id'].unique()
+    #if rep > len(list_uniqe):
+    #    print "[msg] rep was grater then the unique val rep equle now to max "
+    #    rep = len(list_uniqe)
+    #group_of_items = list_uniqe  # a sequence or set will work here.
+    #num_to_select = rep  # set the number to select here.
+    #list_of_random_items = random.sample(group_of_items, num_to_select)
+    #print list_of_random_items
     ky_name_col = ['bug_id','project_id','scope','size_scope','gen_mode','time_budget','actual_size']
-    #ky_name_col.remove('kill_binary')
-    df_it_list = []
     df= df[['bug_id','project_id','scope','size_scope','gen_mode','kill_binary','time_budget','actual_size']]
-    #for item in list_of_random_items:
-    #    df_it_list.append(df[df['test_id']==item])
     df_copy = df.copy(deep=True)
     df_copy.to_csv('{}/df_copy.csv'.format('/home/ise/eran'))
     df['sum'] = df_copy.groupby(ky_name_col).transform('sum')
     df['count'] = df_copy.groupby(ky_name_col).transform('count')
+    df.drop_duplicates(inplace=True)
+    list_occur = df['count'].unique()
+    list_occur = [int(x) for x in list_occur ]
+    for x in list_occur:
+        df["rep_{}".format(x)] = df.apply(lambda row_i : make_rep(row=row_i,val=x),axis=1)
 
-    #df.drop_duplicates(inplace=True)
-    #sub_df.to_csv('{}/sub.csv'.format('/home/ise/eran'))
-    #df.to_csv('{}/df_b.csv'.format('/home/ise/eran'))
-    #arr_key = ['bug_id','project_id','scope','size_scope','gen_mode','time_budget','actual_size']
-    #df = df.join(df.groupby(arr_key).sum(), on=arr_key, rsuffix='_r')
-    #df = df.groupby(arr_key).sum()
-    df.to_csv('{}/df.csv'.format('/home/ise/eran'))
-
-    list_col = list(df)
-
-    #for df_i in df_it_list:
-    #    print list(df_i)
-    #df['kill_binary'] = df.apply(lambda row : apply_avg_func(row,df_it_list,list_col),axis=1)
-    exit()
+    return df
 
 
-
+def make_rep(row,val):
+    count_i = row['count']
+    sum_i = row['sum']
+    if val <= count_i:
+        #print "sum_i={}".format(sum_i)
+        #print "count_i={}".format(count_i)
+        res =  float(sum_i)/float(count_i)
+        if res > 1:
+            return float(1)
+        else:
+            return res
+    return None
 
 def apply_avg_func(row,list_df,list_col):
     for col in list_col:
@@ -303,7 +313,6 @@ def apply_avg_func(row,list_df,list_col):
         if len(df_i)==0:
             continue
         print "df_i: ",len(df_i)
-        #print df_i.to_csv('{}/df_i.csv'.format('/home/ise/eran'))
         list_kill.append(df_i['kill_binary'])
     res_kill=0
     for kill in list_kill:
@@ -420,8 +429,7 @@ if __name__ == "__main__":
     #get_package_csv('/home/ise/eran/eran_D4j/MATH_t=2')
     #exit()
     args = sys.argv
-    #args ='py Chart'.split()
+    # args ='py Chart'.split()
     if len(args) == 2 :
-        merge_oracle_out(args[1],False)
-        merge_oracle_out(args[1],True)
+        merge_oracle_out(args[1])
     #uniform_vs_prefect_oracle(p)
