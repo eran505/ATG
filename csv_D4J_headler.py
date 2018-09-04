@@ -184,11 +184,11 @@ def make_comparison(row_target,df_not_target):
     df = df_filter[df_filter['time_generating_tests'] <= total_time ]
     if len(df) == 0 :
         df = df_filter[df_filter['time_generating_tests'] >= total_time]
+        if len(df) == 0:
+            return '{}|{}|{}'.format(None, None, None)
         val = df['time_generating_tests'].argmin()
     else:
         val = df['time_generating_tests'].argmax()
-    if len(df) == 0 :
-        return '{}|{}|{}'.format(None,None,None)
     list_rep = list(df)
     list_rep = [x for x in list_rep if str(x).__contains__('rep_')]
     res_kill = []
