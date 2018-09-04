@@ -140,7 +140,6 @@ def merge_oracle_out(p_name='Chart',Debug=True):
         print "df_oracle_out After clean Nan in [kill_binary] size: {}".format(len(df_oracle_out ))
     df_oracle_out.to_csv('{}/DF_{}.csv'.format(dir_csvs,p_name))
     #TODO: clean all the empty rows wihtout using inner in the merge process
-    df_oracle_out.to_csv('{}/df_B.csv'.format(dir_csvs))
     df_oracle_out = get_avg_csv_file(df_oracle_out)
 
 
@@ -149,20 +148,23 @@ def merge_oracle_out(p_name='Chart',Debug=True):
 
 
 
-    df_oracle_out.to_csv('{}/df_A.csv'.format(dir_csvs))
+    df_oracle_out.to_csv('{}/{}_GroupBy.csv'.format(dir_csvs,p_name))
     list_rep = list(df_oracle_out)
     list_rep = [x for x in list_rep if str(x).__contains__('rep_')]
 
     df_oracle_out_target = df_oracle_out[df_oracle_out['scope'] == 'target']
     df_oracle_out_not_target = df_oracle_out[df_oracle_out['scope'] != 'target']
-    df_oracle_out_target.to_csv('{}/target.csv'.format(dir_csvs))
-    df_oracle_out_not_target.to_csv('{}/not_target.csv'.format(dir_csvs))
+    #df_oracle_out_target.to_csv('{}/target.csv'.format(dir_csvs))
+    #df_oracle_out_not_target.to_csv('{}/not_target.csv'.format(dir_csvs))
     df_oracle_out_target['package_info'] = df_oracle_out_target.apply(lambda row: make_comparison(row,df_oracle_out_not_target),axis=1)
     df_oracle_out_target['package_total_time_gen'] = df_oracle_out_target['package_info'].apply(lambda x: str(x).split('|')[-1])
     df_oracle_out_target['package_time_budget'] = df_oracle_out_target['package_info'].apply(lambda x: str(x).split('|')[-2])
     df_oracle_out_target['package_kill'] = df_oracle_out_target['package_info'].apply(lambda x : '|'.join(str(x).split('|')[:-2]))
     for col in list_rep:
         df_oracle_out_target["package_{}".format(col)] = df_oracle_out_target['package_kill'].apply(lambda val: split_info(val=val,col_name=col))
+
+    df_oracle_out_target.drop('package_info', axis=1, inplace=True)
+    df_oracle_out_target.drop('package_kill', axis=1, inplace=True)
 
     df_oracle_out_target.to_csv('{}/{}_res.csv'.format(dir_csvs,p_name))
     print "\n\n\n----DONE----\n\n\n"
@@ -294,20 +296,18 @@ def get_avg_csv_file(df=None,path_csv_file='/home/ise/eran/out_csvs_D4j/smart/cs
         print "rep_{}".format(x)
         print '-'*100
         df["rep_{}".format(x)] = df.apply(lambda row_i : make_rep(row=row_i,val=x),axis=1)
+    df["rep_avg".format(x)] = df.apply(lambda row_i: make_rep(row=row_i, val='avg'), axis=1)
     return df
 
 
 def make_rep(row,val):
     count_i = row['count']
     sum_i = row['sum']
-    if val <= count_i:
-        #print "sum_i={}".format(sum_i)
-        #print "count_i={}".format(count_i)
+    if val == 'avg':
         res =  float(sum_i)/float(count_i)
-        if res > 1:
-            return float(1)
-        else:
-            return res
+        return res
+    if val <= count_i:
+        return float(sum_i)/float(val)
     return None
 
 def apply_avg_func(row,list_df,list_col):
@@ -435,7 +435,7 @@ if __name__ == "__main__":
     #get_package_csv('/home/ise/eran/eran_D4j/MATH_t=2')
     #exit()
     args = sys.argv
-    # args ='py Chart'.split()
+   #w args ='py Chart'.split()
     if len(args) == 2 :
         merge_oracle_out(args[1])
     #uniform_vs_prefect_oracle(p)
