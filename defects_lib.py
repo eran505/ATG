@@ -1181,6 +1181,60 @@ def get_FP_csv_by_ID(dir, flag='apache'):
 
     exit()
 
+def make_target_mvn_framework(p_path='/home/ise/eran/eran_D4j',p_name='Math'):
+    if os.path.isdir(p_path) is False:
+        print "[Error] the given path is not a valid dir -> {}".format(p_path)
+        return
+    list_info_bug = get_faulty_comp_defe4j_dir(p_name)
+    if len(list_info_bug) == 0:
+        print "[Error] cant make the info csv "
+        return
+    df = pd.DataFrame(list_info_bug)
+    df.to_csv('{}/info_faulty_comp.csv'.format(p_path))
+    #df = None # naive freeing the memory
+    bug_dirs = pt.walk_rec(p_path,[],"P_",False,lv=-3)
+    for bug_dir_i in bug_dirs:
+        print "---{}---".format(bug_dir_i)
+        out = pt.mkdir_system(bug_dir_i,'TARGET',True)
+        merge_csv_path = '{}/csvs/merge.csv'.format(bug_dir_i)
+        if os.path.isfile(merge_csv_path) is False:
+            continue
+        df_merge = pd.read_csv(merge_csv_path)
+        df_merge['class_name'] = df_merge['name'].apply(lambda x: str(x)[5:])
+        cur_bug_id = str(bug_dir_i).split('/')[-1].split('_')[3]
+        cur_project = str(bug_dir_i).split('/')[-1].split('_')[1]
+        filter_info = df.loc[df['bug_ID'] == cur_bug_id ]
+        if len(filter_info) != 1:
+            print '[Error] the filter csv is differ from one --> len = {}'.format(len(filter_info))
+            return
+        modified_comp_str = filter_info['classes']
+        modified_arry = str(modified_comp_str).split('--')
+        with open("{}/modified_comp.txt".format(out),'w+') as f:
+            for item in modified_arry:
+                f.write(item+'\n')
+        filter_target = df_merge.loc[df_merge['class_name'].isin(modified_arry)]
+        if len(filter_info)>0:
+            filter_target.to_csv("{}/target.csv".format(out))
+
+
+
+
+
+def get_faulty_comp_defe4j_dir(p_name='Math',dir_d4j='/home/ise/programs/defects4j/framework/projects')
+    faluty_comp_dir = '/home/ise/programs/defects4j/framework/projects/{}/modified_classes'.format(p_name)
+    list_files_src = pt.walk_rec(faluty_comp_dir,[],'.src')
+    list_bug_info=[]
+    for file_i in list_files_src:
+        d={}
+        bug_number = str(file_i).split('/')[-1].split('.')[0]
+        d['bug_ID'] = bug_number
+        d['project'] = p_name
+        with open(file_i,'r+') as f:
+            lines = f.readlines()
+        d['classes'] = '--'.join(lines)
+        list_bug_info.append(d)
+    return list_bug_info
+
 
 def get_package_name(name):
     res = '.'.join(str(name).split('.')[:-1])
@@ -2354,6 +2408,9 @@ def main_parser():
         wrapper_make_oracle_target_folder(p_path, out_dir_oracle)
     elif sys.argv[1] == 'not_gen':
         fix_error_no_gen_test(sys.argv[2])
+    elif sys.argv[1] == 'mvn_target':
+        project_name = sys.argv[2]
+        make_target_mvn_framework(p_name=project_name)
     elif sys.argv[1] == 'd4j_mvn':
         sys.argv = sys.argv[1:]
         main_wrapper()

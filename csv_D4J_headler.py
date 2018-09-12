@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import pit_render_test as pt
 import os
+from math import pow
 
 '''
 This script handel the csv operation on the D4J exp
@@ -140,6 +141,26 @@ def merge_oracle_out(p_name='Chart',Debug=True):
         print "df_oracle_out After clean Nan in [kill_binary] size: {}".format(len(df_oracle_out ))
     df_oracle_out.to_csv('{}/DF_{}.csv'.format(dir_csvs,p_name))
     #TODO: clean all the empty rows wihtout using inner in the merge process
+    second_pahse_merge_oracle_out(df_oracle_out,p_name,dir_csvs)
+
+
+
+def get_df_DF_by_project_name(p_path='/home/ise/eran/out_csvs_D4j',p_name='Time'):
+    res_list_df = pt.walk_rec(p_path,[],'DF_{}'.format(p_name))
+    out_dir = pt.mkdir_system('/home/ise/eran/out_csvs_D4j/project',p_name,True)
+    list_df = []
+    print res_list_df
+    for csv_path in res_list_df:
+        df = pd.read_csv(csv_path,index_col=0)
+        list_df.append(df)
+    df_oracle_out = pd.concat(list_df)
+    df_oracle_out.to_csv('{}/concat_{}.csv'.format(out_dir, p_name))
+    df_oracle_out = df_oracle_out.reset_index(drop=True)
+    second_pahse_merge_oracle_out(df_oracle_out,p_name,out_dir)
+
+
+
+def second_pahse_merge_oracle_out(df_oracle_out,p_name,dir_out):
     df_oracle_out = get_avg_csv_file(df_oracle_out)
 
 
@@ -148,7 +169,9 @@ def merge_oracle_out(p_name='Chart',Debug=True):
 
 
 
-    df_oracle_out.to_csv('{}/{}_GroupBy.csv'.format(dir_csvs,p_name))
+    df_oracle_out.to_csv('{}/{}_GroupBy.csv'.format(dir_out,p_name))
+    pivot_groupby('{}/{}_GroupBy.csv'.format(dir_out,p_name),scope='package_only')
+    pivot_groupby('{}/{}_GroupBy.csv'.format(dir_out, p_name),scope='target')
     list_rep = list(df_oracle_out)
     list_rep = [x for x in list_rep if str(x).__contains__('rep_')]
 
@@ -163,10 +186,13 @@ def merge_oracle_out(p_name='Chart',Debug=True):
     for col in list_rep:
         df_oracle_out_target["package_{}".format(col)] = df_oracle_out_target['package_kill'].apply(lambda val: split_info(val=val,col_name=col))
 
+
     df_oracle_out_target.drop('package_info', axis=1, inplace=True)
     df_oracle_out_target.drop('package_kill', axis=1, inplace=True)
 
-    df_oracle_out_target.to_csv('{}/{}_res.csv'.format(dir_csvs,p_name))
+    df_oracle_out_target.to_csv('{}/{}_res.csv'.format(dir_out, p_name))
+    #df_oracle_out_target['vaild_comparison'] = df_oracle_out_target.apply(lambda x : 0 if x['package_total_time_gen'] > x['time_generating_tests'] else 1)
+    #df_oracle_out_target.to_csv('{}/{}_res.csv'.format(dir_out,p_name))
     print "\n\n\n----DONE----\n\n\n"
 
 def split_info(val,col_name):
@@ -307,7 +333,9 @@ def make_rep(row,val):
         res =  float(sum_i)/float(count_i)
         return res
     if val <= count_i:
-        res = float(sum_i)/float(val)
+        Pr = float(sum_i)/float(count_i)
+        res = pow((float(1)-Pr),float(val))
+        res = 1 - res
         if res > 1:
             return 1
         else:
@@ -425,13 +453,55 @@ def get_package_csv(root_dir):
     df.to_csv("{}/info_pakage.csv".format(out))
 
 
-
+def pivot_groupby(csv_path='/home/ise/eran/out_csvs_D4j/project/Math/Math_GroupBy.csv',avg=True,scope='package_only'):
+    out_dir = '/'.join(str(csv_path).split('/')[:-1])
+    df = pd.read_csv(csv_path,index_col=0)
+    all_rep_col = list(df)
+    all_rep_col = [x for x in all_rep_col if str(x).__contains__('rep_')]
+    table = None
+    df_rep=[]
+    df = df[df['scope']==scope]
+    for col in all_rep_col:
+        if avg:
+            table_i = pd.pivot_table(df, values=col, index=['bug_id'],columns = ['time_budget'], aggfunc = np.average)
+        else:
+            table_i = pd.pivot_table(df, values=col, index=['bug_id'], columns=['time_budget'], aggfunc=np.sum)
+        #table_i["{}_Total".format(col)] = table_i.sum(axis=1)
+        #table_i.to_csv('{}/table_{}.csv'.format(out_dir,col))
+        df_rep.append(table_i)
+        if table is None:
+            if avg:
+                table_i["{}_Total".format(col)]=table_i.mean(axis=1)
+            else:
+                table_i["{}_Total".format(col)] = table_i.sum(axis=1)
+            table=table_i[["{}_Total".format(col)]].copy()
+        else:
+            if avg:
+                table["{}_Total".format(col)] = table_i.mean(axis=1)
+            else:
+                table["{}_Total".format(col)]=table_i.sum(axis=1)
+    if avg:
+        table.to_csv('{}/table_pivot_{}_AVG.csv'.format(out_dir,scope))
+    else:
+        table.to_csv('{}/table_pivot_{}_SUM.csv'.format(out_dir,scope))
 
 '''
 need to go over all the bug ID and extract the fault class and all its package class
 '''
 import sys
+
+def wrapper():
+    get_df_DF_by_project_name(p_name='Time')
+    get_df_DF_by_project_name(p_name='Chart')
+    get_df_DF_by_project_name(p_name='Closure')
+    get_df_DF_by_project_name(p_name='Lang')
+    get_df_DF_by_project_name(p_name='Math')
+    get_df_DF_by_project_name(p_name='Mockito')
+
+
 if __name__ == "__main__":
+    wrapper()
+    exit()
     #get_avg_csv_file()
     p='/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.csv'
     p = '/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.tsv'
@@ -439,7 +509,7 @@ if __name__ == "__main__":
     #get_package_csv('/home/ise/eran/eran_D4j/MATH_t=2')
     #exit()
     args = sys.argv
-   #w args ='py Chart'.split()
+    args ='py Chart'.split()
     if len(args) == 2 :
         merge_oracle_out(args[1])
     #uniform_vs_prefect_oracle(p)
