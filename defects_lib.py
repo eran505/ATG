@@ -1201,14 +1201,17 @@ def make_target_mvn_framework(p_path='/home/ise/eran/eran_D4j',p_name='Math'):
             continue
         df_merge = pd.read_csv(merge_csv_path)
         df_merge['class_name'] = df_merge['name'].apply(lambda x: str(x)[5:])
+        print df_merge['class_name']
         cur_bug_id = str(bug_dir_i).split('/')[-1].split('_')[3]
         cur_project = str(bug_dir_i).split('/')[-1].split('_')[1]
         filter_info = df.loc[df['bug_ID'] == cur_bug_id ]
         if len(filter_info) != 1:
             print '[Error] the filter csv is differ from one --> len = {}'.format(len(filter_info))
             return
-        modified_comp_str = filter_info['classes']
-        modified_arry = str(modified_comp_str).split('--')
+        filter_info.to_csv("{}/bla.csv".format(out))
+        modified_comp_str = filter_info.iloc[0]['classes']
+        modified_arry = str(modified_comp_str).split('\n')
+        modified_arry = [x for x in modified_arry if len(str(x))>1]
         with open("{}/modified_comp.txt".format(out),'w+') as f:
             for item in modified_arry:
                 f.write(item+'\n')
@@ -1231,7 +1234,7 @@ def get_faulty_comp_defe4j_dir(p_name='Math',dir_d4j='/home/ise/programs/defects
         d['project'] = p_name
         with open(file_i,'r+') as f:
             lines = f.readlines()
-        d['classes'] = '--'.join(lines)
+        d['classes'] = ''.join(lines)
         list_bug_info.append(d)
     return list_bug_info
 
@@ -2470,10 +2473,10 @@ if __name__ == "__main__":
     main_parser()
     # fixer_maven(p_path)
     # main_wrapper(args)
+    exit()
 
     # init_main()
     # test_process()
-    exit()
     # get_FP_csv_by_ID("/home/ise/Desktop/defect4j_exmple/ex2")
     # check_FP_prediction_vs_reality('Math')
     # path_test = '/home/ise/Desktop/defect4j_exmple/d4j_csv/'
