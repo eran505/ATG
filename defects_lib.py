@@ -1193,15 +1193,15 @@ def make_target_mvn_framework(p_path='/home/ise/eran/eran_D4j',p_name='Math'):
     df.to_csv('{}/info_faulty_comp.csv'.format(p_path))
     #df = None # naive freeing the memory
     bug_dirs = pt.walk_rec(p_path,[],"P_",False,lv=-3)
+    list_target=[]
     for bug_dir_i in bug_dirs:
-        print "---{}---".format(bug_dir_i)
+        #print "---{}---".format(bug_dir_i)
         out = pt.mkdir_system(bug_dir_i,'TARGET',True)
         merge_csv_path = '{}/csvs/merge.csv'.format(bug_dir_i)
         if os.path.isfile(merge_csv_path) is False:
             continue
         df_merge = pd.read_csv(merge_csv_path)
         df_merge['class_name'] = df_merge['name'].apply(lambda x: str(x)[5:])
-        print df_merge['class_name']
         cur_bug_id = str(bug_dir_i).split('/')[-1].split('_')[3]
         cur_project = str(bug_dir_i).split('/')[-1].split('_')[1]
         filter_info = df.loc[df['bug_ID'] == cur_bug_id ]
@@ -1218,9 +1218,10 @@ def make_target_mvn_framework(p_path='/home/ise/eran/eran_D4j',p_name='Math'):
         filter_target = df_merge.loc[df_merge['class_name'].isin(modified_arry)]
         if len(filter_info)>0:
             filter_target.to_csv("{}/target.csv".format(out))
-
-
-
+            list_target.append(filter_target)
+    if len(list_target)>0:
+        df_all_target = pd.concat(list_target)
+        df_all_target.to_csv('{}/df_all_targets.csv'.format(p_path))
 
 
 def get_faulty_comp_defe4j_dir(p_name='Math',dir_d4j='/home/ise/programs/defects4j/framework/projects'):
