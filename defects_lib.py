@@ -1220,7 +1220,7 @@ def make_target_mvn_framework(p_path='/home/ise/eran/eran_D4j',p_name='Math'):
 
 
 
-def get_faulty_comp_defe4j_dir(p_name='Math',dir_d4j='/home/ise/programs/defects4j/framework/projects')
+def get_faulty_comp_defe4j_dir(p_name='Math',dir_d4j='/home/ise/programs/defects4j/framework/projects'):
     faluty_comp_dir = '/home/ise/programs/defects4j/framework/projects/{}/modified_classes'.format(p_name)
     list_files_src = pt.walk_rec(faluty_comp_dir,[],'.src')
     list_bug_info=[]
