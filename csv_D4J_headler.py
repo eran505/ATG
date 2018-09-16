@@ -104,11 +104,16 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
     df_faulty = get_all_faulty_comp_by_project(set_project)
     df_faulty['faulty_class'] = 1
     df = pd.DataFrame(list_d)
-    df.to_csv('{}/ALL_class_fail.csv'.format(out))
+    #df.to_csv('{}/ALL_class_fail.csv'.format(out))
     print list(df)
     print list(df_faulty)
     df = pd.merge(df,df_faulty,on=['bug_ID','project','class'],how="left")
-    df.to_csv('{}/tmp.csv'.format(out))
+
+    df.to_csv('{}/ALL_class_fail.csv'.format(out))
+    df['class'] = df['class'].astype('str')
+    df = df.loc[['class'].str.len()  > 1]
+    df['faulty_class'].fillna(value=0, inplace=True)
+    df.to_csv('{}/ALL_class_fail_CLEAN.csv'.format(out))
 
 
 def is_faulty(row,df_faulty):
