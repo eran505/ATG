@@ -3,10 +3,11 @@ import numpy as np
 import pit_render_test as pt
 import os
 from math import pow
-
+from defects_lib import get_deff,get_faulty_comp_defe4j_dir
 '''
 This script handel the csv operation on the D4J exp
 '''
+
 
 
 def read_scope_test_gen(out_dir):
@@ -22,7 +23,112 @@ def read_scope_test_gen(out_dir):
         lines=lines[:-1]
     return lines
 
+def group_by_MVN(csv_path='/home/ise/eran/eran_D4j/results/smart/all_df_merg.csv'):
 
+    out = '/'.join(str(csv_path).split('/')[:-2])
+    df1 = pd.read_csv(csv_path,index_col=0)
+    df2 = pd.read_csv('/home/ise/eran/eran_D4j/results/map/all_df_merg.csv',index_col=0)
+    df = pd.concat([df1,df2])
+    print list(df)
+    df.drop(['buggy_class_err','buggy_class_fail','fix_class_err','time_budget','fix_class_fail','name','fix_err','buggy_err'], axis=1, inplace=True)
+
+    df['GROUP_fix_fail'] = df.groupby(['project','bug_ID'])['fix_fail'].transform('sum')
+    df['GROUP_buggy_fail'] = df.groupby([ 'project', 'bug_ID'])['buggy_fail'].transform('sum')
+    df.drop(['buggy_fail','fix_fail'], axis=1, inplace=True)
+    df.drop_duplicates(inplace=True)
+
+    #df.to_csv('{}/grouped.csv'.format(out))
+    df = df.loc[df['GROUP_fix_fail'] == 0]
+    df  = df.loc[df['GROUP_buggy_fail'] == 0]
+
+    df.to_csv('{}/un_killable_LANG_ID.csv'.format(out))
+
+
+def group_by_unkillabe(p_name='Math'):
+    csv_path = '/home/ise/eran/out_csvs_D4j/project/{0}/{0}_GroupBy.csv'.format(p_name)
+    out = '/'.join(csv_path.split('/')[:-1])
+    out ='/home/ise/Desktop/rui_folder'
+    df = pd.read_csv(csv_path,index_col=0)
+    print list(df)
+
+    df_bug_ID_scop_unkillabe = df[['bug_id','project_id','rep_avg','time_budget']]
+    df_bug_ID_scop_unkillabe['sum_GROUP'] = df_bug_ID_scop_unkillabe.groupby(['bug_id', 'project_id'])['rep_avg'].transform('sum')
+    df_bug_ID_scop_unkillabe['MAX_search_time'] = df_bug_ID_scop_unkillabe.groupby(['bug_id', 'project_id'])['time_budget'].transform('max')
+    df_bug_ID_scop_unkillabe = df_bug_ID_scop_unkillabe.loc[df_bug_ID_scop_unkillabe['sum_GROUP']==0]
+    df_bug_ID_scop_unkillabe.drop(['time_budget','sum_GROUP','rep_avg'], axis=1, inplace=True)
+
+    df_bug_ID_scop_unkillabe.drop_duplicates(inplace=True)
+    df_bug_ID_scop_unkillabe.to_csv('{}/{}_unkillable_ID'.format(out,p_name))
+
+
+
+
+def replication_experiment(csv_path):
+    '''
+    package vs target, allocate number of rep to each scope
+    :param csv_path:
+    :return:
+    '''
+    pass
+
+def get_Test_name_fail_Junit(path_dir_root,debug=False):
+    out = '/'.join(str(path_dir_root).split('/')[:-1])
+    bug_dirs_Test = pt.walk_rec(path_dir_root,[],'Test_P_',False,lv=-5)
+    list_d=[]
+    set_project = set()
+    for dir_i in bug_dirs_Test:
+        if debug:
+            print "--- {}".format(dir_i)
+        bug_root_dir = '/'.join(str(dir_i).split('/')[:-2])
+        time_budget= str(dir_i).split('/')[-2].split('=')[1]
+        bug_id = str(bug_root_dir).split('/')[-1].split('_')[3]
+        project_id = str(bug_root_dir).split('/')[-1].split('_')[1]
+        set_project.add(project_id)
+        d_diff_results = get_deff(dir_i)
+        print d_diff_results
+        d = {'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget}
+        if len(d_diff_results)>0:
+            buggy_test_case = str(d_diff_results['bug']['class']).split(':')
+            fixed_test_case = d_diff_results['fix']['class'].split(':')
+            for klass in buggy_test_case:
+                list_d.append({'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget, 'dir':'buggy', 'class':klass[:-7]})
+            for klass in fixed_test_case :
+                list_d.append({'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget, 'dir':'fixed', 'class':klass[:-7]})
+        else:
+            list_d.append(d)
+    df_faulty = get_all_faulty_comp_by_project(set_project)
+    df_faulty['faulty_class'] = 1
+    df = pd.DataFrame(list_d)
+    df.to_csv('{}/ALL_class_fail.csv'.format(out))
+    print list(df)
+    print list(df_faulty)
+    df = pd.merge(df,df_faulty,on=['bug_ID','project','class'],how="left")
+    df.to_csv('{}/tmp.csv'.format(out))
+
+
+def is_faulty(row,df_faulty):
+    bug_id=row['bug_ID']
+    proj = row['project']
+    klass = row['classes']
+    klass = str(klass).lower()
+    df_filter = df_faulty.loc[df_faulty['bug_ID'] == bug_id]
+    df_filter = df_filter.loc[df_filter['project'] == proj]
+    list_klass =  df_filter['classes'].tolist()
+    if klass in list_klass:
+        return 1
+    return 0
+
+def get_all_faulty_comp_by_project(list_porject_all):
+    list_project = list(list_porject_all)
+    list_all=None
+    for item_proj in list_project:
+        if list_all is None:
+            list_all = get_faulty_comp_defe4j_dir(item_proj)
+        else:
+            res_list_tmp = get_faulty_comp_defe4j_dir(item_proj)
+            list_all = list_all.extend(res_list_tmp)
+    df = pd.DataFrame(list_all)
+    return df
 
 def uniform_vs_prefect_oracle(csv_path, allocation_mode_name ='allocation_mode',name_modfiy='Math_faulty_comp.csv'):
     '''
@@ -498,9 +604,26 @@ def wrapper():
     get_df_DF_by_project_name(p_name='Math')
     get_df_DF_by_project_name(p_name='Mockito')
 
+def unkillable():
+    group_by_unkillabe('Time')
+    group_by_unkillabe('Chart')
+    group_by_unkillabe('Closure')
+    group_by_unkillabe('Lang')
+    group_by_unkillabe('Math')
+    group_by_unkillabe('Mockito')
+
+def parser():
+    args = sys.argv
+    if len(args) == 1:
+        print "---- no args -----"
+        exit()
+    if args[1]=='fail_test':
+        get_Test_name_fail_Junit(args[2])
+    exit()
 
 if __name__ == "__main__":
-    wrapper()
+    parser()
+#    get_deff('/home/ise/eran/D4j/out/Chart/OUT_Chart_D_Tue_Aug_21_00_48_48_2018/P_Chart_B_6_M_U_D_Tue_Aug_21_00_48_56_2018/t=10/Test_P_Chart_ID_234')
     exit()
     #get_avg_csv_file()
     p='/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.csv'
