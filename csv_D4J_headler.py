@@ -110,8 +110,9 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
     df = pd.merge(df,df_faulty,on=['bug_ID','project','class'],how="left")
 
     df.to_csv('{}/ALL_class_fail.csv'.format(out))
-    df['class'] = df['class'].astype('str')
+    #df['class'] = df['class'].astype('str')
     df = df.loc[df['class'].str.len() > 1]
+    df = df.loc[df['dir'] == 'buggy']
     df['faulty_class'].fillna(value=0, inplace=True)
     df.to_csv('{}/ALL_class_fail_CLEAN.csv'.format(out))
 
