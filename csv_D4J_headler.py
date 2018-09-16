@@ -73,7 +73,7 @@ def replication_experiment(csv_path):
 
 def get_Test_name_fail_Junit(path_dir_root,debug=False):
     out = '/'.join(str(path_dir_root).split('/')[:-1])
-    bug_dirs_Test = pt.walk_rec(path_dir_root,[],'Test_P_',False,lv=-5)
+    bug_dirs_Test = pt.walk_rec(path_dir_root,[],'Test_P_',False,lv=-6)
     list_d=[]
     set_project = set()
     for dir_i in bug_dirs_Test:
@@ -85,7 +85,6 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
         project_id = str(bug_root_dir).split('/')[-1].split('_')[1]
         set_project.add(project_id)
         d_diff_results = get_deff(dir_i)
-        print d_diff_results
         d = {'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget}
         if len(d_diff_results)>0:
             try:
@@ -130,6 +129,7 @@ def is_faulty(row,df_faulty):
     return 0
 
 def get_all_faulty_comp_by_project(list_porject_all):
+    print "list_porject_all: ",list_porject_all
     list_project = list(list_porject_all)
     list_all=None
     for item_proj in list_project:
