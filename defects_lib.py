@@ -1235,8 +1235,9 @@ def get_faulty_comp_defe4j_dir(p_name='Math',dir_d4j='/home/ise/programs/defects
         d['project'] = p_name
         with open(file_i,'r+') as f:
             lines = f.readlines()
-        d['classes'] = ''.join(lines)
-        list_bug_info.append(d)
+        for line in lines:
+            line = line.replace('\n','')
+            list_bug_info.append({'bug_ID':bug_number, 'project':p_name, 'class':line})
     return list_bug_info
 
 
@@ -1843,6 +1844,8 @@ def get_deff(dir_path):
     d['fix']['diff'] = diff_fix
     d['fix']['tests'] = ':'.join(get_regex_res(diff_fix, 'test\d+'))
     d['bug']['tests'] = ':'.join(get_regex_res(diff_bug, 'test\d+'))
+    d['bug']['class'] = ':'.join(get_regex_res(diff_bug,'---.+ESTest',4))
+    d['fix']['class'] = ':'.join(get_regex_res(diff_fix,'^---.+ESTest',4))
     if len(d['fix']['tests']) == 0:
         d['fix']['tests']='-'
     if len(d['bug']['tests']) == 0:
@@ -1850,12 +1853,18 @@ def get_deff(dir_path):
     return d
 
 
-def get_regex_res(string_search, pattern):
+def get_regex_res(string_search, pattern,cut=0):
     tmp = re.compile(r'{}'.format(pattern)).search(string_search)
     arr = []
     if tmp is not None:
         for tuple in tmp.regs:
             arr.append(string_search[tuple[0]:tuple[1]])
+    if cut == 0:
+        return arr
+    else:
+        arr = [x[cut:] for x in arr]
+    if len(arr) == 0 :
+        return ['-']
     return arr
 
 
