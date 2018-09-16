@@ -88,8 +88,13 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
         print d_diff_results
         d = {'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget}
         if len(d_diff_results)>0:
-            buggy_test_case = str(d_diff_results['bug']['class']).split(':')
-            fixed_test_case = d_diff_results['fix']['class'].split(':')
+            try:
+                buggy_test_case = str(d_diff_results['bug']['class']).split(':')
+                fixed_test_case = d_diff_results['fix']['class'].split(':')
+            except Exception as e:
+                print "Exception --> error({0}): {1}".format(e.errno, e.strerror)
+                print d_diff_results
+                continue
             for klass in buggy_test_case:
                 list_d.append({'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget, 'dir':'buggy', 'class':klass[:-7]})
             for klass in fixed_test_case :
