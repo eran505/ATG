@@ -111,7 +111,7 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
 
     df.to_csv('{}/ALL_class_fail.csv'.format(out))
     df['class'] = df['class'].astype('str')
-    df = df.loc[['class'].str.len()  > 1]
+    df = df.loc[df['class'].str.len() > 1]
     df['faulty_class'].fillna(value=0, inplace=True)
     df.to_csv('{}/ALL_class_fail_CLEAN.csv'.format(out))
 
