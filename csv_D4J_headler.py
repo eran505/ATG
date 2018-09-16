@@ -129,15 +129,15 @@ def is_faulty(row,df_faulty):
     return 0
 
 def get_all_faulty_comp_by_project(list_porject_all):
-    print "list_porject_all: ",list_porject_all
     list_project = list(list_porject_all)
+    print "list_porject_all: ",list_porject_all
     list_all=None
     for item_proj in list_project:
         if list_all is None:
             list_all = get_faulty_comp_defe4j_dir(item_proj)
         else:
             res_list_tmp = get_faulty_comp_defe4j_dir(item_proj)
-            list_all = list_all.extend(res_list_tmp)
+            list_all.extend(res_list_tmp)
     df = pd.DataFrame(list_all)
     return df
 
