@@ -92,7 +92,7 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
                 buggy_test_case = str(d_diff_results['bug']['class']).split(':')
                 fixed_test_case = d_diff_results['fix']['class'].split(':')
             except Exception as e:
-                print "Exception --> error({0}): {1}".format(e.errno, e.strerror)
+                print "Exception --> error :: {0}".format(e.message)
                 print d_diff_results
                 continue
             for klass in buggy_test_case:
