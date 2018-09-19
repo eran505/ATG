@@ -16,6 +16,8 @@ from tempfile import mkstemp
 from shutil import move
 from os import fdopen, remove
 
+import csv_D4J_headler as csv_d4j
+
 project_dict = {}
 builder_dict = {}
 root_dir = '~/'
@@ -2386,6 +2388,112 @@ def add_actual_scope_size(bug_id, path_dir, scope='package_only'):
     return None
 
 
+def re_test_OUT_dirs(root_father_out):
+    out_dirs_list = pt.walk_rec(root_father_out, [], 'OUT_', False, lv=-2)
+    dico_parm = {'r': '', 'b': '', 'k': '', 't': ''}
+    for out_dir in out_dirs_list:
+        p_name = str(out_dir).split('/')[-1].split('_')[1]
+        dico_parm['o'] = out_dir
+        dico_parm['p'] = p_name
+        obj_d4j = D4J_tool(out_dir=dico_parm['o'], project=dico_parm['p'], bug_range=dico_parm['r'],
+                           time_b=dico_parm['b'],
+                           csv_fp_path=dico_parm['k'], scope_p=dico_parm['t'], info_d=dico_parm)
+        obj_d4j.test_process(out_dir)
+
+def map_TEST(root_path):
+    '''
+    This function map all the tests in the root_dir and make CSV
+    :param root_path:
+    :return:
+    '''''
+    d_list = []
+    out_root = root_path
+    if root_path[-1]=='/':
+        out_root = root_path[:-1]
+    all_bug_dirs = pt.walk_rec(root_path,[],'P_',False,lv=-4)
+    for bug_dir in all_bug_dirs:
+        father_dir = str(bug_dir).split('/')[-2]
+        bug_id = str(bug_dir).split('/')[-1].split('_')[3]
+        proj_id = str(bug_dir).split('/')[-1].split('_')[1]
+        all_test_jar = pt.walk_rec(bug_dir,[],'.tar.bz2')
+        for test_item in all_test_jar:
+            it_id = str(test_item).split('/')[-2]
+            time_budget_id = str(test_item).split('/t=')[1].split('/')[0]
+            path_tmp_out = '/'.join(str(test_item).split('/')[:-1])
+            out_tmp = pt.mkdir_system(path_tmp_out,'tmp')
+            bol, msg, filter_only, dico_test=extract_tar(test_item,out_tmp,None,proj_id,compress=False,del_tar=False)
+            os.system('rm -r {}'.format(out_tmp))
+            #todo: get all test fail merge with the generated test
+            for ky_item_test in dico_test:
+                d_list.append( {'bug_ID':bug_id,'father_dir':father_dir,'project':proj_id, 'time_budget':time_budget_id, 'iteration_id':it_id, 'TEST':ky_item_test} )
+
+
+    df = pd.DataFrame(d_list)
+    df_fails = csv_d4j.get_Test_name_fail_Junit(root_path,retrun_df=True)
+    df_fails.rename(columns={'class': 'TEST'}, inplace=True)
+    df_fails.rename(columns={'faulty_class': 'fail_test'}, inplace=True)
+
+    for col in ['bug_ID','iteration_id','time_budget']:
+        df_fails[col] = df_fails[col].astype(int)
+        df[col] = df[col].astype(int)
+
+    for col in ['TEST','project']:
+        df_fails[col] = df_fails[col].astype(str)
+        df[col] = df[col].astype(str)
+
+    df_fails['faulty_class'] = 1.0
+    df['detected_bug'] = df.apply(merge_by_row,df=df_fails,cols=['bug_ID','project','iteration_id','father_dir','time_budget'],axis=1)
+    set_project = df['project'].unique()
+    all_faulty_classes = get_all_faulty_comp_by_project(set_project)
+    all_faulty_classes['faulty_class']=1
+    all_faulty_classes.rename(columns={'class': 'TEST'}, inplace=True)
+
+    for col in ['bug_ID']:
+        all_faulty_classes[col] = all_faulty_classes[col].astype(int)
+
+    df = pd.merge(df,all_faulty_classes,on=['bug_ID','project','TEST'],how="left")
+
+    # print 'all_faulty_classes: ', list(all_faulty_classes)
+    # print 'df: ', list(df)
+    #df_new = pd.merge(df,df_fails,on=['bug_ID','project','TEST','iteration_id','time_budget'],how="left")
+    df['faulty_class'].fillna(value=0, inplace=True)
+    df.to_csv("{}/rep_raw_data.csv".format(out_root))
+
+
+def merge_by_row(row,df,cols):
+    arr_val={}
+    for col in cols:
+        arr_val[col]=row[col]
+    test_class = row['TEST']
+    df_filter = None
+    for ky in arr_val:
+        if df_filter is None:
+            df_filter=df.loc[df[ky] == arr_val[ky]]
+        else:
+            df_filter=df_filter.loc[df_filter[ky] == arr_val[ky]]
+    list_klass = df_filter['TEST'].tolist()
+    if test_class in list_klass:
+        return 1
+    return 0
+
+def get_all_faulty_comp_by_project(list_porject_all):
+    '''
+    This function retrun csv file with the faulty component by defect4j dur
+    :param list_porject_all: list/set of project name
+    :return: DataFrame with the projects faulty component (classes)
+    '''
+    list_project = list(list_porject_all)
+    print "list_porject_all: ",list_porject_all
+    list_all=None
+    for item_proj in list_project:
+        if list_all is None:
+            list_all = get_faulty_comp_defe4j_dir(item_proj)
+        else:
+            res_list_tmp = get_faulty_comp_defe4j_dir(item_proj)
+            list_all.extend(res_list_tmp)
+    df = pd.DataFrame(list_all)
+    return df
+
 def main_parser():
     if len(sys.argv) == 1:
         print "--- no args given ---"
@@ -2394,6 +2502,11 @@ def main_parser():
         fixer_maven(sys.argv[2])
     elif sys.argv[1] == 'merg':
         get_results()
+    elif sys.argv[1] == 'map_test':
+        if len(sys.argv) == 2 :
+            map_TEST('/home/ise/eran/D4j/out')
+        else:
+            map_TEST(sys.argv[2])
     elif sys.argv[1]=='T':
         if str(sys.argv[2]).__contains__('oracle'):
             init_testing_pahse(sys.argv[2],'oracle')
@@ -2440,17 +2553,7 @@ def main_parser():
         print "undfiend command [d4j_mvn / d4j / fixer ] "
 
 
-def re_test_OUT_dirs(root_father_out):
-    out_dirs_list = pt.walk_rec(root_father_out, [], 'OUT_', False, lv=-2)
-    dico_parm = {'r': '', 'b': '', 'k': '', 't': ''}
-    for out_dir in out_dirs_list:
-        p_name = str(out_dir).split('/')[-1].split('_')[1]
-        dico_parm['o'] = out_dir
-        dico_parm['p'] = p_name
-        obj_d4j = D4J_tool(out_dir=dico_parm['o'], project=dico_parm['p'], bug_range=dico_parm['r'],
-                           time_b=dico_parm['b'],
-                           csv_fp_path=dico_parm['k'], scope_p=dico_parm['t'], info_d=dico_parm)
-        obj_d4j.test_process(out_dir)
+
 
 
 if __name__ == "__main__":

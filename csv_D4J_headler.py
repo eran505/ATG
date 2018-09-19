@@ -71,7 +71,25 @@ def replication_experiment(csv_path):
     '''
     pass
 
-def get_Test_name_fail_Junit(path_dir_root,debug=False):
+
+def get_iteration_id(test_dir):
+    out_file_l = pt.walk_rec(test_dir, [], 'bug_detection', lv=-2)
+    if len(out_file_l) == 1:
+        out_file = out_file_l[0]
+    else:
+        return None
+    df_tmp = pd.read_csv(out_file)
+    it = df_tmp.iloc[0]['test_id']
+    return it
+
+def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
+    '''
+    this function list all class name package that triggerd the bug using the Test_P_ dir parsing the junit file,
+    extract the class name
+    :param path_dir_root: root dir
+    :param debug:
+    :return: CSV file in the root father dir, clean version filter only the bugs that detected
+    '''
     out = '/'.join(str(path_dir_root).split('/')[:-1])
     bug_dirs_Test = pt.walk_rec(path_dir_root,[],'Test_P_',False,lv=-6)
     list_d=[]
@@ -83,6 +101,11 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
         time_budget= str(dir_i).split('/')[-2].split('=')[1]
         bug_id = str(bug_root_dir).split('/')[-1].split('_')[3]
         project_id = str(bug_root_dir).split('/')[-1].split('_')[1]
+
+        father_dir = get_father_dir_by_prefix(dir_i)
+
+        it_id = get_iteration_id(dir_i)
+
         set_project.add(project_id)
         d_diff_results = get_deff(dir_i)
         d = {'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget}
@@ -95,9 +118,9 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
                 print d_diff_results
                 continue
             for klass in buggy_test_case:
-                list_d.append({'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget, 'dir':'buggy', 'class':klass[:-7]})
+                list_d.append({'project': project_id, 'father_dir':father_dir,'bug_ID': bug_id, 'time_budget': time_budget, 'iteration_id':it_id,'dir':'buggy', 'class':klass[:-7]})
             for klass in fixed_test_case :
-                list_d.append({'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget, 'dir':'fixed', 'class':klass[:-7]})
+                list_d.append({'project': project_id, 'father_dir':father_dir, 'bug_ID': bug_id, 'time_budget': time_budget, 'iteration_id':it_id,'dir':'fixed', 'class':klass[:-7]})
         else:
             list_d.append(d)
     df_faulty = get_all_faulty_comp_by_project(set_project)
@@ -107,28 +130,28 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False):
     print list(df)
     print list(df_faulty)
     df = pd.merge(df,df_faulty,on=['bug_ID','project','class'],how="left")
-
     df.to_csv('{}/ALL_class_fail.csv'.format(out))
-    #df['class'] = df['class'].astype('str')
     df = df.loc[df['class'].str.len() > 1]
+    if retrun_df:
+        return df
     df = df.loc[df['dir'] == 'buggy']
     df['faulty_class'].fillna(value=0, inplace=True)
     df.to_csv('{}/ALL_class_fail_CLEAN.csv'.format(out))
+    return '{}/ALL_class_fail.csv'.format(out)
 
-
-def is_faulty(row,df_faulty):
-    bug_id=row['bug_ID']
-    proj = row['project']
-    klass = row['classes']
-    klass = str(klass).lower()
-    df_filter = df_faulty.loc[df_faulty['bug_ID'] == bug_id]
-    df_filter = df_filter.loc[df_filter['project'] == proj]
-    list_klass =  df_filter['classes'].tolist()
-    if klass in list_klass:
-        return 1
-    return 0
+def get_father_dir_by_prefix(path,prefix='OUT_'):
+    arr = str(path).split('/')
+    for item in arr:
+        if str(item).startswith(prefix):
+            return item
+    return None
 
 def get_all_faulty_comp_by_project(list_porject_all):
+    '''
+    This function retrun csv file with the faulty component by defect4j dur
+    :param list_porject_all: list/set of project name
+    :return: DataFrame with the projects faulty component (classes)
+    '''
     list_project = list(list_porject_all)
     print "list_porject_all: ",list_porject_all
     list_all=None
@@ -632,9 +655,60 @@ def parser():
         get_Test_name_fail_Junit(args[2])
     exit()
 
+
+def mvn_get_test_fail(csv_p):
+    out = '/'.join(str(csv_p).split('/')[:-1])
+    dico=[]
+    df=pd.read_csv(csv_p,index_col=0)
+    print list(df)
+    df = df.loc[df['fix_fail']==0]
+    df.apply(itrate_rows,dico_l=dico,axis=1)
+    df_res = pd.DataFrame(dico)
+    list_project = list(df_res['project'].unique())
+    df_fault = get_all_faulty_comp_by_project(list_project)
+    df_fault['is_faulty']=1
+    df_fault.to_csv('{}/tmper.csv'.format(out))
+    print list(df_fault)
+    print list(df_res)
+    df_res.to_csv("{}/fail_class.csv".format(out))
+    df_fault['bug_ID'] = df_fault['bug_ID'].astype(int)
+    df_res = pd.merge(df_res, df_fault, on=['bug_ID', 'project', 'class'], how="left")
+    df_res['is_faulty']=df_res['is_faulty'].fillna(0)
+    #df_res['is_faulty'] = df_res.apply(merge_by_row,df=df_fault,axis=1)
+    df_res = df_res.loc[df_res['dir'] == 'buggy']
+    df_res = df_res.loc[df_res['class'].str.len() > 2]
+    df_res.drop_duplicates(inplace=True)
+    df_res.to_csv("{}/fail_class_CLEAN.csv".format(out))
+
+def merge_by_row(row,df):
+    bug_id = row['bug_ID']
+    test_class = row['class']
+    project_id = row['project']
+    df_filter = df.loc[df['project'] == project_id]
+    df_filter = df_filter.loc[df_filter['bug_ID'] == bug_id]
+    list_klass = df_filter['class'].tolist()
+    if test_class in list_klass:
+        return 1
+    return 0
+
+def itrate_rows(row,dico_l):
+    bug_id = row['bug_ID']
+    test_class = row['name']
+    project_id = row['project']
+    time_b = row['time_budget']
+    list_fail_buggy = row['buggy_class_fail']
+    list_fail_fix = row['fix_class_fail']
+    for item in str(list_fail_buggy)[1:-1].split(','):
+        item  = str(item).replace("'",'').split('_')[0].replace(' ','')
+        dico_l.append({'bug_ID':bug_id, 'dir':'buggy','project':project_id, 'time_budget':time_b, 'TEST_NAME':test_class, 'class':item})
+    for item in str(list_fail_fix)[1:-1].split(','):
+        dico_l.append(
+            {'bug_ID': bug_id, 'dir': 'fixed', 'project': project_id, 'time_budget': time_b, 'TEST_NAME': test_class,
+             'class': item})
+
+
 if __name__ == "__main__":
     parser()
-#    get_deff('/home/ise/eran/D4j/out/Chart/OUT_Chart_D_Tue_Aug_21_00_48_48_2018/P_Chart_B_6_M_U_D_Tue_Aug_21_00_48_56_2018/t=10/Test_P_Chart_ID_234')
     exit()
     #get_avg_csv_file()
     p='/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.csv'
