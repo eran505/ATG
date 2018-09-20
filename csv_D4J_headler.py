@@ -4,10 +4,111 @@ import pit_render_test as pt
 import os
 from math import pow
 from collections import Counter
-from defects_lib import get_deff,get_faulty_comp_defe4j_dir
 '''
 This script handel the csv operation on the D4J exp
 '''
+
+
+
+def get_faulty_comp_defe4j_dir(p_name='Math',dir_d4j='/home/ise/programs/defects4j/framework/projects'):
+    faluty_comp_dir = '/home/ise/programs/defects4j/framework/projects/{}/modified_classes'.format(p_name)
+    list_files_src = pt.walk_rec(faluty_comp_dir,[],'.src')
+    list_bug_info=[]
+    for file_i in list_files_src:
+        d={}
+        bug_number = str(file_i).split('/')[-1].split('.')[0]
+        d['bug_ID'] = bug_number
+        d['project'] = p_name
+        with open(file_i,'r+') as f:
+            lines = f.readlines()
+        for line in lines:
+            line = line.replace('\n','')
+            list_bug_info.append({'bug_ID':bug_number, 'project':p_name, 'class':line})
+    return list_bug_info
+
+
+
+def get_deff(dir_path):
+    '''
+    getting the diff between the result of the junit, the buggy version and the fix version
+    :param dir_path:
+    :return:
+    '''
+    log_files = pt.walk_rec(dir_path, [], 'trigger.log')
+    d = {}
+    if len(log_files) == 2:
+        for file_i in log_files:
+            if str(file_i).split('.')[0].__contains__('f'):
+                d['fix'] = {'path': file_i}
+            elif str(file_i).split('.')[0].__contains__('b'):
+                d['bug'] = {'path': file_i}
+            else:
+                raise Exception("[Error] the log file is not in the correct format -> {}".format(file_i))
+    else:
+        return d
+    diff_bug, diff_fix = diff_function(d['bug']['path'], d['fix']['path'])
+    d['bug']['diff'] = diff_bug
+    d['fix']['diff'] = diff_fix
+    d['fix']['tests'] = ':'.join(get_regex_res(diff_fix, 'test\d+'))
+    d['bug']['tests'] = ':'.join(get_regex_res(diff_bug, 'test\d+'))
+    d['bug']['class'] = ':'.join(get_regex_res(diff_bug,'---.+ESTest',4))
+    d['fix']['class'] = ':'.join(get_regex_res(diff_fix,'^---.+ESTest',4))
+    if len(d['fix']['tests']) == 0:
+        d['fix']['tests']='-'
+    if len(d['bug']['tests']) == 0:
+        d['bug']['tests'] = '-'
+    return d
+
+
+
+def get_regex_res(string_search, pattern,cut=0):
+    tmp = re.compile(r'{}'.format(pattern)).search(string_search)
+    arr = []
+    if tmp is not None:
+        for tuple in tmp.regs:
+            arr.append(string_search[tuple[0]:tuple[1]])
+    if cut == 0:
+        return arr
+    else:
+        arr = [x[cut:] for x in arr]
+    if len(arr) == 0 :
+        return ['-']
+    return arr
+
+
+def diff_function(file_one, file_two):
+    '''
+    This is very inefficient, especially for large files !!! FIX IT !!!
+    :return:
+    '''
+    doc2 = open(file_two, 'r')
+    doc1 = open(file_one, 'r')
+
+    f2 = [x for x in doc2.readlines()]
+    f1 = [x for x in doc1.readlines()]
+
+    f1 = [x for x in f1 if str(x).startswith('\tat') is False]
+    f2 = [x for x in f2 if str(x).startswith('\tat') is False]
+
+    diff1 = [line for line in f1 if line not in f2]  # lines present only in f1
+    diff2 = [line for line in f2 if line not in f1]  # lines present only in f2
+
+
+
+    if len(diff1) == 0:
+        diff1 = '-'
+    else:
+        diff1 = '\n'.join(diff1)
+        diff1 = diff1.replace(',', '|')
+    if len(diff2) == 0:
+        diff2 = '-'
+    else:
+        diff2 = '\n'.join(diff2)
+        diff2 = diff2.replace(',', '|')
+    doc2.close()
+    doc1.close()
+
+    return diff1, diff2
 
 
 
@@ -697,27 +798,32 @@ def itrate_rows(row,dico_l):
              'class': item})
 
 
-def util():
+
+def util(p_name='Time',time_b=60):
     out = '/home/ise/eran/out_csvs_D4j/rep_exp'
-    df = pd.read_csv('/home/ise/eran/out_csvs_D4j/rep_exp/eran_all.csv',index_col=0)
+    df = pd.read_csv('/home/ise/eran/out_csvs_D4j/rep_exp/all.csv',index_col=0)
     print "df_size = {}".format(len(df))
     print "cols: {}".format(list(df))
-    df = df.loc[df['project']=='Math']
-    df['time_budget'] = df['time_budget'].apply(lambda val : 60 if val == 70 else val)
+    df = df.loc[df['project']==p_name]
+    print df['time_budget'].value_counts()
+    #exit()
+    df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val == 20 else val)
+    #df['time_budget'] = df['time_budget'].apply(lambda val: 60 if val == 120 else val)
     df['sum_detected']= df.groupby(['bug_ID', 'time_budget','project','TEST'])['detected_bug'].transform('sum')
     df['count_detected'] = df.groupby(['bug_ID', 'time_budget', 'project', 'TEST'])['detected_bug'].transform('count')
     df.drop('father_dir', axis=1, inplace=True)
     df.drop('iteration_id', axis=1, inplace=True)
     df.drop('detected_bug', axis=1, inplace=True)
-    df = df.loc[df['time_budget']==60]
+    df = df.loc[df['time_budget']==time_b]
     df = df.sort_values(by=['TEST'])
     df.drop_duplicates(inplace=True)
-    df.to_csv("{}/df_grouped.csv".format(out))
+    df.to_csv("{}/df_grouped_{}.csv".format(out,p_name))
 
     print len(df)
 
-def rep_exp(csv_path = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped.csv',rep=4):
+def rep_exp(p_name='Time',rep=4):
     d_list_res=[]
+    csv_path = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_{}.csv'.format(p_name)
     df = pd.read_csv(csv_path,index_col=0)
     max_all_rep = df['count_detected'].max()
     print 'max_rep',df['count_detected'].max()
@@ -752,7 +858,7 @@ def rep_exp(csv_path = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped.csv',rep=
             d_list_res.append({'bug_ID':bug_i, 'kill_val':val_random,'method':'random','rep_sampled':rep_i,'size_suite':size_tset_suite,'size_faulty_classes':size_faulty_suite})
             d_list_res.append({'bug_ID': bug_i, 'kill_val': val_target, 'method': 'target', 'rep_sampled': rep_i,'size_suite':size_tset_suite,'size_faulty_classes':size_faulty_suite})
     df_res = pd.DataFrame(d_list_res)
-    df_res.to_csv('{}/out.csv'.format('/home/ise/eran/out_csvs_D4j/rep_exp'))
+    df_res.to_csv('{}/out_{}.csv'.format('/home/ise/eran/out_csvs_D4j/rep_exp',p_name))
 
 
 
@@ -792,6 +898,7 @@ def make_rep(row,val,count='count',sum='sum'):
     return None
 
 if __name__ == "__main__":
+    #util()
     #rep_exp(rep=4)
     exit()
     parser()

@@ -2430,6 +2430,7 @@ def map_TEST(root_path):
 
     df = pd.DataFrame(d_list)
     df_fails = csv_d4j.get_Test_name_fail_Junit(root_path,retrun_df=True)
+    df_fails.to_csv("{}/df_tmp.csv".format(out_root))
     df_fails.rename(columns={'class': 'TEST'}, inplace=True)
     df_fails.rename(columns={'faulty_class': 'fail_test'}, inplace=True)
     df_fails.dropna(axis=0,how='any',inplace=True)
