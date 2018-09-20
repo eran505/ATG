@@ -4,7 +4,7 @@ import pit_render_test as pt
 import os
 from math import pow
 from collections import Counter
-#from defects_lib import get_deff,get_faulty_comp_defe4j_dir
+from defects_lib import get_deff,get_faulty_comp_defe4j_dir
 '''
 This script handel the csv operation on the D4J exp
 '''
