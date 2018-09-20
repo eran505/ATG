@@ -3,6 +3,7 @@ import numpy as np
 import pit_render_test as pt
 import os
 from math import pow
+import re
 from collections import Counter
 '''
 This script handel the csv operation on the D4J exp
