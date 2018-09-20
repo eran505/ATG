@@ -2438,7 +2438,6 @@ def map_TEST(root_path):
         df[col] = df[col].astype(int)
 
     for col in ['TEST','project']:
-        df = df[np.isfinite(df[col])]
         df_fails[col] = df_fails[col].astype(str)
         df[col] = df[col].astype(str)
 
