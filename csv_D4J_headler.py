@@ -185,9 +185,24 @@ def get_iteration_id(test_dir):
     df_tmp = pd.read_csv(out_file)
     if len(df_tmp)>0:
         it = df_tmp.iloc[0]['test_id']
+        if try_to_cast(it):
+            return it
+        else:
+            return None
     else:
         return None
     return it
+
+def try_to_cast(s):
+    try:
+        i = int(s)
+    except ValueError as verr:
+        print "s==",s
+        return False
+    except Exception as ex:
+        print "s==", s
+        return False
+    return True
 
 def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
     '''
@@ -212,7 +227,7 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
         father_dir = get_father_dir_by_prefix(dir_i)
 
         it_id = get_iteration_id(dir_i)
-        if it_id  is None:
+        if it_id is None:
             continue
         set_project.add(project_id)
         d_diff_results = get_deff(dir_i)
