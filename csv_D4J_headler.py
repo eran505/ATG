@@ -176,16 +176,17 @@ def replication_experiment(csv_path):
 
 
 def get_iteration_id(test_dir):
-    out_file_l = pt.walk_rec(test_dir, [], 'bug_detection', lv=-3)
+    out_file_l = pt.walk_rec(test_dir, [], 'bug_detection')
+    print out_file_l
     if len(out_file_l) == 1:
         out_file = out_file_l[0]
     else:
-        return None
+        return 'path_err'
     df_tmp = pd.read_csv(out_file)
     if len(df_tmp)>0:
         it = df_tmp.iloc[0]['test_id']
     else:
-        return None
+        return 'empty'
     return it
 
 def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
@@ -800,7 +801,7 @@ def itrate_rows(row,dico_l):
 
 
 
-def util(p_name='Time',time_b=60):
+def util(p_name='Lang',time_b=60):
     out = '/home/ise/eran/out_csvs_D4j/rep_exp'
     df = pd.read_csv('/home/ise/eran/out_csvs_D4j/rep_exp/all.csv',index_col=0)
     print "df_size = {}".format(len(df))
@@ -808,7 +809,7 @@ def util(p_name='Time',time_b=60):
     df = df.loc[df['project']==p_name]
     print df['time_budget'].value_counts()
     #exit()
-    df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val == 20 else val)
+    df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val == 70 else val)
     #df['time_budget'] = df['time_budget'].apply(lambda val: 60 if val == 120 else val)
     df['sum_detected']= df.groupby(['bug_ID', 'time_budget','project','TEST'])['detected_bug'].transform('sum')
     df['count_detected'] = df.groupby(['bug_ID', 'time_budget', 'project', 'TEST'])['detected_bug'].transform('count')
@@ -898,8 +899,17 @@ def make_rep(row,val,count='count',sum='sum'):
             return res
     return None
 
+
+def merger():
+    res = pt.walk_rec('/home/ise/eran/out_csvs_D4j/rep_exp',[],'rep_raw_data.csv')
+    l=[]
+    for x in res:
+        l.append(pd.read_csv(x,index_col=0))
+    all = pd.concat(l)
+    all.to_csv('/home/ise/eran/out_csvs_D4j/rep_exp/all.csv')
+
 if __name__ == "__main__":
-    #util()
+    util()
     #rep_exp(rep=4)
     exit()
     parser()
