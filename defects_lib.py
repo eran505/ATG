@@ -2434,10 +2434,12 @@ def map_TEST(root_path):
     df_fails.rename(columns={'faulty_class': 'fail_test'}, inplace=True)
 
     for col in ['bug_ID','iteration_id','time_budget']:
+        df = df[np.isfinite(df[col])]
         df_fails[col] = df_fails[col].astype(int)
         df[col] = df[col].astype(int)
 
     for col in ['TEST','project']:
+        df = df[np.isfinite(df[col])]
         df_fails[col] = df_fails[col].astype(str)
         df[col] = df[col].astype(str)
 
