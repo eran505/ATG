@@ -177,16 +177,16 @@ def replication_experiment(csv_path):
 
 def get_iteration_id(test_dir):
     out_file_l = pt.walk_rec(test_dir, [], 'bug_detection',lv=-2)
-    print out_file_l
+    ##print out_file_l
     if len(out_file_l) == 1:
         out_file = out_file_l[0]
     else:
-        return 'path_err'
+        return None
     df_tmp = pd.read_csv(out_file)
     if len(df_tmp)>0:
         it = df_tmp.iloc[0]['test_id']
     else:
-        return 'empty'
+        return None
     return it
 
 def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
