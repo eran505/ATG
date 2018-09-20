@@ -2432,9 +2432,8 @@ def map_TEST(root_path):
     df_fails = csv_d4j.get_Test_name_fail_Junit(root_path,retrun_df=True)
     df_fails.rename(columns={'class': 'TEST'}, inplace=True)
     df_fails.rename(columns={'faulty_class': 'fail_test'}, inplace=True)
-
+    df_fails.dropna(axis=0,how='any',inplace=True)
     for col in ['bug_ID','iteration_id','time_budget']:
-        df = df[np.isfinite(df[col])]
         df_fails[col] = df_fails[col].astype(int)
         df[col] = df[col].astype(int)
 
