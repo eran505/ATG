@@ -212,7 +212,8 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
         father_dir = get_father_dir_by_prefix(dir_i)
 
         it_id = get_iteration_id(dir_i)
-
+        if it_id  is None:
+            continue
         set_project.add(project_id)
         d_diff_results = get_deff(dir_i)
         d = {'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget}
