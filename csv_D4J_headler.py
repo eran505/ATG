@@ -3,7 +3,8 @@ import numpy as np
 import pit_render_test as pt
 import os
 from math import pow
-from defects_lib import get_deff,get_faulty_comp_defe4j_dir
+from collections import Counter
+#from defects_lib import get_deff,get_faulty_comp_defe4j_dir
 '''
 This script handel the csv operation on the D4J exp
 '''
@@ -73,13 +74,16 @@ def replication_experiment(csv_path):
 
 
 def get_iteration_id(test_dir):
-    out_file_l = pt.walk_rec(test_dir, [], 'bug_detection', lv=-2)
+    out_file_l = pt.walk_rec(test_dir, [], 'bug_detection', lv=-3)
     if len(out_file_l) == 1:
         out_file = out_file_l[0]
     else:
         return None
     df_tmp = pd.read_csv(out_file)
-    it = df_tmp.iloc[0]['test_id']
+    if len(df_tmp)>0:
+        it = df_tmp.iloc[0]['test_id']
+    else:
+        return None
     return it
 
 def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
@@ -466,21 +470,7 @@ def get_avg_csv_file(df=None,path_csv_file='/home/ise/eran/out_csvs_D4j/smart/cs
     return df
 
 
-def make_rep(row,val):
-    count_i = row['count']
-    sum_i = row['sum']
-    if val == 'avg':
-        res =  float(sum_i)/float(count_i)
-        return res
-    if val <= count_i:
-        Pr = float(sum_i)/float(count_i)
-        res = pow((float(1)-Pr),float(val))
-        res = 1 - res
-        if res > 1:
-            return 1
-        else:
-            return res
-    return None
+
 
 def apply_avg_func(row,list_df,list_col):
     for col in list_col:
@@ -707,9 +697,104 @@ def itrate_rows(row,dico_l):
              'class': item})
 
 
+def util():
+    out = '/home/ise/eran/out_csvs_D4j/rep_exp'
+    df = pd.read_csv('/home/ise/eran/out_csvs_D4j/rep_exp/eran_all.csv',index_col=0)
+    print "df_size = {}".format(len(df))
+    print "cols: {}".format(list(df))
+    df = df.loc[df['project']=='Math']
+    df['time_budget'] = df['time_budget'].apply(lambda val : 60 if val == 70 else val)
+    df['sum_detected']= df.groupby(['bug_ID', 'time_budget','project','TEST'])['detected_bug'].transform('sum')
+    df['count_detected'] = df.groupby(['bug_ID', 'time_budget', 'project', 'TEST'])['detected_bug'].transform('count')
+    df.drop('father_dir', axis=1, inplace=True)
+    df.drop('iteration_id', axis=1, inplace=True)
+    df.drop('detected_bug', axis=1, inplace=True)
+    df = df.loc[df['time_budget']==60]
+    df = df.sort_values(by=['TEST'])
+    df.drop_duplicates(inplace=True)
+    df.to_csv("{}/df_grouped.csv".format(out))
+
+    print len(df)
+
+def rep_exp(csv_path = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped.csv',rep=4):
+    d_list_res=[]
+    df = pd.read_csv(csv_path,index_col=0)
+    max_all_rep = df['count_detected'].max()
+    print 'max_rep',df['count_detected'].max()
+    print 'min_rep',df['count_detected'].min()
+    print list(df)
+    for x in range(1,max_all_rep+1):
+        df['{}_rep'.format(x)] = df.apply(make_rep, val=x, count='count_detected', sum='sum_detected',axis=1)
+#    df.to_csv('/home/ise/eran/out_csvs_D4j/rep_exp/df.csv')
+    print list(df)
+    id_list_bug = df['bug_ID'].unique()
+    for bug_i in id_list_bug:
+        print "--- BUG {} ----".format(bug_i)
+        df_filter = df.loc[df['bug_ID']==bug_i]
+        df_target = df_filter.loc[df_filter['faulty_class'] == 1 ]
+        size_tset_suite = len(df_filter)
+        size_faulty_suite = len(df_target)
+        rep_target_max = df_target['count_detected'].sum()
+        print "rep_target_max: {}".format(rep_target_max )
+
+        d_target_list = df_target[['TEST','count_detected']].to_dict('records')
+        d_list_all = df_filter[['TEST','count_detected']].to_dict('records')
+        dico_TEST={}
+        dico_TEST_TARGET={}
+        for d in d_list_all:
+            dico_TEST[d['TEST']]=d['count_detected']
+        for d in d_target_list:
+            dico_TEST_TARGET[d['TEST']]=d['count_detected']
+
+        for rep_i in range(1,max_all_rep+1):
+            val_random = pick_choose_rep_exp(dico_TEST,df_filter,num_of_rep=rep_i)
+            val_target = pick_choose_rep_exp(dico_TEST_TARGET,df_target,num_of_rep=rep_i)
+            d_list_res.append({'bug_ID':bug_i, 'kill_val':val_random,'method':'random','rep_sampled':rep_i,'size_suite':size_tset_suite,'size_faulty_classes':size_faulty_suite})
+            d_list_res.append({'bug_ID': bug_i, 'kill_val': val_target, 'method': 'target', 'rep_sampled': rep_i,'size_suite':size_tset_suite,'size_faulty_classes':size_faulty_suite})
+    df_res = pd.DataFrame(d_list_res)
+    df_res.to_csv('{}/out.csv'.format('/home/ise/eran/out_csvs_D4j/rep_exp'))
+
+
+
+def pick_choose_rep_exp(d,df,num_of_rep=4):
+    list_tests = []
+    for ky in d:
+        num = int(d[ky])
+        tmp_list = [ky]*num
+        list_tests.extend((tmp_list))
+    if num_of_rep>len(list_tests):
+        num_of_rep = len(list_tests)
+    res = np.random.choice(list_tests,num_of_rep,replace=False)
+    d_count = Counter(res)
+    sum_kill=0.0
+    for ky in d_count:
+        time_rep = d_count[ky]
+        filter_df = df.loc[df['TEST']==ky]
+        val = filter_df['{}_rep'.format(time_rep)].sum()
+        sum_kill+=val
+    return sum_kill
+
+
+def make_rep(row,val,count='count',sum='sum'):
+    count_i = row[count]
+    sum_i = row[sum]
+    if val == 'avg':
+        res =  float(sum_i)/float(count_i)
+        return res
+    if val <= count_i:
+        Pr = float(sum_i)/float(count_i)
+        res = pow((float(1)-Pr),float(val))
+        res = 1 - res
+        if res > 1:
+            return 1
+        else:
+            return res
+    return None
+
 if __name__ == "__main__":
-    parser()
+    #rep_exp(rep=4)
     exit()
+    parser()
     #get_avg_csv_file()
     p='/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.csv'
     p = '/home/ise/MATH/Defect4J/D4J_MATH - Sheet2.tsv'

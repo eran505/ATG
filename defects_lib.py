@@ -2581,7 +2581,7 @@ if __name__ == "__main__":
     ### make_uniform_package_dict()
 
     # args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
-    #args = 'py res all'
+    #args = 'py map_test'
     #sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)
