@@ -176,7 +176,7 @@ def replication_experiment(csv_path):
 
 
 def get_iteration_id(test_dir):
-    out_file_l = pt.walk_rec(test_dir, [], 'bug_detection')
+    out_file_l = pt.walk_rec(test_dir, [], 'bug_detection',lv=-2)
     print out_file_l
     if len(out_file_l) == 1:
         out_file = out_file_l[0]
