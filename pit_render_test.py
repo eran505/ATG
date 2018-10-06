@@ -132,6 +132,8 @@ def path_to_package(first, path, cut):
                 arr_newer.append(candidt)
                 continue
         arr = arr_newer
+        if len(arr) == 0:
+            return None
         if len(arr) != 1:
             raise Exception('confilcet in path to package :', path, "with the key:", first)
     packa = path[arr[0]:]

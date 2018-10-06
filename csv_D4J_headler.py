@@ -197,10 +197,10 @@ def try_to_cast(s):
     try:
         i = int(s)
     except ValueError as verr:
-        print "s==",s
+        print "err::",s
         return False
     except Exception as ex:
-        print "s==", s
+        print "err::",s
         return False
     return True
 
@@ -817,16 +817,16 @@ def itrate_rows(row,dico_l):
 
 
 
-def util(p_name='Lang',time_b=60):
+def util(p_name='Lang',time_b=10):
     out = '/home/ise/eran/out_csvs_D4j/rep_exp'
     df = pd.read_csv('/home/ise/eran/out_csvs_D4j/rep_exp/all.csv',index_col=0)
     print "df_size = {}".format(len(df))
     print "cols: {}".format(list(df))
     df = df.loc[df['project']==p_name]
     print df['time_budget'].value_counts()
-    #exit()
-    df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val == 70 else val)
-    #df['time_budget'] = df['time_budget'].apply(lambda val: 60 if val == 120 else val)
+    exit()
+    #df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val == 15 else val)
+    #df['time_budget'] = df['time_budget'].apply(lambda val: time_b if val == 20 else val)
     df['sum_detected']= df.groupby(['bug_ID', 'time_budget','project','TEST'])['detected_bug'].transform('sum')
     df['count_detected'] = df.groupby(['bug_ID', 'time_budget', 'project', 'TEST'])['detected_bug'].transform('count')
     df.drop('father_dir', axis=1, inplace=True)
@@ -925,8 +925,8 @@ def merger():
     all.to_csv('/home/ise/eran/out_csvs_D4j/rep_exp/all.csv')
 
 if __name__ == "__main__":
-    util()
-    #rep_exp(rep=4)
+    util(p_name='Time')
+    rep_exp(p_name='Time')
     exit()
     parser()
     #get_avg_csv_file()

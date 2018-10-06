@@ -1468,6 +1468,8 @@ class D4J_tool:
             if item[-5:] != '.java':
                 continue
             pack = pt.path_to_package(start_package, item, -1 * len('.java'))
+            if pack is None:
+                continue
             package_class.append(pack)
         package_class = self.filter_by_scope(package_class, id)
         self.write_faulty(self.out, "class_{}".format(id), package_class)
@@ -2580,10 +2582,10 @@ if __name__ == "__main__":
     # get_results_junit()
     # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
     ### make_uniform_package_dict()
-
+    args_in ='py. d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2-5-10-20-30-70 -r 11-13 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
     # args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
     #args = 'py map_test'
-    #sys.argv=args.split()
+    sys.argv=args_in .split()
     main_parser()
     # fixer_maven(p_path)
     # main_wrapper(args)
