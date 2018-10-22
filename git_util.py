@@ -40,6 +40,18 @@ def befor_op():
     project_dict['Time'] = {'project_name': "Joda-Time", 'repo_path': '/home/ise/tmp_d4j/joda-time', "num_bugs": 27}
 
 
+
+
+def new_data_set():
+    project_dict['accumulo']={'repo_path':'/home/ise/programs/bugs-dot-jar/accumulo'}
+    project_dict['camel'] = {'repo_path': '/home/ise/programs/bugs-dot-jar/camel'}
+    project_dict['commons-math'] = {'repo_path': '/home/ise/programs/bugs-dot-jar/commons-math'}
+    project_dict['flink'] = {'repo_path': '/home/ise/programs/bugs-dot-jar/flink'}
+    project_dict['jackrabbit-oak'] = {'repo_path': '/home/ise/programs/bugs-dot-jar/jackrabbit-oak'}
+    project_dict['maven'] = {'repo_path': '/home/ise/programs/bugs-dot-jar/maven'}
+    project_dict['wicket'] = {'repo_path': '/home/ise/programs/bugs-dot-jar/wicket'}
+    project_dict['logging-log4j2'] = {'repo_path': '/home/ise/programs/bugs-dot-jar/logging-log4j2'}
+
 def extract_data(p_name, id):
     str_c = "/home/ise/programs/defects4j/framework/bin/defects4j info -p  {1} -b {0}".format(id, p_name)
     print str_c
@@ -202,6 +214,36 @@ def main():
         if project_name == 'Chart':
             get_commit_id(csv_p, p_name=project_name)
 
+
+def get_Version_name_via_commit(commit_id,p_name):
+    '''
+    get the version that the commit id contains in.
+    '''
+    path_repo = project_dict[p_name]['repo_path']
+    command_git = 'git describe --tag {}'.format(commit_id)
+    std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None, False)
+    if len(std_out) < 1:
+        command_git = 'git describe --contains {}'.format(commit_id)
+        std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None,False)
+        if len(std_out)<1:
+            command_git = 'git describe --tag --contains --all {}'.format(commit_id)
+            std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None, False)
+            if len(std_out) < 1:
+                print "[Error] the stdout return empty --> {} ".format(commit_id)
+                return None
+    if str(std_out).__contains__('~'):
+        delim='~'
+    elif str(std_out).__contains__('-'):
+        delim = '-'
+    elif str(std_out).__contains__('^'):
+        delim = '^'
+    else:
+        return std_out
+    current_tag = str(std_out).split(delim)[0]
+    if current_tag.__contains__('^'):
+        current_tag = current_tag.split('^')[0]
+    current_tag = current_tag.replace('\n', '')
+    return current_tag
 
 def make_auto_config_TAG(out_dir, log_dir, project_name='Math', commit_id='8c2199df0f613c63bd362303c953cee66712d56c',
                          time_bol=False):
@@ -410,7 +452,7 @@ def pars_commit_msg(p_name='Time',out='/home/ise/tmp_d4j/config'):
     '''
     print "pars_commit_msg({})".format(p_name)
     p_path_repo = project_dict[p_name]['repo_path']
-    command_git = "git log "
+    command_git = "git log --all "
     std_out, std_err = run_GIT_command_and_log(p_path_repo, command_git, None, "", False)
     look_for_commit(std_out,'{}/{}'.format(out,p_name),p_name)
 
@@ -509,6 +551,7 @@ def pars_commit_block(txt_block,p_name):
     class_i,by_str = classifier_is_fixed(d['msg'],p_name)
     d['is_fix']=class_i
     d['by']=by_str
+    d['version_TAG'] = get_Version_name_via_commit(d['id_commit'],p_name)
     return d
 
 def get_sorted_git_tag(p_name='Time'):
@@ -531,7 +574,7 @@ def get_sorted_git_tag(p_name='Time'):
         tags_sort.append(item[0])
         str_results += '{}\t{}\n'.format(item[0], item[1])
         print "{}\t\t{}".format(item[0], item[1])
-    return tags_sort,str_results
+    return tags_sort,str_result
 
 def str_acc_helper(txt,strat,end):
     acc=''
@@ -566,16 +609,55 @@ def regx_look_up(txt,rec=r'#[0-9]+'):
         return False
     return True
 
+import numpy as np
+
+def bug_distribution(name_proj):
+    csv_commit_log_path = '/home/ise/tmp_d4j/config/{}/log_commits.csv'.format(name_proj)
+    out='/'.join(str(csv_commit_log_path).split('/')[:-1])
+    df = pd.read_csv(csv_commit_log_path, index_col=0)
+    print list(df)
+    na_ctr =  df['version_TAG'].isnull().sum()
+    indices = np.where(df['version_TAG'].isnull())
+    df_null = df.ix[indices]
+    df_null.to_csv('{}/index_null.csv'.format(out))
+    print 'df_null size = ',float(na_ctr)/len(df)*100
+    #df['version_TAG'].fillna(method='ffill', inplace=True)
+    df_small = df[['is_fix', 'version_TAG']]
+    res= df_small.groupby(['version_TAG'])['is_fix'].sum().reset_index()
+    res['version_TAG'] = res['version_TAG'].apply(lambda x: str(x).replace('\n',''))
+    res.to_csv('{}/bug_distribution.csv'.format(out))
+    #print list(res)
+    for i in range(0,5):
+        res['major_{}'.format(i)]=res['version_TAG'].apply(lambda x: str(x).split('_')[i] if len(str(x).split('_')) > i else None)
+    res.to_csv('{}/bug_distribution.csv'.format(out))
+
+def foo():
+    path_rep = project_dict['Lang']['repo_path']
+    repo = git.Repo(path_rep)
+    repo.commit()
+    for x in repo.iter_commits():
+        print x
+    exit()
+
+
+
 if __name__ == "__main__":
     befor_op()
+    new_data_set()
+    bug_distribution('Lang')
+    exit()
+    #bug_distribution('Math')
     #    fixed compilation errors (oups
     #    fix to bypass ant failures
-    projects = ['Lang','Math']
-    projects = ['Mockito','Time','Chart','Closure']
+    projects = ['Math','Lang','Mockito','Time','Chart','Closure']
+    projects = ['accumulo','camel','commons-math','flink',
+                'jackrabbit-oak','logging-log4j2','maven','wicket']
+    project = ['jackrabbit-oak','logging-log4j2','maven','wicket']
+    #projects = ['Math','Lang']
     for x in projects:
-        #if x=='Closure':
-        #    continue
-        pars_commit_msg(x)
-        #exit()
+        if x=='jackrabbit-oak':
+            continue
+        pars_commit_msg(x,out='/home/ise/tmp_jira/config')
+
     print "----git util----"
     exit()

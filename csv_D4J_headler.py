@@ -5,6 +5,11 @@ import os
 from math import pow
 import re
 from collections import Counter
+from subprocess import Popen, PIPE, check_call, check_output
+import pit_render_test as pt
+import subprocess
+import shlex
+
 '''
 This script handel the csv operation on the D4J exp
 '''
@@ -240,6 +245,8 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
                 print "Exception --> error :: {0}".format(e.message)
                 print d_diff_results
                 continue
+            buggy_test_case = [x for x in buggy_test_case if x != '-']
+            fixed_test_case = [x for x in fixed_test_case if x != '-']
             for klass in buggy_test_case:
                 list_d.append({'project': project_id, 'father_dir':father_dir,'bug_ID': bug_id, 'time_budget': time_budget, 'iteration_id':it_id,'dir':'buggy', 'class':klass[:-7]})
             for klass in fixed_test_case :
@@ -818,6 +825,12 @@ def itrate_rows(row,dico_l):
 
 
 def util(p_name='Lang',time_b=10):
+    '''
+
+    :param p_name:
+    :param time_b:
+    :return:
+    '''
     out = '/home/ise/eran/out_csvs_D4j/rep_exp'
     df = pd.read_csv('/home/ise/eran/out_csvs_D4j/rep_exp/all.csv',index_col=0)
     print "df_size = {}".format(len(df))
@@ -838,6 +851,72 @@ def util(p_name='Lang',time_b=10):
     df.to_csv("{}/df_grouped_{}.csv".format(out,p_name))
 
     print len(df)
+
+def get_size_classes_csv(id, p_name,out_csv_path,tmp_dir='/tmp',root_d4j ='/home/ise/programs/defects4j/framework/bin/defects4j'):
+    '''
+    get the LOC size of each class (src file) in the current bug project (the commit)
+    :param id: the bug id
+    :param p_name: the project name
+    :param out_csv_path: where to write the csv file (dir path)
+    :param tmp_dir: for tmp files
+    :param root_d4j: the root dir for the Defect4J framework
+    :return: None
+    '''
+    out_fix = pt.mkdir_system(tmp_dir, 'Defects4j_{}_{}'.format(p_name,id))
+    str_command = root_d4j + ' checkout -p {1} -v {0}"f" -w {2}/'.format(id, p_name, out_fix)
+    print '[OS] {}'.format(str_command)
+    os.system(str_command)
+    java_class = pt.walk_rec(out_fix, [], '.java')
+    inf_classes = []
+    size_loc=-1
+    start_package = 'org'
+    if p_name == 'Closure':
+        start_package = 'com'
+    for item in java_class:
+        if item[-5:] != '.java':
+            continue
+        try:
+            pack = pt.path_to_package(start_package, item, -1 * len('.java'))
+        except Exception as e:
+            pack=None
+        if pack is None:
+            continue
+        size_loc = get_LOC(item)
+        inf_classes.append({'project':p_name,'bug_ID':id,'path':item, 'name':pack, 'LOC':size_loc})
+    df = pd.DataFrame(inf_classes)
+    df.to_csv("{}/LOC_{}_{}.csv".format(out_csv_path, p_name,id))
+
+
+
+
+def get_LOC(class_path):
+    '''
+    given class path (src) retrun the size of the line of code
+    :param class_path: path to class file
+    :return: int, size LOC
+    '''
+    if os.path.isfile(class_path) is False:
+        return None
+    bash_command = 'loc {}'.format(class_path)
+    print "[OS] {}".format(bash_command)
+    process = Popen(shlex.split(bash_command), stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate()
+    print "[std_err] {}".format(stderr)
+    last_line = str(stdout).split('\n')[-3]
+    size_loc=''
+    index=-1
+    while(last_line[index] != ' '):
+        size_loc=last_line[index] + size_loc
+        index=index-1
+    #print "size_loc: {}".format(size_loc)
+    try:
+        size = int(size_loc)
+    except Exception as e:
+        print '[Error] Exception as been ocuur while trying to conver {} to an int, in the function get_LOC'.format(size)
+        size = None
+    return size
+
+
 
 def rep_exp(p_name='Time',rep=4):
     d_list_res=[]
@@ -917,6 +996,10 @@ def make_rep(row,val,count='count',sum='sum'):
 
 
 def merger():
+    '''
+    merge all the data from diff server into one big csv (all.csv)
+    :return:
+    '''
     res = pt.walk_rec('/home/ise/eran/out_csvs_D4j/rep_exp',[],'rep_raw_data.csv')
     l=[]
     for x in res:
@@ -924,7 +1007,48 @@ def merger():
     all = pd.concat(l)
     all.to_csv('/home/ise/eran/out_csvs_D4j/rep_exp/all.csv')
 
+
+def add_random_probabilityes(path_dir='/home/ise/tmp_d4j/LOC/Chart',loc=False):
+    if path_dir[-1]=='/':
+        path_dir=path_dir[:-1]
+    project=str(path_dir).split('/')[-1]
+    path_out = pt.mkdir_system('/home/ise/tmp_d4j/Prob',project,False)
+    csvFiles = pt.walk_rec(path_dir,[],'.csv')
+    for file_csv_i in csvFiles:
+        name_i = str(file_csv_i).split('/')[-1]
+        df = pd.read_csv(file_csv_i,index_col=0)
+        if loc:
+            max_LOC = df['LOC'].max()
+            min_LOC = df['LOC'].min()
+            df['FP']=df['LOC'].apply(lambda x: float(x-min_LOC)/float(max_LOC-min_LOC))
+        else:
+            df['FP'] = np.random.random_sample(size=len(df))
+        df.to_csv('{}/{}'.format(path_out,name_i))
+
+def normalizer_col(df,target,suffix='normalize'):
+    '''
+    normalize colunm in dataframe
+    :param df: Dataframe
+    :param target: col_names (list) or name (str)
+    :param suffix: suffix to add after the process to the new colunm
+    :return: Dataframe
+    '''
+    if isinstance(target, basestring):
+        target = [target]
+    for col_name in target:
+        max_value = df[col_name].max()
+        min_value = df[col_name].min()
+        df["{}_{}".format(col_name,suffix)] = (df[col_name] - min_value) / (max_value - min_value)
+    return df
+
 if __name__ == "__main__":
+    add_random_probabilityes(loc=True)
+    exit()
+    proj='Mockito'
+    for i in range(1,39):
+        get_size_classes_csv(i,proj,'/home/ise/tmp_d4j/LOC/{}'.format(proj))
+
+    exit()
     util(p_name='Time')
     rep_exp(p_name='Time')
     exit()

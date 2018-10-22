@@ -2564,28 +2564,11 @@ if __name__ == "__main__":
     # sudo env "PATH=$PATH" python
     '''
     before_op()
-    out = '/home/ise/eran/D4j/oracle/P_Chart_B_4_M_U_D_Mon_Aug_20_01_02_31_2018/t=5/Chart/evosuite-branch/0'
-    faulty_dir = '/home/ise/eran/D4j/out/OUT_Chart_D_Mon_Aug_20_01_02_16_2018/fault_components'
-    zip = '/home/ise/eran/D4j/out/OUT_Chart_D_Mon_Aug_20_01_02_16_2018/P_Chart_B_4_M_U_D_Mon_Aug_20_01_02_31_2018/t=5/Chart/evosuite-branch/0/Chart-4f-evosuite-branch.0.tar.bz2'
 
-    args = "py. -p Mockito -o /home/ise/Desktop/defect4j_exmple/ex2/ \
-            -e /home/ise/eran/evosuite/jar/evosuite-1.0.5.jar -b 5 -l 1\
-            -u 100 -f True -t info -r 1-555 -z 2;4;6;10;20;50 "
-
-    p_path = '/home/ise/eran/D4j/OUT_Time_D_Sat_Jul_21_17_54_36_2018'
-    p_path = '/home/ise/Desktop/d4j_framework/out/OUT_Time_D_Sat_Jul_21_17_59_42_2018'
-    p_path = '/home/ise/eran/eran_D4j'
-    # get_problamtic_dirs(p_path)
-    #
-    # get_faulty_comp()
-    #
-    # get_results_junit()
-    # wrapper_get_all_results_D4j('/home/ise/Desktop/d4j_framework/out/')
-    ### make_uniform_package_dict()
-    args_in ='py. d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2-5-10-20-30-70 -r 11-13 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
-    # args = 'pp d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 100-100 -o /home/ise/eran/D4j/out/ -t package_only -p Closure -k U'
+    #args ='py. d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2-5-7 -r 1-43 -o /home/ise/eran/D4j/out/ -t package_only -p Time -k U'
+    #args = 'pp map_test'
     #args = 'py map_test'
-    sys.argv=args_in .split()
+    #sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)
     # main_wrapper(args)

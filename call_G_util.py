@@ -167,7 +167,7 @@ def g_test():
 
 
 if __name__ == "__main__":
-    #g_test()
+    g_test()
     print "in"
-    #graph_obj = Call_g('/home/ise/Desktop/call_G/common_lang_test_callG.txt')
+    graph_obj = Call_g('/home/ise/Desktop/call_G/common_lang_test_callG.txt')
     #graph_obj.read_and_process()
