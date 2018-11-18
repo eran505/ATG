@@ -48,7 +48,7 @@ def manger(root_dir, out_dir,filter_time_b=None):
     df.set_index(np.arange(len(df.index)),inplace=True)
     df.drop_duplicates(inplace=False)
 
-    df = df.head(5) #TODO: remove it !!!!
+    df = df.head(2) #TODO: remove it !!!!
 
 
     print 'len(df):\t{}'.format(len(df))
@@ -57,7 +57,7 @@ def manger(root_dir, out_dir,filter_time_b=None):
     jar_making_process(src_dir)
     util_d4j.rm_dir_by_name(src_dir,'debug_dir')
     util_d4j.rm_dir_by_name(src_dir, 'out_test')
-
+    mk_call_graph(src_dir)
 
 def jar_making_process(src_dir):
     all_project = pt.walk_rec(src_dir,[],'V_fixed',False)
@@ -84,7 +84,19 @@ def gatther_info_make_dir(row, out, list_info):
                       'path': row['JAR_path'], 'version': bug_id})
     return out_dir_i
 
+def mk_call_graph(root_dir,name_find='jars_dir',java_caller='/home/ise/programs/java-callgraph/target/javacg-0.1-SNAPSHOT-static.jar'):
+    res = pt.walk_rec(root_dir,[],name_find,False)
+    for dir_i in res:
+        father_dir = '/'.join(str(dir_i).split('/')[:-1])
+        jars = pt.walk_rec(dir_i,[],'.jar')
+        if len(jars)!=2:
+            print "[Error] in dir --> {}\nfind:\n{}".format(dir_i,jars)
+            continue
+        out_jars = pt.mkdir_system(father_dir,'out_jar')
+        command_java = 'java -jar {} {} {} '.format(java_caller,
+                                                        jars[0],jars[1],father_dir)
 
+        util_d4j.execute_command(command_java,'call_graph',out_jars)
 def make_jars(path_proj, out_dir, src_dir_compile='target/classes/org', test_dir_compile='target/gen-tests/org'):
     '''
     make a jars one for the src files one for the test files

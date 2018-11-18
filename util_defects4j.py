@@ -106,14 +106,14 @@ def write_log(father_dir, info, name='missing_pred_class'):
         f.write('\n')
 
 
-def execute_command(command,log_dir=None):
+def execute_command(command,name='log',log_dir=None):
     print "[OS] {}".format(command)
     process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
     if log_dir is not None:
-        write_log(log_dir, command, 'testing_commands.log')
-        write_log(log_dir, stdout, 'testing_stdout.log')
-        write_log(log_dir, stderr, 'testing_stderr.log')
+        write_log(log_dir, command, "{}_commnd".format(name))
+        write_log(log_dir, stdout, "{}_stdout".format(name))
+        write_log(log_dir, stderr, "{}_stderr".format(name))
 
 
 def make_jar(path_target_dir, name, out, log=None):
