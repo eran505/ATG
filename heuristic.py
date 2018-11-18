@@ -51,6 +51,8 @@ def manger(root_dir, out_dir,filter_time_b=None):
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
     jar_making_process(src_dir)
+    util_d4j.rm_dir_by_name(src_dir,'debug_dir')
+    util_d4j.rm_dir_by_name(src_dir, 'out_test')
 
 
 def jar_making_process(src_dir):
@@ -94,7 +96,9 @@ def main_parser():
         manger(args[2], args[3],filter_time_b=[60])
     if args[1] == 'j':
         jar_making_process(args[2])
-
+    if args[1] == 'del':
+        util_d4j.rm_dir_by_name(args[2], 'debug_dir')
+        util_d4j.rm_dir_by_name(args[2], 'out_test')
 
 if __name__ == '__main__':
     print "\t"

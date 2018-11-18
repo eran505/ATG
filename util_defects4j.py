@@ -125,6 +125,19 @@ def make_jar(path_target_dir, name, out, log=None):
     execute_command(command_jar,log)
     execute_command(command_mv,log)
 
+def rm_dir_by_name(root, name=None):
+    if name is None:
+        print '[Error] name is None'
+        return
+    all_res = pt.walk_rec(root, [], name, False)
+    for x in all_res:
+        final_command = 'rm -r -f {}'.format(x)
+        process = Popen(shlex.split(final_command), stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        print "----stdout----"
+        print stdout
+        print "----stderr----"
+        print stderr
 
 if __name__ == "__main__":
     print '--- util file py -----'
