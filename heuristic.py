@@ -23,7 +23,6 @@ def scan_all_test_jar(path_target, file_name='jar_test_df', out=None):
         d= {'JAR_path': item, 'Test_index': test_index, 'Fitness_Evosutie': fitness_evolution,
                        'time_budget': time_budget, 'Project_Name': project_name,
                        'bug_ID': bug_id, 'Date': date}
-        print d
         d_info.append(d)
     df = pd.DataFrame(d_info)
     if out is not None:
@@ -62,9 +61,11 @@ def gatther_info_make_dir(row, out, list_info):
     arr_dir_name = ['debug_dir', 'log', 'out_test']
     for dir_name in arr_dir_name:
         pt.mkdir_system(out_dir_i, dir_name)
-    list_info.append({'p_name': proj_name, 'output': "{}/out_test".format(out_dir_i),
+    tmp = {'p_name': proj_name, 'output': "{}/out_test".format(out_dir_i),
                       'log': "{}/log".format(out_dir_i), 'tmp_dir': "{}/debug_dir".format(out_dir_i),
-                      'path': row['JAR_path'], 'version': bug_id})
+                      'path': row['JAR_path'], 'version': bug_id}
+    list_info.append(tmp)
+    print tmp
     return out_dir_i
 
 

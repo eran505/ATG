@@ -95,7 +95,7 @@ def run_tests(list_test_tar,d4j_path='/home/ise/programs/defects4j/framework/bin
         write_log(dir_out_bug_i, stdout, 'testing_stdout.log')
         write_log(dir_out_bug_i, stderr, 'testing_stderr.log')
 
-def write_log(self, father_dir, info, name='missing_pred_class'):
+def write_log(father_dir, info, name='missing_pred_class'):
     """
     write to log dir
     """
