@@ -39,7 +39,7 @@ class Call_g:
         pat_prefix = '.'.join(arr_data[0].split()[0].split(':')[1].split('.')[:-1])
         lookup_pattren.append(pat_prefix)
         for line in arr_data:
-            print "line:\t{}".format(line)
+
             flag = 0
             for pat in remove_pattrens:
                 if str(line).__contains__(pat):
@@ -49,6 +49,12 @@ class Call_g:
             if flag == 1:
                 continue
             for match_p in lookup_pattren:
+                print "line:\t{}".format(line)
+                if line.__contains__(' ') is False:
+                    print "----*300"
+                    print line
+                    print "----*300"
+                    continue
                 if str(line).split()[1].__contains__(match_p):
                     print line
                     self.process_data(line)
