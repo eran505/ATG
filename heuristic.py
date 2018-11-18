@@ -64,7 +64,7 @@ def jar_making_process(src_dir):
     for proj_i in all_project:
         out_i = '/'.join(str(proj_i).split('/')[:-3])
         out_dir_jar = pt.mkdir_system(out_i,'jars_dir')
-        make_jars(proj_i,out_i,out_dir_jar)
+        make_jars(proj_i,out_dir_jar)
 
 
 def gatther_info_make_dir(row, out, list_info):
