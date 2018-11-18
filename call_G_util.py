@@ -8,8 +8,9 @@ import numpy as np
 import pandas as pd
 
 class Call_g:
-    def __init__(self, path_file):
+    def __init__(self, path_file,out_dir):
         self.data_path = path_file
+        self.out_dir_data = out_dir
         self.class_graph = {}
         self.method_graph = {}
         self.G_method = ig.Graph()
@@ -186,7 +187,7 @@ class Call_g:
                     acc_args = 'Null'
                 return method_name, acc_args
 
-    def coverage_matrix(self,step=10,out_df=None,debug=False):
+    def coverage_matrix(self,step=10,debug=False):
         '''
         making a coverage matrix
         :param step: matrix ^ step
@@ -238,10 +239,7 @@ class Call_g:
                 print "\t{}".format(key)
                 for ky_sec in  coverage_dico[key].keys():
                     print "{}:{}".format(ky_sec,coverage_dico[key][ky_sec])
-        if out_df is None:
-            self.cover_df.to_csv('/home/ise/Desktop/new/zzz/df_coverage.csv')
-        else:
-            self.cover_df.to_csv('{}/df_coverage.csv'.format(out_df))
+        self.cover_df.to_csv('{}/df_coverage.csv'.format(self.out_dir_data))
 
     def matrixMul_rec(self,a, n):
         '''
@@ -272,7 +270,8 @@ if __name__ == "__main__":
     #g_test()
     print "in"
     path_file = '/home/ise/Desktop/new/zzz/lang_57.txt'
-    graph_obj = Call_g(path_file)
+    out = '/home/ise/Desktop/new/zzz'
+    graph_obj = Call_g(path_file,out)
     graph_obj.read_and_process(False)
     print "--"*60,'Q',"--"*60
     graph_obj.coverage_matrix()

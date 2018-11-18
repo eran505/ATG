@@ -4,6 +4,7 @@ import sys
 import pit_render_test as pt
 import util_defects4j as util_d4j
 import numpy as np
+import call_G_util as call_g
 
 def scan_all_test_jar(path_target, file_name='jar_test_df', out=None):
     """
@@ -28,7 +29,6 @@ def scan_all_test_jar(path_target, file_name='jar_test_df', out=None):
     if out is not None:
         df.to_csv('{}/{}.csv'.format(out, file_name))
     return df
-
 
 def manger(root_dir, out_dir,filter_time_b=None):
     """
@@ -58,7 +58,8 @@ def manger(root_dir, out_dir,filter_time_b=None):
     os.chdir(src_dir)
     util_d4j.rm_dir_by_name(src_dir,'debug_dir')
     util_d4j.rm_dir_by_name(src_dir, 'out_test')
-    mk_call_graph(src_dir)
+    mk_call_graph_raw_data(src_dir)
+    mk_call_graph_df(src_dir)
 
 def jar_making_process(src_dir):
     all_project = pt.walk_rec(src_dir,[],'V_fixed',False)
@@ -85,7 +86,15 @@ def gatther_info_make_dir(row, out, list_info):
                       'path': row['JAR_path'], 'version': bug_id})
     return out_dir_i
 
-def mk_call_graph(root_dir,name_find='jars_dir',java_caller='/home/ise/programs/java-callgraph/target/javacg-0.1-SNAPSHOT-static.jar'):
+def mk_call_graph_df(root_dir,name_find='call_graph_stdout.txt'):
+    res = pt.walk_rec(root_dir,[],name_find)
+    for item in res:
+        father_dir = '/'.join(str(item).split('/')[:-3])
+        graph_obj = call_g.Call_g(item,father_dir)
+        graph_obj.read_and_process(False)
+        graph_obj.coverage_matrix()
+
+def mk_call_graph_raw_data(root_dir,name_find='jars_dir',java_caller='/home/ise/programs/java-callgraph/target/javacg-0.1-SNAPSHOT-static.jar'):
     res = pt.walk_rec(root_dir,[],name_find,False)
     for dir_i in res:
         father_dir = '/'.join(str(dir_i).split('/')[:-1])
@@ -98,6 +107,7 @@ def mk_call_graph(root_dir,name_find='jars_dir',java_caller='/home/ise/programs/
                                                         jars[0],jars[1],father_dir)
 
         util_d4j.execute_command(command_java,'call_graph',out_jars)
+
 def make_jars(path_proj, out_dir, src_dir_compile='target/classes/org', test_dir_compile='target/gen-tests/org'):
     '''
     make a jars one for the src files one for the test files
