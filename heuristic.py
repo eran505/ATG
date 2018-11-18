@@ -92,7 +92,7 @@ def mk_call_graph_df(root_dir,name_find='call_graph_stdout.txt'):
         father_dir = '/'.join(str(item).split('/')[:-3])
         graph_obj = call_g.Call_g(item,father_dir)
         graph_obj.read_and_process(False)
-        graph_obj.coverage_matrix()
+        graph_obj.coverage_matrix(debug=True)
 
 def mk_call_graph_raw_data(root_dir,name_find='jars_dir',java_caller='/home/ise/programs/java-callgraph/target/javacg-0.1-SNAPSHOT-static.jar'):
     res = pt.walk_rec(root_dir,[],name_find,False)

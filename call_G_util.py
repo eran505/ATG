@@ -32,7 +32,6 @@ class Call_g:
             raise Exception(err_msg)
         with open(self.data_path, 'r+') as f:
             arr_data = f.readlines()
-
         if len(arr_data) == 0:
             err_msg = "[Error] empty file, no data to process: {} ".format(self.data_path)
             raise Exception(err_msg)
@@ -50,11 +49,7 @@ class Call_g:
             if flag == 1:
                 continue
             for match_p in lookup_pattren:
-                print "line:\t{}".format(line)
                 if line.__contains__(' ') is False:
-                    print "----*300"
-                    print line
-                    print "----*300"
                     continue
                 if str(line).split()[1].__contains__(match_p):
                     print line
