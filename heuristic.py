@@ -41,6 +41,7 @@ def manger(root_dir, out_dir,filter_time_b=None):
     src_dir = pt.mkdir_system(out_dir, 'JARS_D4J')
     df = scan_all_test_jar(root_dir, out=src_dir)
     list_jar_info = []
+    df['time_budget'].astype(int)
     print df.dtypes
     if filter_time_b is not None:
             df = df.loc[df['time_budget'].isin(filter_time_b)]
