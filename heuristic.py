@@ -61,11 +61,9 @@ def gatther_info_make_dir(row, out, list_info):
     arr_dir_name = ['debug_dir', 'log', 'out_test']
     for dir_name in arr_dir_name:
         pt.mkdir_system(out_dir_i, dir_name)
-    tmp = {'p_name': proj_name, 'output': "{}/out_test".format(out_dir_i),
+    list_info.append({'p_name': proj_name, 'output': "{}/out_test".format(out_dir_i),
                       'log': "{}/log".format(out_dir_i), 'tmp_dir': "{}/debug_dir".format(out_dir_i),
-                      'path': row['JAR_path'], 'version': bug_id}
-    list_info.append(tmp)
-    print tmp
+                      'path': row['JAR_path'], 'version': bug_id})
     return out_dir_i
 
 

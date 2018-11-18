@@ -70,6 +70,7 @@ def run_tests(list_test_tar,d4j_path='/home/ise/programs/defects4j/framework/bin
     tmp_command=''
     d4j_dir_bin = '/'.join(str(d4j_path).split('/')[:-1])
     for item in list_test_tar:
+        print item
         if 'tmp_dir' in item:
             tmp_command = '-t {}'.format(item['tmp_dir'])
         p_name = item['p_name']
