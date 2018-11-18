@@ -46,6 +46,7 @@ def manger(root_dir, out_dir,filter_time_b=None):
             df = df.loc[df['time_budget'].isin(filter_time_b)]
         else:
             df = df.loc[df['time_budget'] == filter_time_b]
+    df.reset_index(inplace=True)
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
 
