@@ -103,10 +103,12 @@ def mk_call_graph_raw_data(root_dir,name_find='jars_dir',java_caller='/home/ise/
             print "[Error] in dir --> {}\nfind:\n{}".format(dir_i,jars)
             continue
         out_jars = pt.mkdir_system(father_dir,'out_jar')
-        command_java = 'java -jar {} {} {} '.format(java_caller,
-                                                        jars[0],jars[1],father_dir)
-
-        util_d4j.execute_command(command_java,'call_graph',out_jars)
+        command_java_1 = 'java -jar {} {} {} '.format(java_caller,
+                                                        jars[1],father_dir)
+        command_java_0 = 'java -jar {} {} {} '.format(java_caller,
+                                                        jars[0],father_dir)
+        util_d4j.execute_command(command_java_1,'call_graph',out_jars)
+        util_d4j.execute_command(command_java_0, 'call_graph', out_jars)
 
 def make_jars(path_proj, out_dir, src_dir_compile='target/classes/org', test_dir_compile='target/gen-tests/org'):
     '''
