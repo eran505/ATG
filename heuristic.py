@@ -41,11 +41,9 @@ def manger(root_dir, out_dir,filter_time_b=None):
     src_dir = pt.mkdir_system(out_dir, 'JARS_D4J')
     df = scan_all_test_jar(root_dir, out=src_dir)
     list_jar_info = []
+    print df.dtypes
     if filter_time_b is not None:
-        if isinstance(filter_time_b , list):
             df = df.loc[df['time_budget'].isin(filter_time_b)]
-        else:
-            df = df.loc[df['time_budget'] == filter_time_b]
     df = df.reset_index()
     df.set_index(np.arange(len(df.index)),inplace=True)
     print 'len(df):\t{}'.format(len(df))
@@ -72,7 +70,7 @@ def gatther_info_make_dir(row, out, list_info):
 def main_parser():
     args = sys.argv
     if args[1] == 'jar':
-        manger(args[2], args[3],60)
+        manger(args[2], args[3],filter_time_b=[60])
 
 
 if __name__ == '__main__':
