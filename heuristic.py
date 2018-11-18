@@ -3,7 +3,7 @@ import os
 import sys
 import pit_render_test as pt
 import util_defects4j as util_d4j
-
+import numpy as np
 
 def scan_all_test_jar(path_target, file_name='jar_test_df', out=None):
     """
@@ -46,7 +46,9 @@ def manger(root_dir, out_dir,filter_time_b=None):
             df = df.loc[df['time_budget'].isin(filter_time_b)]
         else:
             df = df.loc[df['time_budget'] == filter_time_b]
-    df.reset_index(inplace=True)
+    df = df.reset_index()
+    df.set_index(np.arange(len(df.index)),inplace=True)
+    print 'len(df):\t{}'.format(len(df))
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
 
