@@ -121,7 +121,7 @@ def make_jar(path_target_dir, name, out, log=None):
     os.chdir(path_father_dir)
     target = str(path_target_dir).split('/')[-1]
     command_jar = 'jar cvf {}.jar {}'.format(name, target)
-    command_mv = 'mv {} {}'.format(path_father_dir, out)
+    command_mv = 'mv {}/{}.jar {}/'.format(path_father_dir,name, out)
     execute_command(command_jar,log)
     execute_command(command_mv,log)
 
