@@ -33,7 +33,7 @@ def manger(root_dir, out_dir):
     """
     manage the process
     """
-    if os.path.isdir(root_dir):
+    if os.path.isdir(root_dir) is False:
         msg = "[Error] the dir path is not a valid one --> {}".format(root_dir)
         raise Exception(msg)
     src_dir = pt.mkdir_system(out_dir, 'JARS_D4J')
