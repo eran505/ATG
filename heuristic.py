@@ -55,6 +55,7 @@ def manger(root_dir, out_dir,filter_time_b=None):
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
     jar_making_process(src_dir)
+    os.chdir(src_dir)
     util_d4j.rm_dir_by_name(src_dir,'debug_dir')
     util_d4j.rm_dir_by_name(src_dir, 'out_test')
     mk_call_graph(src_dir)
