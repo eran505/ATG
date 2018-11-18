@@ -84,7 +84,7 @@ def run_tests(list_test_tar,d4j_path='/home/ise/programs/defects4j/framework/bin
             out_test_dir = item['output']
         command_test = '{0}/run_bug_detection.pl -d {1}/ -p {2} -v {3}f -o {4} {5} -D'.format(d4j_dir_bin,
                                                                                               item['path'],
-                                                                                              item['project'],
+                                                                                              item['p_name'],
                                                                                               item['version'],
                                                                                               out_test_dir,
                                                                                             tmp_command)
