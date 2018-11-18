@@ -49,6 +49,14 @@ def manger(root_dir, out_dir,filter_time_b=None):
     print 'len(df):\t{}'.format(len(df))
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
+    jar_making_process(src_dir)
+
+
+def jar_making_process(src_dir):
+    all_project = pt.walk_rec(src_dir,[],'V_fixed',False)
+    for proj_i in all_project:
+        out_i = '/'.join(str(proj_i).split('/')[:-3])
+        make_jars(proj_i,out_i)
 
 
 def gatther_info_make_dir(row, out, list_info):
@@ -67,10 +75,22 @@ def gatther_info_make_dir(row, out, list_info):
     return out_dir_i
 
 
+def make_jars(path_proj, out_dir, src_dir_compile='target/classes/org', test_dir_compile='target/gen-tests/org'):
+    '''
+    make a jars one for the src files one for the test files
+    # jar cvf <name>.jar <target_dir>
+    '''
+    util_d4j.make_jar("{}/{}".format(path_proj,src_dir_compile),'src_classes',out_dir)
+    util_d4j.make_jar("{}/{}".format(path_proj, test_dir_compile), 'test_classes', out_dir)
+
+
+
 def main_parser():
     args = sys.argv
     if args[1] == 'jar':
         manger(args[2], args[3],filter_time_b=[60])
+    if args[1] == 'j':
+        jar_making_process(args[2])
 
 
 if __name__ == '__main__':

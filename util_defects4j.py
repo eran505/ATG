@@ -70,7 +70,6 @@ def run_tests(list_test_tar,d4j_path='/home/ise/programs/defects4j/framework/bin
     tmp_command=''
     d4j_dir_bin = '/'.join(str(d4j_path).split('/')[:-1])
     for item in list_test_tar:
-        print item
         if 'tmp_dir' in item:
             tmp_command = '-t {}'.format(item['tmp_dir'])
         p_name = item['p_name']
@@ -107,6 +106,24 @@ def write_log(father_dir, info, name='missing_pred_class'):
         f.write('\n')
 
 
+def execute_command(command,log_dir=None):
+    print "[OS] {}".format(command)
+    process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate()
+    if log_dir is not None:
+        write_log(log_dir, command, 'testing_commands.log')
+        write_log(log_dir, stdout, 'testing_stdout.log')
+        write_log(log_dir, stderr, 'testing_stderr.log')
+
+
+def make_jar(path_target_dir, name, out, log=None):
+    path_father_dir = '/'.join(str(path_target_dir).split('/')[:-1])
+    os.chdir(path_father_dir)
+    target = str(path_target_dir).split('/')[-1]
+    command_jar = 'jar cvf {}.jar {}'.format(name, target)
+    command_mv = 'mv {} {}'.format(path_father_dir, out)
+    execute_command(command_jar,log)
+    execute_command(command_mv,log)
 
 
 if __name__ == "__main__":
