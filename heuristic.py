@@ -20,9 +20,11 @@ def scan_all_test_jar(path_target, file_name='jar_test_df', out=None):
         project_name = arr_rel_path[-6].split('_')[1]
         bug_id = arr_rel_path[-6].split('_')[2]
         date = '_'.join(arr_rel_path[-6].split('_')[4:])
-        d_info.append({'JAR_path': item, 'Test_index': test_index, 'Fitness_Evosutie': fitness_evolution,
+        d= {'JAR_path': item, 'Test_index': test_index, 'Fitness_Evosutie': fitness_evolution,
                        'time_budget': time_budget, 'Project_Name': project_name,
-                       'bug_ID': bug_id, 'Date': date})
+                       'bug_ID': bug_id, 'Date': date}
+        print d
+        d_info.append(d)
     df = pd.DataFrame(d_info)
     if out is not None:
         df.to_csv('{}/{}.csv'.format(out, file_name))
