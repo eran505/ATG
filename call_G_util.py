@@ -39,7 +39,8 @@ class Call_g:
         pat_prefix = '.'.join(arr_data[0].split()[0].split(':')[1].split('.')[:-1])
         lookup_pattren.append(pat_prefix)
         for line in arr_data:
-
+            if len(line) < 1:
+                continue
             flag = 0
             for pat in remove_pattrens:
                 if str(line).__contains__(pat):
