@@ -1,6 +1,9 @@
 
 import os
 import pit_render_test as pt
+from subprocess import Popen, PIPE, check_call, check_output
+import sys, time,shlex
+
 
 def change_runtime_and_gen_jars(version='0'):
     if version == '0':
@@ -53,6 +56,56 @@ def change_evo_suite_version_D4j(new_ver='evosuite-1.0.5',path_d4j='/home/ise/pr
         command_cp_mv = 'cp {} {}/{}.jar'.format(res_file[0],path_d4j,d4j_name_used)
         print '[OS] {}'.format(command_cp_mv)
         os.system(command_cp_mv)
+
+
+
+def run_tests(list_test_tar,d4j_path='/home/ise/programs/defects4j/framework/bin/defects4j'):
+    '''
+    /home/ise/programs/defects4j/framework/bin/run_bug_detection.pl
+    -d ~/Desktop/d4j_framework/test s/Math/evosuite-branch/0/ -p Math -v 3f -o ~/Desktop/d4j_framework/out/ -D
+
+    sudo cpan -i DBD::CSV
+    '''
+    print "---test phase----"
+    tmp_command=''
+    d4j_dir_bin = '/'.join(str(d4j_path).split('/')[:-1])
+    for item in list_test_tar:
+        if 'tmp_dir' in item:
+            tmp_command = '-t {}'.format(item['tmp_dir'])
+        p_name = item['p_name']
+        if 'output' not in item:
+
+            dir_out_bug_i = '/'.join(str(item['path']).split('/')[:-3])
+            out_test_dir = pt.mkdir_system(dir_out_bug_i, 'Test_P_{}_ID_{}'.format(p_name,
+                                                                                       str(time.time() % 1000).split(
+                                                                                           '.')[0]))
+        else:
+            dir_out_bug_i = item['log']
+            out_test_dir = item['output']
+        command_test = '{0}/run_bug_detection.pl -d {1}/ -p {2} -v {3}f -o {4} {5} -D'.format(d4j_dir_bin,
+                                                                                              item['path'],
+                                                                                              item['project'],
+                                                                                              item['version'],
+                                                                                              out_test_dir,
+                                                                                            tmp_command)
+        print "[OS] {}".format(command_test)
+        process = Popen(shlex.split(command_test), stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        write_log(dir_out_bug_i, command_test, 'testing_commands.log')
+        write_log(dir_out_bug_i, stdout, 'testing_stdout.log')
+        write_log(dir_out_bug_i, stderr, 'testing_stderr.log')
+
+def write_log(self, father_dir, info, name='missing_pred_class'):
+    """
+    write to log dir
+    """
+    dir_p = pt.mkdir_system(father_dir, 'loging', False)
+    with open("{}/{}".format(dir_p, '{}.txt'.format(name)), 'a') as f:
+        f.write(info)
+        f.write('\n')
+
+
+
 
 if __name__ == "__main__":
     print '--- util file py -----'

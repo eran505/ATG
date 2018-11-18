@@ -39,6 +39,7 @@ def befor_op():
 
     project_dict['Time'] = {'project_name': "Joda-Time", 'repo_path': '/home/ise/tmp_d4j/joda-time', "num_bugs": 27}
 
+    project_dict['tika'] = {'project_name': "tika", 'repo_path': '/home/ise/eran/git_repos/tika', "num_bugs": 27}
 
 
 
@@ -246,7 +247,7 @@ def get_Version_name_via_commit(commit_id,p_name):
     return current_tag
 
 def make_auto_config_TAG(out_dir, log_dir, project_name='Math', commit_id='8c2199df0f613c63bd362303c953cee66712d56c',
-                         time_bol=False):
+                         time_bol=False,single=True):
     path_repo = project_dict[project_name]['repo_path']
     if os.path.isdir(path_repo) is False:
         print "the path is not valid ==> {}".format(path_repo)
@@ -261,8 +262,9 @@ def make_auto_config_TAG(out_dir, log_dir, project_name='Math', commit_id='8c219
     if current_tag.__contains__('^'):
         current_tag = current_tag.split('^')[0]
     current_tag = current_tag.replace('\n', '')
-    #command_git = "git tag --format='%(creatordate:short)%09%(refname:strip=2)' --sort=taggerdate"
-    #std_out, std_err = run_GIT_command_and_log(path_repo, command_git, log_dir, '{}_AllTag'.format(commit_id))
+    if single:
+        return current_tag
+    # the section below is to get older TAG name for the config file
     list_tag,std_out=get_sorted_git_tag(p_name=project_name)
     res = get_previous_TAG(current_tag, std_out, time=time_bol)
     if res is None:
@@ -370,13 +372,13 @@ def make_file_config(row, out_path, p_name):
 def get_tag_commit(csv_file='/home/ise/tmp_d4j/projects/csvs/Closure_commit_Git.csv', out='/home/ise/tmp_d4j/config'):
     df = pd.read_csv(csv_file, index_col=0)
     project_name = str(csv_file).split('/')[-1].split('_')[0]
-    out_proj_curr = pt.mkdir_system(out, '{}'.format(project_name))
-    log_out_files = pt.mkdir_system(out_proj_curr, 'LOG')
-    config_out_files = pt.mkdir_system(out_proj_curr, 'File_conf')
+    out_proj_curr = pt.mkdir_system(out, '{}'.format(project_name),False)
+    log_out_files = pt.mkdir_system(out_proj_curr, 'LOG',False)
+    config_out_files = pt.mkdir_system(out_proj_curr, 'File_conf',False)
     df['TAG_NAME'] = df['buggy_Git_ID_commit'].apply(
         lambda commit_i: make_auto_config_TAG(config_out_files, log_out_files, project_name, commit_i))
-    df['TAG_DATE'] = df['buggy_Git_ID_commit'].apply(
-        lambda commit_i: make_auto_config_TAG(config_out_files, log_out_files, project_name, commit_i, time_bol=True))
+    #df['TAG_DATE'] = df['buggy_Git_ID_commit'].apply(
+    #    lambda commit_i: make_auto_config_TAG(config_out_files, log_out_files, project_name, commit_i, time_bol=True))
     df.to_csv('{}/df.csv'.format(out_proj_curr))
    # df.apply(make_file_config, out_path=config_out_files, p_name=project_name, axis=1)
 
@@ -460,18 +462,27 @@ def pars_commit_msg(p_name='Time',out='/home/ise/tmp_d4j/config'):
 def jira_is_bug(msg_str,p_name):
     uper_p_name = str(p_name).upper()
     rec = '{}-[0-9]+'.format(uper_p_name.lower())
-    df = pd.read_csv('/home/ise/tmp_d4j/JIRA/JIRA_{}.csv'.format(uper_p_name))
+    df = pd.read_csv('/home/ise/eran/git_repos/JIRA/{}/all.csv'.format(p_name.lower()))
     tmp = re.compile(rec).search(msg_str)
     list_cand=[]
     for item in tmp.regs:
         list_cand.append(msg_str[item[0]:item[1]])
     list_cand = [str(x).upper() for x in list_cand]
-    set_list = list(df['Issue key'].unique())
-    for cand in list_cand:
-        if cand in set_list:
-            return 1,'JIRA'
-        else:
-            return 0,'not bug JIRA'
+#    if msg_str.__contains__('tika-2599'):
+#        print ""
+    for x in list_cand:
+        x= x.replace(' ','')
+        if x in df['Issue key'].values:
+            return 1, 'JIRA'
+
+    return 0, 'not bug JIRA'
+
+    #set_list = list(df['Issue key'].unique())
+    #for cand in list_cand:
+    #    if cand in set_list:
+    #        return 1,'JIRA'
+    #    else:
+    #        return 0,'not bug JIRA'
 
 def classifier_is_fixed(msg,p_name):
     msg_str = str(msg).lower()
@@ -479,6 +490,9 @@ def classifier_is_fixed(msg,p_name):
         return 0,'typo'
     if msg_str.__contains__('javadoc'):
         return 0, 'javadoc'
+    if p_name == 'tika':
+        if regx_look_up(msg, r'TIKA-[0-9]+'):
+            return jira_is_bug(msg_str,p_name)
     if  p_name == 'Math':
         if regx_look_up(msg, r'MATH-[0-9]+'):
             return jira_is_bug(msg_str,p_name)
@@ -574,7 +588,7 @@ def get_sorted_git_tag(p_name='Time'):
         tags_sort.append(item[0])
         str_results += '{}\t{}\n'.format(item[0], item[1])
         print "{}\t\t{}".format(item[0], item[1])
-    return tags_sort,str_result
+    return tags_sort
 
 def str_acc_helper(txt,strat,end):
     acc=''
@@ -611,8 +625,8 @@ def regx_look_up(txt,rec=r'#[0-9]+'):
 
 import numpy as np
 
-def bug_distribution(name_proj):
-    csv_commit_log_path = '/home/ise/tmp_d4j/config/{}/log_commits.csv'.format(name_proj)
+def bug_distribution(name_proj,dir='/home/ise/tmp_d4j/config'):
+    csv_commit_log_path = '{}/{}/log_commits.csv'.format(dir,name_proj)
     out='/'.join(str(csv_commit_log_path).split('/')[:-1])
     df = pd.read_csv(csv_commit_log_path, index_col=0)
     print list(df)
@@ -643,13 +657,16 @@ def foo():
 
 if __name__ == "__main__":
     befor_op()
-    new_data_set()
-    bug_distribution('Lang')
+
+
+    #projects = ['Math','Lang','Mockito','Time','Chart','Closure']
+    #new_data_set()
+    #pars_commit_msg('tika',out='/home/ise/eran/git_repos/out')
+    bug_distribution(dir='/home/ise/tmp_jira/config',name_proj='camel')
     exit()
     #bug_distribution('Math')
     #    fixed compilation errors (oups
     #    fix to bypass ant failures
-    projects = ['Math','Lang','Mockito','Time','Chart','Closure']
     projects = ['accumulo','camel','commons-math','flink',
                 'jackrabbit-oak','logging-log4j2','maven','wicket']
     project = ['jackrabbit-oak','logging-log4j2','maven','wicket']

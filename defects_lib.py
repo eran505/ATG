@@ -1619,7 +1619,7 @@ class D4J_tool:
             return True
         return False
 
-    def run_tests(self, list_test_tar):
+    def run_tests(self, list_test_tar,tmp=None):
         '''
         /home/ise/programs/defects4j/framework/bin/run_bug_detection.pl
         -d ~/Desktop/d4j_framework/test s/Math/evosuite-branch/0/ -p Math -v 3f -o ~/Desktop/d4j_framework/out/ -D
@@ -1627,6 +1627,9 @@ class D4J_tool:
         sudo cpan -i DBD::CSV
         '''
         print "---test phase----"
+        tmp_command=''
+        if tmp is not None:
+            tmp_command='-t {}'.format(tmp)
         d4j_dir_bin = '/'.join(str(self.root_d4j).split('/')[:-1])
         for item in list_test_tar:
             if 'output' not in item:
@@ -1637,11 +1640,12 @@ class D4J_tool:
             else:
                 dir_out_bug_i = item['log']
                 out_test_dir = item['output']
-            command_test = '{0}/run_bug_detection.pl -d {1}/ -p {2} -v {3}f -o {4} -D'.format(d4j_dir_bin,
+            command_test = '{0}/run_bug_detection.pl -d {1}/ -p {2} -v {3}f -o {4} {5} -D'.format(d4j_dir_bin,
                                                                                               item['path'],
                                                                                               item['project'],
                                                                                               item['version'],
-                                                                                              out_test_dir)
+                                                                                              out_test_dir,
+                                                                                            tmp_command)
             print "[OS] {}".format(command_test)
             process = Popen(shlex.split(command_test), stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()

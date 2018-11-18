@@ -1,7 +1,11 @@
+from numpy.core.multiarray import ndarray
+from typing import Dict, Any
+
 import pit_render_test
 import os.path
 import igraph as ig
-
+import numpy as np
+import pandas as pd
 
 class Call_g:
     def __init__(self, path_file):
@@ -10,17 +14,18 @@ class Call_g:
         self.method_graph = {}
         self.G_method = ig.Graph()
         self.G_class = ig.Graph()
-
+        self.matrix_cover=None
+        self.cover_df=None
     def init_G(self):
         self.G_class['name']
 
-    def read_and_process(self):
+    def read_and_process(self,print_graph =False):
         """
         process and read the data from the given file
         :return: None
         """
-        remove_pattrens = ['ESTest_scaffolding', 'junit.Assert','org.evosuite']
-        lookup_pattren = []
+        remove_pattrens = ['ESTest_scaffolding', 'junit.Assert','org.evosuite','$']
+        lookup_pattren = ['org.apache.commons.lang']
         if os.path.isfile(self.data_path) is False:
             err_msg = "[Error] invalid path: {} ".format(self.data_path)
             raise Exception(err_msg)
@@ -50,13 +55,20 @@ class Call_g:
         method_graph = self.G_method
         class_graph = self.G_class
 
+        '''
+        the next code section is responsible for printing the graph 
+        green = Src Class
+        blue = Evosutie Class 
+        '''
+
         class_graph.vs["label"] = [str(name).split('.')[-1] for name in class_graph.vs["name"]]
         color_dict={True:'blue', False:'green'}
         class_graph.vs["color"] = [color_dict[indctor] for indctor in class_graph.vs["is_test"]]
         layout = class_graph.layout("kk")
-        ig.plot(class_graph, layout=layout)
+        if print_graph:
+            ig.plot(class_graph, layout=layout)
 
-    def process_data(self, line_data):
+    def process_data(self, line_data,method=False,dup=True):
         """
         M for invoke virtual calls
         I for invoke interface calls
@@ -66,12 +78,20 @@ class Call_g:
         :param line_data:
         :return:
         """
+
         symbol = line_data[0]
         line_data = line_data[2:]
         split_data = str(line_data).split()
         klass = split_data[0]
         call_class = split_data[1]
+        call_class_is_test=False
+        klass_is_test = False
+        if call_class.__contains__('ESTest'):
+            call_class_is_test=True
+        if klass.__contains__('ESTest'):
+            klass_is_test=True
         if symbol == 'M':
+
             print "----method----"
             method_name = klass.split(':')[1]
             class_name = klass.split(':')[0]
@@ -79,36 +99,49 @@ class Call_g:
             prop_invok = call_class[1]
             invoked_method = str(call_class).split(':')[1]
             inv_method, inv_args = self.get_args_method(invoked_method)
-            print "{}:{} --> ({}){}:{}( {} )".format(class_name, method_name,
-                                                     prop_invok, invoked_class, inv_method, inv_args)
             src_name = '{}:{}'.format(class_name, method_name)
             target_name = '{}:{}'.format(invoked_class, inv_method)
-            self.add_node('method', {'name': src_name, 'is_test': True})
-            self.add_node('method', {'name': target_name, 'is_test': False})
-            self.add_edge(src_name, target_name)
+            if method:
+                print "{}:{} --> ({}){}:{}( {} )".format(class_name, method_name,
+                                                         prop_invok, invoked_class, inv_method, inv_args)
+                self.add_node('method', {'name': src_name, 'is_test': klass_is_test})
+                self.add_node('method', {'name': target_name, 'is_test': call_class_is_test})
+                self.add_edge(src_name, target_name,is_dup=dup)
 
             src_name=class_name
             target_name=invoked_class
-            self.add_node('class', {'name': src_name, 'is_test': True})
-            self.add_node('class', {'name': target_name, 'is_test': False})
-            self.add_edge(src_name, target_name,'class')
+            self.add_node('class', {'name': src_name, 'is_test': klass_is_test})
+            self.add_node('class', {'name': target_name, 'is_test': call_class_is_test})
+
+            self.add_edge(src_name, target_name,'class',is_dup=dup)
 
         elif symbol == 'C':
             print '---class---'
             print "{}-->{}".format(klass, call_class)
-            self.add_node('class', {'name': klass, 'is_test': True})
-            self.add_node('class', {'name': call_class, 'is_test': False})
-            self.add_edge(klass, call_class,'class')
+            self.add_node('class', {'name': klass, 'is_test': klass_is_test})
+            self.add_node('class', {'name': call_class, 'is_test': call_class_is_test})
+            self.add_edge(klass, call_class,'class',is_dup=dup)
         else:
             print 'error: {}'.format(symbol)
             raise Exception("error")
 
+
+    def clean_text(self,txt):
+        '''
+        clean classes name from the text file
+        '''
+        if txt[-1]==';' and txt[0]=='[':
+            return txt[2:-1]
+        return txt
+
     def add_node(self, label, args_dico):
+
         if label == 'class':
             graph_g = self.G_class
         else:
             graph_g = self.G_method
         node_name = args_dico['name']
+        args_dico['name'] = self.clean_text(node_name)
         try:
             node = graph_g.vs.find(name=node_name)
         except ValueError:
@@ -121,13 +154,18 @@ class Call_g:
         else:
             return False
 
-    def add_edge(self, source_name, target_name, label='method'):
-        G = None
+    def add_edge(self, source_name, target_name, label='method',is_dup=False):
+        source_name=self.clean_text(source_name)
+        target_name=self.clean_text(target_name)
         if label == 'method':
             G = self.G_method
         else:
             G = self.G_class
-        G.add_edge(source_name, target_name)
+        if is_dup is False:
+            if G.are_connected(source_name, target_name) is False:
+                G.add_edge(source_name, target_name)
+        else:
+            G.add_edge(source_name, target_name)
 
     def get_args_method(self, data):
         size = len(str(data))
@@ -148,6 +186,71 @@ class Call_g:
                     acc_args = 'Null'
                 return method_name, acc_args
 
+    def coverage_matrix(self,step=10,out_df=None,debug=False):
+        '''
+        making a coverage matrix
+        :param step: matrix ^ step
+        :param out_df: path for DataFrame
+        :param debug: print process consol
+        :return: None
+        '''
+        coverage_dico={}  # type: Dict[Any, Dict[Any, ndarray]]
+        g = self.G_class
+        if debug:
+            print "is_directed = {} ".format(g.is_directed())
+        matrix = g.get_adjacency()
+        matrix = matrix.data
+        test_index={}
+        component_index={}
+        for node in g.vs:
+            if node["is_test"]:
+                test_index[node.index]=node['name']
+            else:
+                component_index[node.index]=node['name']
+        if debug:
+            print test_index
+            print component_index
+        adjacency_matrix = np.matrix(matrix)
+        adjacency_matrix = adjacency_matrix.astype(float)
+        adjacency_matrix_steps = self.matrixMul_rec(adjacency_matrix,step)
+        list_dict=[]
+        for index_evo in test_index.keys() :
+            tmp = adjacency_matrix_steps[:,index_evo]
+            if debug:
+                print "adjacency_matrix_10_step.shape={}".format(adjacency_matrix_steps.shape)
+            i = 0
+            d_item={}
+            for n in tmp :
+                totalsum = np.sum(n)
+                if totalsum>0:
+                    if debug:
+                        print g.vs[i]['name']
+                    d_item[g.vs[i]['name']]=totalsum
+                    list_dict.append({'test':g.vs[index_evo]['name'], 'component':g.vs[i]['name'],'score':totalsum })
+                i+=1
+            coverage_dico[g.vs[index_evo]['name']]=d_item
+
+        self.matrix_cover=coverage_dico
+        self.cover_df=pd.DataFrame(list_dict)
+        if debug:
+            print "------"*100
+            for key in coverage_dico.keys():
+                print "\t{}".format(key)
+                for ky_sec in  coverage_dico[key].keys():
+                    print "{}:{}".format(ky_sec,coverage_dico[key][ky_sec])
+        if out_df is None:
+            self.cover_df.to_csv('/home/ise/Desktop/new/zzz/df_coverage.csv')
+        else:
+            self.cover_df.to_csv('{}/df_coverage.csv'.format(out_df))
+
+    def matrixMul_rec(self,a, n):
+        '''
+        multi matrix rec function
+        '''
+        if (n <= 1):
+            return a
+        else:
+            return np.matmul(self.matrixMul_rec(a, n - 1), a)
 
 def g_test():
     g = ig.Graph()
@@ -160,14 +263,17 @@ def g_test():
     g.add_vertex(**x)
     g.add_vertex('xx')
     g.delete_vertices('xx')
-
     print g.vs['age']
 
     exit()
 
 
 if __name__ == "__main__":
-    g_test()
+    #g_test()
     print "in"
-    graph_obj = Call_g('/home/ise/Desktop/call_G/common_lang_test_callG.txt')
-    #graph_obj.read_and_process()
+    path_file = '/home/ise/Desktop/new/zzz/lang_57.txt'
+    graph_obj = Call_g(path_file)
+    graph_obj.read_and_process(False)
+    print "--"*60,'Q',"--"*60
+    graph_obj.coverage_matrix()
+    #print graph_obj.G_class.adjacent(target_vs)

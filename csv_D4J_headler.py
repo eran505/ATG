@@ -824,22 +824,23 @@ def itrate_rows(row,dico_l):
 
 
 
-def util(p_name='Lang',time_b=10):
+def util(p_name='Closure',time_b=70):
     '''
 
     :param p_name:
     :param time_b:
     :return:
     '''
+    print "-"*30,p_name,"-"*30
     out = '/home/ise/eran/out_csvs_D4j/rep_exp'
     df = pd.read_csv('/home/ise/eran/out_csvs_D4j/rep_exp/all.csv',index_col=0)
     print "df_size = {}".format(len(df))
     print "cols: {}".format(list(df))
     df = df.loc[df['project']==p_name]
     print df['time_budget'].value_counts()
-    exit()
-    #df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val == 15 else val)
-    #df['time_budget'] = df['time_budget'].apply(lambda val: time_b if val == 20 else val)
+    df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val > time_b-11 and val < time_b + 11 else val)
+    df['time_budget'] = df['time_budget'].apply(lambda val: time_b if val == 120 else val)
+    print df['time_budget'].value_counts()
     df['sum_detected']= df.groupby(['bug_ID', 'time_budget','project','TEST'])['detected_bug'].transform('sum')
     df['count_detected'] = df.groupby(['bug_ID', 'time_budget', 'project', 'TEST'])['detected_bug'].transform('count')
     df.drop('father_dir', axis=1, inplace=True)
@@ -851,6 +852,9 @@ def util(p_name='Lang',time_b=10):
     df.to_csv("{}/df_grouped_{}.csv".format(out,p_name))
 
     print len(df)
+
+
+
 
 def get_size_classes_csv(id, p_name,out_csv_path,tmp_dir='/tmp',root_d4j ='/home/ise/programs/defects4j/framework/bin/defects4j'):
     '''
@@ -917,10 +921,96 @@ def get_LOC(class_path):
     return size
 
 
+def get_bug_ID_contains_FP(p_name='Lang'):
+    '''
+    get the bug_ID that has FP and FP_Gen values
+    '''
+    print "Project Name : {}".format(p_name)
+    csv_path = '/home/ise/tmp_d4j/out/raw_data/{}.csv'.format(p_name)
+    df = pd.read_csv(csv_path, index_col=0)
+    if 'no_fp' in df['FP']:
+        df.loc[df['FP'] == 'no_fp', 'FP'] = None
+    if 'no_fp' in df['FP_genric']:
+        df.loc[df['FP_genric'] == 'no_fp', 'FP_genric'] = None
+    df_filter = df.dropna(subset=['FP'])                      # TODO: maybe add the Gen_FP
+    id_list_bug = df_filter['bug_ID'].unique()
+    filter_coluoms_by_bug_ID(list(id_list_bug ),p_name)
+    with open('/home/ise/tmp_d4j/out/id_has_FP/{}_BUG_FP.txt'.format(p_name),'w') as f:
+        for item in id_list_bug:
+            item = str(item).replace('\n','')
+            f.write("{}\n".format(item))
+    print id_list_bug
 
-def rep_exp(p_name='Time',rep=4):
+
+
+def filter_coluoms_by_bug_ID(bug_ids,p_name='Lang'):
+    path_csv = '{}/{}.csv'.format('/home/ise/tmp_d4j/out/result', p_name)
+    df = pd.read_csv(path_csv)
+    print len(df)
+    df = df.loc[df['bug_ID'].isin(bug_ids)]
+    print len(df)
+    df.to_csv('{}/{}_FP.csv'.format('/home/ise/tmp_d4j/out/result_only_fp/', p_name))
+
+def rep_exp_new(p_name='Lang',rep=4,item=1):
+    d_list_res = []
+    # csv_path = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_{}.csv'.format(p_name)
+    csv_path = '/home/ise/tmp_d4j/out/raw_data/{}.csv'.format(p_name)
+    df = pd.read_csv(csv_path, index_col=0)
+    max_all_rep = df['count_detected'].max()
+    print 'max_rep', df['count_detected'].max()
+    print 'min_rep', df['count_detected'].min()
+    max_rep = df['count_detected'].max()
+    x =  df['count_detected'].value_counts().reset_index().rename(columns={'index': 'Rep Index', 'count_detected': 'Value'})
+    x.to_csv('{}/rep_frq_{}.csv'.format('/home/ise/tmp_d4j/out', p_name))
+    for x in range(1, max_rep + 1):
+        df['{}_rep'.format(x)] = df.apply(make_rep, val=x, count='count_detected', sum='sum_detected', axis=1)
+    #    df.to_csv('/home/ise/eran/out_csvs_D4j/rep_exp/df.csv')
+    print list(df)
+    id_list_bug = df['bug_ID'].unique()
+    for bug_i in id_list_bug[2+1:]:
+        print "--- BUG {} ----".format(bug_i)
+        df_filter = df.loc[df['bug_ID'] == bug_i]
+        df_target = df_filter.loc[df_filter['faulty_class'] == 1]
+        size_tset_suite = len(df_filter)
+        size_faulty_suite = len(df_target)
+        rep_target_max = df_target['count_detected'].sum()
+        print "rep_target_max: {}".format(rep_target_max)
+        if 'no_fp' in df_filter['FP'] :
+            df_filter.loc[df_filter['FP'] == 'no_fp', 'FP'] = None
+        if 'no_fp' in df_filter['FP_genric']:
+            df_filter.loc[df_filter['FP_genric'] == 'no_fp', 'FP_genric'] = None
+        for item_number in range(1,3):
+            for rep_i in range(1, max_all_rep + 1):
+                val_random = pick_by_prop(df_filter, 'Random', rep=rep_i,item_num=item_number)
+                val_fp = pick_by_prop(df_filter, 'FP', rep=rep_i, item_num=item_number)
+                val_fp_gen = pick_by_prop(df_filter, 'FP_genric', rep=rep_i, item_num=item_number)
+                val_loc = pick_by_prop(df_filter, 'LOC', rep=rep_i, item_num=item_number)
+                val_target = pick_by_prop(df_target, 'faulty_class',rep=rep_i,item_num=item_number)
+
+
+                d_list_res.append({'bug_ID': bug_i, 'kill_val': val_target, 'method': 'target', 'rep_sampled': rep_i,'item':item_number,
+                                   'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+
+
+                d_list_res.append({'bug_ID': bug_i, 'kill_val': val_random, 'method': 'random', 'rep_sampled': rep_i,'item':item_number,
+                                   'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+
+
+                d_list_res.append({'bug_ID': bug_i, 'kill_val': val_fp, 'method': 'FP', 'rep_sampled': rep_i,'item':item_number,
+                                   'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+
+                d_list_res.append({'bug_ID': bug_i, 'kill_val': val_loc, 'method': 'LOC', 'rep_sampled': rep_i,'item':item_number,
+                                   'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+
+                d_list_res.append({'bug_ID': bug_i, 'kill_val': val_fp_gen, 'method': 'FP_gen', 'rep_sampled': rep_i,'item':item_number,
+                                   'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+    df_res = pd.DataFrame(d_list_res)
+    df_res.to_csv('{}/{}.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
+
+def rep_exp(p_name='Math',rep=4):
     d_list_res=[]
-    csv_path = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_{}.csv'.format(p_name)
+    #csv_path = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_{}.csv'.format(p_name)
+    csv_path = '/home/ise/tmp_d4j/out/{}.csv'.format(p_name)
     df = pd.read_csv(csv_path,index_col=0)
     max_all_rep = df['count_detected'].max()
     print 'max_rep',df['count_detected'].max()
@@ -955,8 +1045,23 @@ def rep_exp(p_name='Time',rep=4):
             d_list_res.append({'bug_ID':bug_i, 'kill_val':val_random,'method':'random','rep_sampled':rep_i,'size_suite':size_tset_suite,'size_faulty_classes':size_faulty_suite})
             d_list_res.append({'bug_ID': bug_i, 'kill_val': val_target, 'method': 'target', 'rep_sampled': rep_i,'size_suite':size_tset_suite,'size_faulty_classes':size_faulty_suite})
     df_res = pd.DataFrame(d_list_res)
-    df_res.to_csv('{}/out_{}.csv'.format('/home/ise/eran/out_csvs_D4j/rep_exp',p_name))
+    df_res.to_csv('{}/{}.csv'.format('/home/ise/eran/out_csvs_D4j/rep_exp/out',p_name))
 
+def pick_by_prop(df_filter,prop='FP',rep=3,item_num=1):
+    df_filter = df_filter.dropna(subset=[prop])
+    if len(df_filter) == 0 :
+        return None
+    if len(df_filter)<item_num:
+        item_num=len(df_filter)
+    df_filter[prop] = df_filter[prop].astype(float)
+    df_cut = df_filter.nlargest(item_num, columns=[prop])
+    if len(df_cut) > item_num:
+        print 'in'
+        df_elements = df_cut.sample(n=item_num)
+        val = df_elements['{}_rep'.format(rep)].sum()
+    else:
+        val = df_cut['{}_rep'.format(rep)].sum()
+    return val
 
 
 def pick_choose_rep_exp(d,df,num_of_rep=4):
@@ -984,6 +1089,8 @@ def make_rep(row,val,count='count',sum='sum'):
     if val == 'avg':
         res =  float(sum_i)/float(count_i)
         return res
+    if val > count_i: #################################TODO: look at this line hendel the missing value of the rep
+        val=count_i
     if val <= count_i:
         Pr = float(sum_i)/float(count_i)
         res = pow((float(1)-Pr),float(val))
@@ -995,7 +1102,7 @@ def make_rep(row,val,count='count',sum='sum'):
     return None
 
 
-def merger():
+def merger(): # 1
     '''
     merge all the data from diff server into one big csv (all.csv)
     :return:
@@ -1041,12 +1148,151 @@ def normalizer_col(df,target,suffix='normalize'):
         df["{}_{}".format(col_name,suffix)] = (df[col_name] - min_value) / (max_value - min_value)
     return df
 
+def get_bug_d4j_major(p_name='Mockito',fp_dir='/home/ise/tmp_d4j/out_pred/out',dir_rep_exp='/home/ise/eran/out_csvs_D4j/rep_exp',config_dir='/home/ise/tmp_d4j/config',out='/home/ise/tmp_d4j/out',major=False):
+    '''
+    Taking as an input the group csv and the fp cvs and df info on each bug making | FP colounm | LOC colounm | RANODM colounm |
+    :param p_name: project name
+    :param fp_dir: where all the FP csvs
+    :param dir_rep_exp: where the group csv
+    :param config_dir: where df csv
+    :param out: where to write the output
+    :return: None
+    '''
+    df = pd.read_csv('{}/{}/df.csv'.format(config_dir,p_name),index_col=0)
+    df_group = pd.read_csv('{}/df_grouped_{}.csv'.format(dir_rep_exp,p_name))
+    csv_files = pt.walk_rec('{}/{}'.format(fp_dir,p_name),[],'FP.csv')
+    d_csv_fp={}
+    for item in csv_files:
+        name=str(item).split('/')[-1].split('.')[0].split('_')[1]
+        df_i = pd.read_csv(item,index_col=0)
+        d_csv_fp[name]=df_i
+    print "done"
+    if p_name =='Math':
+        df.loc[df['TAG_NAME'] == 'trunk_tmp_2012-03-01', 'TAG_NAME'] = 'MATH_2_2_1'
+    for i in range(4):
+        df['MAJOR_{}'.format(i)] = df['TAG_NAME'].apply(lambda x : " " if len(str(x).split('_')) <= i else str(x).split('_')[i])
+    print list(df)
+    if major is False:
+        ky = d_csv_fp.keys()[0]
+        df['MAJOR_1']=ky
+    df_group['FP']=df_group.apply(get_FP,dico_fp=d_csv_fp,df_info=df,axis=1)
+    df_group['FP_genric']=df_group.apply(get_FP,dico_fp=d_csv_fp,df_info=df,mean=True,axis=1)
+    df_group['LOC'] = df_group.apply(add_LOC,p_name=p_name,axis=1)
+    max_LOC = df_group['LOC'].max()
+    min_LOC = df_group['LOC'].min()
+    df_group['LOC_P'] = df_group['LOC'].apply(lambda x: float(x - min_LOC) / float(max_LOC - min_LOC))
+    df_group['Random'] = np.random.random_sample(size=len(df_group))
+    df_group.to_csv('{}/{}.csv'.format(out,p_name))
+
+
+def get_FP(row,dico_fp,df_info,mean=False,gen_name='name_genric'):
+    '''
+    add the FP probability to the group dataframe
+    '''
+    id_i = row['bug_ID']
+    test_i = row['TEST']
+    value = df_info.loc[df_info['bug_ID'] == id_i, 'MAJOR_1'].iloc[0]
+    if value not in dico_fp:
+        return "no_fp"
+    df_fp = dico_fp[value]
+    df_tmp = df_fp.loc[df_fp['name'] == test_i, 'FP']
+    if len(df_tmp) > 0:
+        value_fp = df_tmp.iloc[0]
+    else:
+        print test_i
+        return "no_fp"
+    if mean:
+        value_fp = np.mean(df_tmp )
+        #value_fp =df_fp.loc[df_fp[gen_name] == test_i, 'FP'].mean()
+    return value_fp
+
+def add_LOC(row,p_name,path='/home/ise/tmp_d4j/LOC'):
+    '''
+    adding the line of code for the class
+    '''
+    bug_id_i = row['bug_ID']
+    test_i = row['TEST']
+    file_csv = "{0}/{1}/LOC_{1}_{2}.csv".format(path,p_name,bug_id_i)
+    if os.path.isfile(file_csv) is False:
+        return None
+    df_loc = pd.read_csv(file_csv)
+    value_loc = df_loc.loc[df_loc['name'] == test_i, 'LOC'].iloc[0]
+    return value_loc
+
+def make_FP_pred(dir_target='/home/ise/tmp_d4j/out_pred/out/Math/Math_3'):
+    '''
+    concat the two csv files from the weka dir to one big Dateframe and make the probabily for bug,
+    by 1-probablit for a vaild component
+    '''
+    out = '/'.join(str(dir_target).split('/')[:-1])
+    name = str(dir_target).split('/')[-1]
+    p_name = str(name).split('_')[0]
+    res_test_set = pt.walk_rec(dir_target,[],'testing__results_pred.csv')
+    most_csv = pt.walk_rec(dir_target,[],'Most_names_File.csv')
+    if len(most_csv)==1 and len(res_test_set)==1 is False:
+        print "[Error] no csv in the dir-> {}".format(dir_target)
+        return None
+    df_most = pd.read_csv(most_csv[0],names=['class'])
+    df_res =  pd.read_csv(res_test_set [0])
+    print 'df_most: ',list(df_most),'\tsize: ',len(df_most)
+    print 'df_res: ',list(df_res),'\tsize: ',len(df_res)
+    df = pd.concat([df_res, df_most], axis=1)
+    df['FP'] = float(1) - df['prediction']
+    df['name'] = df['class'].apply(lambda x: path_to_package_name(p_name,x))
+    if p_name == 'Math':
+        df['name_genric'] = df['name'].apply(lambda x: str(x).replace('.math2.','.math.').replace('.math3.','.math.').replace('.math4.','.math.'))
+    if p_name == 'Lang':
+        df['name_genric'] = df['name'].apply(lambda x: str(x).replace('.lang2.','.lang.').replace('.lang3.','.lang.').replace('.lang4.','.lang.'))
+    df.to_csv("{}/{}_FP.csv".format(dir_target,name))
+
+
+def path_to_package_name(p_name,path_input):
+    item = str(path_input).replace('\\','/')
+    start_package = 'org'
+    if p_name == 'Closure':
+        start_package = 'com'
+    if item[-5:] != '.java':
+        return None
+    try:
+        pack = pt.path_to_package(start_package, item, -1 * len('.java'))
+    except Exception as e:
+        pack=None
+    return pack
+
+
+def parser():
+    flag = sys.argv[1]
+    if flag == 'Make_FP':
+        # make a FP file using the Weka outputs files from the Fault-Prediction model
+        make_FP_pred(sys.argv[2])
+    if flag == 'Only_FP':
+        # this Function filter out only the bug IDs that has FP prediction
+        get_bug_ID_contains_FP(sys.argv[2])
+    if flag == 'exp_rep':
+        # make the rep experiment
+        rep_exp_new(sys.argv[2])
+    if flag =='LOC':
+        proj = sys.argv[2]
+        #proj = 'Lang'
+        for i in range(1, 200):
+            get_size_classes_csv(i, proj, '/home/ise/tmp_d4j/LOC/{}'.format(proj))
+
+
+
 if __name__ == "__main__":
-    add_random_probabilityes(loc=True)
+    #make_FP_pred()
+    #rep_exp_new('Mockito')
+    rep_exp_new('Time')
+    get_bug_ID_contains_FP('Time')
+    #get_bug_d4j_major()
+    #project_arr=['Chart','Time','Closure','Lang','Mockito','Math']
     exit()
-    proj='Mockito'
-    for i in range(1,39):
-        get_size_classes_csv(i,proj,'/home/ise/tmp_d4j/LOC/{}'.format(proj))
+    rep_exp_new(p_name='Lang')
+    get_bug_ID_contains_FP(p_name='Lang')
+
+    #exit()
+    #add_random_probabilityes(loc=True)
+
 
     exit()
     util(p_name='Time')
