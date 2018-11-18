@@ -31,7 +31,7 @@ def scan_all_test_jar(path_target, file_name='jar_test_df', out=None):
     return df
 
 
-def manger(root_dir, out_dir):
+def manger(root_dir, out_dir,filter_time_b=None):
     """
     manage the process
     """
@@ -41,7 +41,11 @@ def manger(root_dir, out_dir):
     src_dir = pt.mkdir_system(out_dir, 'JARS_D4J')
     df = scan_all_test_jar(root_dir, out=src_dir)
     list_jar_info = []
-    exit()
+    if filter_time_b is not None:
+        if isinstance(filter_time_b , list):
+            df = df.loc[df['time_budget'].isin(filter_time_b)]
+        else:
+            df = df.loc[df['time_budget'] == filter_time_b]
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
 
@@ -65,7 +69,7 @@ def gatther_info_make_dir(row, out, list_info):
 def main_parser():
     args = sys.argv
     if args[1] == 'jar':
-        manger(args[2], args[3])
+        manger(args[2], args[3],60)
 
 
 if __name__ == '__main__':
