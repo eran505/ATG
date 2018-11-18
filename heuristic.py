@@ -18,7 +18,7 @@ def scan_all_test_jar(path_target, file_name='jar_test_df', out=None):
         fitness_evolution = arr_rel_path[-3]
         time_budget = arr_rel_path[-5].split('=')[1]
         project_name = arr_rel_path[-6].split('_')[1]
-        bug_id = arr_rel_path[-6].split('_')[2]
+        bug_id = arr_rel_path[-6].split('_')[3]
         date = '_'.join(arr_rel_path[-6].split('_')[4:])
         d= {'JAR_path': item, 'Test_index': test_index, 'Fitness_Evosutie': fitness_evolution,
                        'time_budget': time_budget, 'Project_Name': project_name,
@@ -41,6 +41,7 @@ def manger(root_dir, out_dir):
     src_dir = pt.mkdir_system(out_dir, 'JARS_D4J')
     df = scan_all_test_jar(root_dir, out=src_dir)
     list_jar_info = []
+    exit()
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
 
