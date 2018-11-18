@@ -46,6 +46,7 @@ def manger(root_dir, out_dir,filter_time_b=None):
             df = df.loc[df['time_budget'].isin(filter_time_b)]
     df = df.reset_index()
     df.set_index(np.arange(len(df.index)),inplace=True)
+    df.drop_duplicates(inplace=False)
     print 'len(df):\t{}'.format(len(df))
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
@@ -64,7 +65,9 @@ def gatther_info_make_dir(row, out, list_info):
     proj_name = row['Project_Name']
     test_index = row['Test_index']
     time_b = row['time_budget']
-    name = 'P_{}_B_{}_T_{}_I_{}'.format(proj_name, bug_id, time_b, test_index)
+    date = row['Date']
+    date = '_'.join(str(date).split('_')[-5:])
+    name = 'P_{}_B_{}_T_{}_I_{}_D_{}'.format(proj_name, bug_id, time_b, test_index,date)
     out_dir_i = pt.mkdir_system(out, name)
     arr_dir_name = ['debug_dir', 'log', 'out_test']
     for dir_name in arr_dir_name:
