@@ -278,6 +278,16 @@ def g_test():
 
     exit()
 
+def min_max_noramlizer(df,col,min_new_arg=0,max_new_arg=1):
+    print
+    min_score = df[col].min()
+    max_score = df[col].max()
+    max_minus_min = float(max_score - min_score)
+    new_max = max_new_arg
+    new_min = min_new_arg
+    df[col] = df[col].apply(
+        lambda x: (float(x - min_score) / (max_minus_min)) * (new_max - new_min) + new_min)
+    return df
 
 if __name__ == "__main__":
     # sudo pip install python-igraph
