@@ -1219,7 +1219,7 @@ def add_LOC(row,p_name,path='/home/ise/tmp_d4j/LOC'):
     value_loc = df_loc.loc[df_loc['name'] == test_i, 'LOC'].iloc[0]
     return value_loc
 
-def make_FP_pred(dir_target='/home/ise/tmp_d4j/out_pred/out/Math/Math_3'):
+def make_FP_pred(dir_target='/home/ise/tmp_d4j/out_pred/out/Lang/Lang_2'):
     '''
     concat the two csv files from the weka dir to one big Dateframe and make the probabily for bug,
     by 1-probablit for a vaild component
@@ -1282,11 +1282,11 @@ def parser():
 if __name__ == "__main__":
     #make_FP_pred()
     #rep_exp_new('Mockito')
+    get_bug_d4j_major('Lang',out='/home/ise/Desktop',major=False)
+    exit()
     rep_exp_new('Time')
     get_bug_ID_contains_FP('Time')
-    #get_bug_d4j_major()
     #project_arr=['Chart','Time','Closure','Lang','Mockito','Math']
-    exit()
     rep_exp_new(p_name='Lang')
     get_bug_ID_contains_FP(p_name='Lang')
 

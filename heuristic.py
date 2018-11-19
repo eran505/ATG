@@ -48,8 +48,7 @@ def manger(root_dir, out_dir,filter_time_b=None):
     df.set_index(np.arange(len(df.index)),inplace=True)
     df.drop_duplicates(inplace=False)
 
-    df = df.head(2) #TODO: remove it !!!!
-
+    df = df.head(6) #TODO: remove it !!!!
 
     print 'len(df):\t{}'.format(len(df))
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
@@ -60,6 +59,25 @@ def manger(root_dir, out_dir,filter_time_b=None):
     util_d4j.rm_dir_by_name(src_dir, 'out_test')
     mk_call_graph_raw_data(src_dir)
     mk_call_graph_df(src_dir)
+
+
+
+def making_pred(p_name='Lang',root_jat_dir='/home/ise/eran/JARS',csv_FP='/home/ise/eran/repo/ATG/D4J/FP'):
+    df = pd.read_csv("{0}/{1}/{1}.csv".format(csv_FP,p_name),index_col=0)
+    print "df size:\t{}".format(len(df))
+    print df.dtypes
+    res = pt.walk_rec(root_jat_dir,[],'df_coverage.csv')
+    for item in res:
+        print item
+        p_name=str(item).split('/')[-2].split('_')[1]
+        b_time = str(item).split('/')[-2].split('_')[3]
+        bug_id = str(item).split('/')[-2].split('_')[5]
+        index_test = str(item).split('/')[-2].split('_')[7]
+        df_coverage = pd.read_csv(item)
+        print "----{}----".format(bug_id)
+        df_filter = df.loc[df['bug_ID'] == int(bug_id)]
+        print "df size:\t{}".format(len(df_filter))
+
 
 def jar_making_process(src_dir):
     all_project = pt.walk_rec(src_dir,[],'V_fixed',False)
@@ -94,6 +112,18 @@ def mk_call_graph_df(root_dir,name_find='call_graph_stdout.txt'):
         graph_obj.read_and_process(False)
         graph_obj.coverage_matrix(debug=True)
 
+
+def find_loc_componenets(p_name,bug_id,path_LOC_dir='/home/ise/eran/LOC'):
+    '''
+    finding the loc in a given project name and bug_id in LOC dir
+    '''
+    if os.path.isdir("{}/{}".format(path_LOC_dir,p_name )) is False:
+        msg="[Error] the path is not valid one --> {} ".format("{}/{}".format(path_LOC_dir,p_name ))
+        print msg
+        return
+    path_to_csv = "{0}/{1}/LOC_{1}_{2}.csv".format(path_LOC_dir,p_name ,bug_id)
+    return pd.read_csv(path_to_csv)
+
 def mk_call_graph_raw_data(root_dir,name_find='jars_dir',java_caller='/home/ise/programs/java-callgraph/target/javacg-0.1-SNAPSHOT-static.jar'):
     res = pt.walk_rec(root_dir,[],name_find,False)
     for dir_i in res:
@@ -120,16 +150,20 @@ def make_jars(path_proj, out_dir, src_dir_compile='target/classes/org', test_dir
 
 
 
+
 def main_parser():
     args = sys.argv
-    if args[1] == 'jar':
+    if args[1] == 'main':
         manger(args[2], args[3],filter_time_b=[60])
-    if args[1] == 'j':
+    if args[1] == 'jar':
         jar_making_process(args[2])
     if args[1] == 'del':
         util_d4j.rm_dir_by_name(args[2], 'debug_dir')
         util_d4j.rm_dir_by_name(args[2], 'out_test')
+    if args[1]=='loc':
+        find_loc_componenets()
 
 if __name__ == '__main__':
     print "\t"
-    main_parser()
+    making_pred()
+    #main_parser()

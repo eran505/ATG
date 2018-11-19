@@ -1,6 +1,6 @@
 from numpy.core.multiarray import ndarray
 from typing import Dict, Any
-
+from sklearn import preprocessing
 import pit_render_test
 import os.path
 import igraph as ig
@@ -190,7 +190,7 @@ class Call_g:
                     acc_args = 'Null'
                 return method_name, acc_args
 
-    def coverage_matrix(self,step=10,debug=False):
+    def coverage_matrix(self,step=10,normalize=False,debug=False):
         '''
         making a coverage matrix
         :param step: matrix ^ step
@@ -236,6 +236,14 @@ class Call_g:
 
         self.matrix_cover=coverage_dico
         self.cover_df=pd.DataFrame(list_dict)
+        print self.cover_df.dtypes
+        if normalize:
+            min_score = self.cover_df['score'].min()
+            max_score = self.cover_df['score'].max()
+            max_minus_min = float(max_score - min_score)
+            new_max=10000000
+            new_min=1
+            self.cover_df['score'] = self.cover_df['score'].apply(lambda x :(float(x-min_score)/(max_minus_min))*(new_max-new_min)+new_min)
         if debug:
             print "------"*100
             for key in coverage_dico.keys():
@@ -243,6 +251,8 @@ class Call_g:
                 for ky_sec in  coverage_dico[key].keys():
                     print "{}:{}".format(ky_sec,coverage_dico[key][ky_sec])
         self.cover_df.to_csv('{}/df_coverage.csv'.format(self.out_dir_data))
+        return coverage_dico
+
 
     def matrixMul_rec(self,a, n):
         '''
