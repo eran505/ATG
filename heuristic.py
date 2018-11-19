@@ -165,5 +165,5 @@ def main_parser():
 
 if __name__ == '__main__':
     print "\t"
-    making_pred()
-    #main_parser()
+    main_parser()
+    #making_pred()
