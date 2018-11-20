@@ -63,26 +63,32 @@ def manger(root_dir, out_dir, filter_time_b=None):
     mk_call_graph_df(src_dir)
 
 
-def making_pred(p_name='Lang', root_jat_dir='/home/ise/eran/JARS', csv_FP='/home/ise/eran/repo/ATG/D4J/FP'):
+def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise/eran/JARS',
+                csv_FP='/home/ise/eran/repo/ATG/D4J/FP',k=2,alpha=0.7,beta=0.01):
     df = pd.read_csv("{0}/{1}/{1}.csv".format(csv_FP, p_name), index_col=0)
     print "df size:\t{}".format(len(df))
     print df.dtypes
+    res_list=[]
     res = pt.walk_rec(root_jat_dir, [], 'df_coverage.csv')
     for item in res:
         print item
-        p_name = str(item).split('/')[-2].split('_')[1]
+        p_name_i = str(item).split('/')[-2].split('_')[1]
         b_time = str(item).split('/')[-2].split('_')[5]
         bug_id = str(item).split('/')[-2].split('_')[3]
         index_test = str(item).split('/')[-2].split('_')[7]
         df_coverage = pd.read_csv(item, index_col=0)
-        df_loc = find_loc_componenets(p_name, bug_id)
+        df_loc = find_loc_componenets(p_name_i, bug_id)
         df_coverage = filter_coverage_data(df_coverage)
         print list(df_coverage)
         print "----{}----".format(bug_id)
         df_filter = df.loc[df['bug_ID'] == int(bug_id)]
         print "df size:\t{}".format(len(df_filter))
-        heuristic_process(df_filter, df_coverage, df_loc)
-
+        list_test_picked = heuristic_process(df_filter, df_coverage, df_loc,k,alpha,beta)
+        for test_i in list_test_picked:
+            res_list.append({'bug_ID':bug_id,'project':p_name_i,'time_budget':b_time,'k':k,
+                         'alpha':alpha,'beta':beta,'test_picked':test_i,'index':index_test})
+    df_final = pd.DataFrame(res_list)
+    df_final.to_csv('{}/heuristic_{}.csv'.format(out,p_name))
 
 def filter_coverage_data(df, filter='_ESTest', col='component'):
     print list(df)
@@ -122,6 +128,7 @@ def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,be
         test_picked = df_res['test'].iloc[df_res['rank'].argmax()]
         print test_picked
         d_set_picked[test_picked]['pick']=1
+    return [x for x in d_set_picked.keys() if d_set_picked[x]['pick'] == 1]
 
 def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp):
     '''
@@ -275,5 +282,5 @@ def main_parser():
 
 if __name__ == '__main__':
     print "\t"
-    #sys.argv = ['', 'pred']
+    sys.argv = ['', 'pred']
     main_parser()

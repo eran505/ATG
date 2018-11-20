@@ -279,10 +279,14 @@ def g_test():
     exit()
 
 def min_max_noramlizer(df,col,min_new_arg=0,max_new_arg=1):
-    print
+    print col
+    print df[col]
     min_score = df[col].min()
     max_score = df[col].max()
     max_minus_min = float(max_score - min_score)
+    if max_minus_min  == 0:
+        df[col] = 0
+        return df
     new_max = max_new_arg
     new_min = min_new_arg
     df[col] = df[col].apply(
