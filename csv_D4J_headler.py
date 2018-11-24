@@ -824,7 +824,7 @@ def itrate_rows(row,dico_l):
 
 
 
-def util(p_name='Closure',time_b=70):
+def util(p_name='Closure',time_b=60):
     '''
 
     :param p_name:
@@ -838,8 +838,8 @@ def util(p_name='Closure',time_b=70):
     print "cols: {}".format(list(df))
     df = df.loc[df['project']==p_name]
     print df['time_budget'].value_counts()
-    df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val > time_b-11 and val < time_b + 11 else val)
-    df['time_budget'] = df['time_budget'].apply(lambda val: time_b if val == 120 else val)
+    #df['time_budget'] = df['time_budget'].apply(lambda val : time_b if val > time_b-11 and val < time_b + 11 else val)
+    #df['time_budget'] = df['time_budget'].apply(lambda val: time_b if val == 120 else val)
     print df['time_budget'].value_counts()
     df['sum_detected']= df.groupby(['bug_ID', 'time_budget','project','TEST'])['detected_bug'].transform('sum')
     df['count_detected'] = df.groupby(['bug_ID', 'time_budget', 'project', 'TEST'])['detected_bug'].transform('count')
@@ -852,7 +852,7 @@ def util(p_name='Closure',time_b=70):
     df.to_csv("{}/df_grouped_{}.csv".format(out,p_name))
 
     print len(df)
-
+    exit()
 
 
 
@@ -928,11 +928,11 @@ def get_bug_ID_contains_FP(p_name='Lang'):
     print "Project Name : {}".format(p_name)
     csv_path = '/home/ise/tmp_d4j/out/raw_data/{}.csv'.format(p_name)
     df = pd.read_csv(csv_path, index_col=0)
-    if 'no_fp' in df['FP']:
+    if 'no_fp' in df['FP'].values:
         df.loc[df['FP'] == 'no_fp', 'FP'] = None
-    if 'no_fp' in df['FP_genric']:
-        df.loc[df['FP_genric'] == 'no_fp', 'FP_genric'] = None
+    print "Size_Before:\t",len(df)
     df_filter = df.dropna(subset=['FP'])                      # TODO: maybe add the Gen_FP
+    print "Size_After:\t",len(df_filter )
     id_list_bug = df_filter['bug_ID'].unique()
     filter_coluoms_by_bug_ID(list(id_list_bug ),p_name)
     with open('/home/ise/tmp_d4j/out/id_has_FP/{}_BUG_FP.txt'.format(p_name),'w') as f:
@@ -944,16 +944,18 @@ def get_bug_ID_contains_FP(p_name='Lang'):
 
 
 def filter_coluoms_by_bug_ID(bug_ids,p_name='Lang'):
-    path_csv = '{}/{}.csv'.format('/home/ise/tmp_d4j/out/result', p_name)
+    path_csv = '{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result', p_name)
     df = pd.read_csv(path_csv)
     print len(df)
     df = df.loc[df['bug_ID'].isin(bug_ids)]
     print len(df)
-    df.to_csv('{}/{}_FP.csv'.format('/home/ise/tmp_d4j/out/result_only_fp/', p_name))
+    df.to_csv('{}/{}_FP_tmp.csv'.format('/home/ise/tmp_d4j/out/result_only_fp/', p_name))
 
-def rep_exp_new(p_name='Lang',rep=4,item=1):
+def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True):
     d_list_res = []
-    # csv_path = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_{}.csv'.format(p_name)
+    if heuristic_method:
+        import heuristic
+        d_heuristic_res = heuristic.csv_to_dict(p_name,False)
     csv_path = '/home/ise/tmp_d4j/out/raw_data/{}.csv'.format(p_name)
     df = pd.read_csv(csv_path, index_col=0)
     max_all_rep = df['count_detected'].max()
@@ -968,25 +970,28 @@ def rep_exp_new(p_name='Lang',rep=4,item=1):
     print list(df)
     id_list_bug = df['bug_ID'].unique()
     for bug_i in id_list_bug[2+1:]:
+        if bug_i ==63:
+            print""
         print "--- BUG {} ----".format(bug_i)
         df_filter = df.loc[df['bug_ID'] == bug_i]
         df_target = df_filter.loc[df_filter['faulty_class'] == 1]
         size_tset_suite = len(df_filter)
         size_faulty_suite = len(df_target)
         rep_target_max = df_target['count_detected'].sum()
+
         print "rep_target_max: {}".format(rep_target_max)
-        if 'no_fp' in df_filter['FP'] :
+        if 'no_fp' in df_filter['FP'].values :
             df_filter.loc[df_filter['FP'] == 'no_fp', 'FP'] = None
-        if 'no_fp' in df_filter['FP_genric']:
+        if 'no_fp' in df_filter['FP_genric'].values:
             df_filter.loc[df_filter['FP_genric'] == 'no_fp', 'FP_genric'] = None
-        for item_number in range(1,3):
+        for item_number in range(1,item):
             for rep_i in range(1, max_all_rep + 1):
                 val_random = pick_by_prop(df_filter, 'Random', rep=rep_i,item_num=item_number)
                 val_fp = pick_by_prop(df_filter, 'FP', rep=rep_i, item_num=item_number)
                 val_fp_gen = pick_by_prop(df_filter, 'FP_genric', rep=rep_i, item_num=item_number)
                 val_loc = pick_by_prop(df_filter, 'LOC', rep=rep_i, item_num=item_number)
                 val_target = pick_by_prop(df_target, 'faulty_class',rep=rep_i,item_num=item_number)
-
+                d_val_heuristic = heuristic_pick(d_heuristic_res,bug_i,df_filter,rep=rep_i,item_num=item_number)
 
                 d_list_res.append({'bug_ID': bug_i, 'kill_val': val_target, 'method': 'target', 'rep_sampled': rep_i,'item':item_number,
                                    'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
@@ -1004,8 +1009,14 @@ def rep_exp_new(p_name='Lang',rep=4,item=1):
 
                 d_list_res.append({'bug_ID': bug_i, 'kill_val': val_fp_gen, 'method': 'FP_gen', 'rep_sampled': rep_i,'item':item_number,
                                    'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+
+                for ky_h in d_val_heuristic:
+                    d_list_res.append(
+                        {'bug_ID': bug_i, 'kill_val': d_val_heuristic[ky_h], 'method': ky_h, 'rep_sampled': rep_i,
+                         'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+
     df_res = pd.DataFrame(d_list_res)
-    df_res.to_csv('{}/{}.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
+    df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
 
 def rep_exp(p_name='Math',rep=4):
     d_list_res=[]
@@ -1047,6 +1058,68 @@ def rep_exp(p_name='Math',rep=4):
     df_res = pd.DataFrame(d_list_res)
     df_res.to_csv('{}/{}.csv'.format('/home/ise/eran/out_csvs_D4j/rep_exp/out',p_name))
 
+
+
+def heuristic_pick(d,bug_id,df_filter,rep=3,item_num=1,clean=True):
+    picked=[]
+    d_size={}
+    suite_ctr=0
+    if bug_id in d:
+        for ky_a_b in d[bug_id].keys():
+            for ky_date in d[bug_id][ky_a_b].keys():
+                picked=[]
+                for i in range(item_num):
+                    if i in d[bug_id][ky_a_b][ky_date]:
+                        if clean:
+                            name_test = d[bug_id][ky_a_b][ky_date][i]
+                            name_test = str(name_test).split('_EST')[0]
+                            picked.append(name_test)
+                        else:
+                            picked.append(d[bug_id][ky_a_b][ky_date][i])
+                print "picked:\t",picked
+                df_cut = df_filter.loc[df_filter['TEST'].isin(picked)]
+                size_len = len(picked)
+                ky = "{}__{}".format(ky_a_b,ky_date)
+                if size_len not in d_size:
+                    d_size[ky]={}
+                if len(df_cut)==0:
+                    d_size[ky] = {"val":None,'size':0}
+                else:
+                    val = df_cut['{}_rep'.format(rep)].sum()
+                    d_size[ky] = {"val":val, 'size': 0}
+
+    list_keys = d_size.keys()
+    max_val = -1
+    key_max = None
+    dico_filter_by_max_size = filter_val_max_only(d_size)
+    key_max_size = get_max_val(dico_filter_by_max_size)
+    key_max_all = get_max_val(d_size)
+    if d_size[key_max_all]['val'] != d_size[key_max_size]['val']:
+        raise  Exception("hurstic !!!!")
+    else:
+        return {str(key_max_size).split('__')[0]:  d_size[key_max_size]['val']}
+
+
+def filter_val_max_only(d):
+    ky_max = get_max_val(d,'size')
+    max_size = d[ky_max]['size']
+    d_res = {}
+    for key_i in d.keys():
+        if d[key_i]['size'] == max_size:
+            d_res[key_i]={"size":max_size,'val':d[key_i]['val']}
+    return d_res
+
+def get_max_val(d,key_traget='val'):
+    '''
+    helper for the hurstic dico
+    '''
+    val_max = -1
+    key_val = None
+    for ky_i in d.keys():
+        if val_max<d[ky_i][key_traget]:
+            val_max=d[ky_i][key_traget]
+            key_val=ky_i
+    return key_val
 def pick_by_prop(df_filter,prop='FP',rep=3,item_num=1):
     df_filter = df_filter.dropna(subset=[prop])
     if len(df_filter) == 0 :
@@ -1055,6 +1128,7 @@ def pick_by_prop(df_filter,prop='FP',rep=3,item_num=1):
         item_num=len(df_filter)
     df_filter[prop] = df_filter[prop].astype(float)
     df_cut = df_filter.nlargest(item_num, columns=[prop])
+    print "{} : {}".format(prop,df_cut['TEST'])
     if len(df_cut) > item_num:
         print 'in'
         df_elements = df_cut.sample(n=item_num)
@@ -1278,16 +1352,33 @@ def parser():
             get_size_classes_csv(i, proj, '/home/ise/tmp_d4j/LOC/{}'.format(proj))
 
 
+def helper(df1 = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_Lang.csv',
+           df2 = '/home/ise/tmp_d4j/out/raw_data/Lang.csv'):
+    out='/home/ise'
+    df1 = pd.read_csv(df1,index_col=0)
+    df1 = df1[['TEST','bug_ID','project']]
+    df2 = pd.read_csv(df2,index_col=0)
+    print list(df1)
+    print list(df2)
+    print "df2 len: ",len(df2)
+    print "df1 len: ",len(df1)
+    res_df = pd.merge(df1,df2,how='left',on=['TEST','bug_ID','project'])
+    print "res len: ",len(res_df)
+    exit()
 
 if __name__ == "__main__":
     #make_FP_pred()
     #rep_exp_new('Mockito')
-    get_bug_d4j_major('Lang',out='/home/ise/Desktop',major=False)
+    #helper()
+    util(p_name="Lang")
     exit()
+    rep_exp_new(p_name='Lang')
+    get_bug_ID_contains_FP()
+    exit()
+    get_bug_d4j_major('Lang',out='/home/ise/Desktop',major=False)
     rep_exp_new('Time')
     get_bug_ID_contains_FP('Time')
     #project_arr=['Chart','Time','Closure','Lang','Mockito','Math']
-    rep_exp_new(p_name='Lang')
     get_bug_ID_contains_FP(p_name='Lang')
 
     #exit()

@@ -64,7 +64,7 @@ def manger(root_dir, out_dir, filter_time_b=None):
 
 
 def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise/eran/JARS',
-                csv_FP='/home/ise/eran/repo/ATG/D4J/FP',k=2,alpha=0.7,beta=0.01):
+                csv_FP='/home/ise/eran/repo/ATG/D4J/FP',k=2,alpha=0.099,beta=0.1,debug=True):
     df = pd.read_csv("{0}/{1}/{1}.csv".format(csv_FP, p_name), index_col=0)
     print "df size:\t{}".format(len(df))
     print df.dtypes
@@ -76,20 +76,39 @@ def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise
         b_time = str(item).split('/')[-2].split('_')[5]
         bug_id = str(item).split('/')[-2].split('_')[3]
         index_test = str(item).split('/')[-2].split('_')[7]
+        date_time= '_'.join(str(item).split('/')[-2].split('_')[9:])
         df_coverage = pd.read_csv(item, index_col=0)
         df_loc = find_loc_componenets(p_name_i, bug_id)
         df_coverage = filter_coverage_data(df_coverage)
+        if debug:
+            out_debug = pt.mkdir_system("{}/debug".format(root_jat_dir),str(item).split('/')[-2])
         print list(df_coverage)
         print "----{}----".format(bug_id)
         df_filter = df.loc[df['bug_ID'] == int(bug_id)]
         print "df size:\t{}".format(len(df_filter))
-        list_test_picked = heuristic_process(df_filter, df_coverage, df_loc,k,alpha,beta)
-        for test_i in list_test_picked:
+        dict_test_picked = heuristic_process(df_filter, df_coverage, df_loc,k,alpha,beta,debug_dir=out_debug,f_name="{}_B_{}_K".format(p_name,bug_id))
+        for test_i_key in dict_test_picked.keys():
+            if dict_test_picked[test_i_key]['pick']==0:
+                continue
+            kill_sum,all_rep = get_rep_kill_out_raw_by_name(test_i_key,df_filter )
+            index_test_pick = dict_test_picked[test_i_key]['index']
             res_list.append({'bug_ID':bug_id,'project':p_name_i,'time_budget':b_time,'k':k,
-                         'alpha':alpha,'beta':beta,'test_picked':test_i,'index':index_test})
+                         'alpha':alpha,'beta':beta,'test_picked':test_i_key,'index_gen_suite':index_test,
+                             "index_pick_test":index_test_pick ,"date_time":date_time,'sum_detected':kill_sum,
+                             'count_detected':all_rep})
     df_final = pd.DataFrame(res_list)
-    df_final.to_csv('{}/heuristic_{}.csv'.format(out,p_name))
+    df_final.to_csv('{}/heuristic_{}_V_2.csv'.format(out,p_name))
 
+def get_rep_kill_out_raw_by_name(name,df):
+    comp_name = str(name).split('_EST')[0]
+    print list(df)
+    df_filter = df.loc[df['TEST'] == comp_name]
+    if len(df_filter )==0:
+        raise Exception('The test is missing from the raw DataFrame --> {}'.format(name))
+    if len(df_filter)==1:
+        return df_filter['sum_detected'].sum(),df_filter['count_detected'].sum()
+    else:
+        raise Exception('more then one result in function [get_rep_kill_out_raw_by_name] ')
 def filter_coverage_data(df, filter='_ESTest', col='component'):
     print list(df)
     print len(df)
@@ -107,7 +126,8 @@ def to_binary_vec(vec):
     return vec
 
 #######################################heuristic_process###################################################
-def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,beta=0.01):
+def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,beta=0.01
+                      ,f_name='tmp',debug_dir='/home/ise/eran/JARS/debug',debug=True):
     list_test = df_coverage['test'].unique()
     print list_test
     list_comp = df_coverage['component'].unique()
@@ -124,11 +144,13 @@ def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,be
     for i in range(k):
         df_res = compute_heuristic(d_set_picked, pivot_data_df, df_data, df_loc_componenet)
         df_res['rank'] = df_res['val_fp']*alpha+df_res['val_coverage']*(1-alpha)+beta*df_res['val_loc']
-        df_res.to_csv('/home/ise/Desktop/tmp_{}.csv'.format(i))
+        df_res
         test_picked = df_res['test'].iloc[df_res['rank'].argmax()]
-        print test_picked
+        if debug:
+            df_res.to_csv('{}/{}_{}.csv'.format(debug_dir,f_name,i))
         d_set_picked[test_picked]['pick']=1
-    return [x for x in d_set_picked.keys() if d_set_picked[x]['pick'] == 1]
+        d_set_picked[test_picked]['index'] = i
+    return d_set_picked
 
 def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp):
     '''
@@ -175,6 +197,8 @@ def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp):
         return None
     # norm all the val colounms
     for loc in ['val_fp','val_loc','val_coverage']:
+        if loc == 'val_fp':                         # TODO: FIX IT !!!
+            continue
         df_res = call_g.min_max_noramlizer(df_res,loc,min_new_arg=0.01,max_new_arg=1)
     return df_res
 
@@ -261,6 +285,50 @@ def make_jars(path_proj, out_dir, src_dir_compile='target/classes/org', test_dir
     util_d4j.make_jar("{}/{}".format(path_proj, src_dir_compile), 'src_classes', out_dir)
     util_d4j.make_jar("{}/{}".format(path_proj, test_dir_compile), 'test_classes', out_dir)
 
+def csv_to_dict(p_name='Lang',debug=True):
+    '''
+    DataFrame to python dictionary result heurisitic
+    '''
+    csv_p = '/home/ise/eran/JARS/heuristic_{}_V_2.csv'.format(p_name)
+    df = pd.read_csv(csv_p,index_col=0)
+    print list(df)
+    d={}
+    df.apply(dict_insert,dico=d,axis=1)
+    if debug:
+        for ky in d:
+            print "first_key: {}".format(ky)
+            for ky_sec in d[ky]:
+                print "\tsec_key: {}".format(ky_sec)
+                print "\t\t{}".format(d[ky][ky_sec])
+    return d
+
+def dict_insert(row, dico):
+    '''
+    insert the row into a dict
+    first key: p_<project>_I_<gen_index>_A_<alpha>_B_<beta>_D_<date_gen>
+    sec key: bug_ID
+    d[first_key][sec_key]= key value --> { index_pick_test:test_name}
+    '''
+    id_bug = row['bug_ID']
+    alpha = row['alpha']
+    beta = row['beta']
+    date_time= row['date_time']
+    k = row['k']
+    project_name = row['project']
+    index_pick_test = row['index_pick_test']
+    test_picked = row['test_picked']
+    index_gen_suite = row['index_gen_suite']
+    hyper_parm_key = "A_{}_B_{}".format(alpha,beta)
+    key_date = 'I_{}_D_{}'.format(index_gen_suite,date_time)
+    if id_bug not in dico:
+        dico[id_bug]={}
+    if hyper_parm_key not in dico[id_bug]:
+        dico[id_bug][hyper_parm_key]={}
+    if key_date not in dico[id_bug][hyper_parm_key]:
+        dico[id_bug][hyper_parm_key][key_date]={}
+    dico[id_bug][hyper_parm_key][key_date][index_pick_test] = test_picked
+    return True
+
 
 def main_parser():
     args = sys.argv
@@ -268,7 +336,7 @@ def main_parser():
         print "---No args----"
         return
     if args[1] == 'main':
-        manger(args[2], args[3], filter_time_b=[60])
+        manger(args[2], args[3], filter_time_b=[70,90,50])
     if args[1] == 'jar':
         jar_making_process(args[2])
     if args[1] == 'del':
@@ -278,9 +346,10 @@ def main_parser():
         find_loc_componenets()
     if args[1] == 'pred':
         making_pred()
-
+    if args[1] == 'csv_to_dict':
+        csv_to_dict()
 
 if __name__ == '__main__':
     print "\t"
-    sys.argv = ['', 'pred']
+    #sys.argv = ['', 'pred']
     main_parser()
