@@ -35,8 +35,11 @@ class Call_g:
         if len(arr_data) == 0:
             err_msg = "[Error] empty file, no data to process: {} ".format(self.data_path)
             raise Exception(err_msg)
-        pat_prefix = '.'.join(arr_data[0].split()[0].split(':')[1].split('.')[:-1])
-        lookup_pattren.append(pat_prefix)
+        try:
+            pat_prefix = '.'.join(arr_data[0].split()[0].split(':')[1].split('.')[:-1])
+            lookup_pattren.append(pat_prefix)
+        except Exception as e:
+            print e.message
         for line in arr_data:
             if len(line) < 1:
                 continue
