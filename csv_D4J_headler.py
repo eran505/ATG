@@ -951,7 +951,7 @@ def filter_coluoms_by_bug_ID(bug_ids,p_name='Lang'):
     print len(df)
     df.to_csv('{}/{}_FP_tmp.csv'.format('/home/ise/tmp_d4j/out/result_only_fp/', p_name))
 
-def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True):
+def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True):
     d_list_res = []
     if heuristic_method:
         import heuristic
@@ -970,8 +970,6 @@ def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True):
     print list(df)
     id_list_bug = df['bug_ID'].unique()
     for bug_i in id_list_bug[2+1:]:
-        if bug_i ==63:
-            print""
         print "--- BUG {} ----".format(bug_i)
         df_filter = df.loc[df['bug_ID'] == bug_i]
         df_target = df_filter.loc[df_filter['faulty_class'] == 1]
@@ -1014,7 +1012,7 @@ def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True):
                     d_list_res.append(
                         {'bug_ID': bug_i, 'kill_val': d_val_heuristic[ky_h], 'method': ky_h, 'rep_sampled': rep_i,
                          'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
-
+                break
     df_res = pd.DataFrame(d_list_res)
     df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
 
@@ -1080,25 +1078,30 @@ def heuristic_pick(d,bug_id,df_filter,rep=3,item_num=1,clean=True):
                 df_cut = df_filter.loc[df_filter['TEST'].isin(picked)]
                 size_len = len(picked)
                 ky = "{}__{}".format(ky_a_b,ky_date)
+                frist_ky = ky_a_b
+                if frist_ky not in d_size:
+                    d_size[frist_ky]={}
                 if size_len not in d_size:
-                    d_size[ky]={}
+                    d_size[frist_ky][ky]={}
                 if len(df_cut)==0:
-                    d_size[ky] = {"val":None,'size':0}
+                    d_size[frist_ky][ky] = {"val":None,'size':0}
                 else:
                     val = df_cut['{}_rep'.format(rep)].sum()
-                    d_size[ky] = {"val":val, 'size': 0}
+                    d_size[frist_ky][ky] = {"val":val, 'size': 0}
+    ans={}
+    for f_key in d_size:
+        dico_filter_by_max_size = filter_val_max_only(d_size[f_key])
+        key_max_size = get_max_val(dico_filter_by_max_size)
+        key_max_all = get_max_val(d_size[f_key])
+        if d_size[f_key][key_max_all]['val'] != d_size[f_key][key_max_size]['val']:
+            raise  Exception("hurstic !!!!")
+        else:
+            ans[str(key_max_size).split('__')[0]] = d_size[f_key][key_max_size]['val']
+    return ans
 
-    list_keys = d_size.keys()
-    max_val = -1
-    key_max = None
-    dico_filter_by_max_size = filter_val_max_only(d_size)
-    key_max_size = get_max_val(dico_filter_by_max_size)
-    key_max_all = get_max_val(d_size)
-    if d_size[key_max_all]['val'] != d_size[key_max_size]['val']:
-        raise  Exception("hurstic !!!!")
-    else:
-        return {str(key_max_size).split('__')[0]:  d_size[key_max_size]['val']}
 
+def filter_max_item():
+    pass
 
 def filter_val_max_only(d):
     ky_max = get_max_val(d,'size')
@@ -1120,6 +1123,7 @@ def get_max_val(d,key_traget='val'):
             val_max=d[ky_i][key_traget]
             key_val=ky_i
     return key_val
+
 def pick_by_prop(df_filter,prop='FP',rep=3,item_num=1):
     df_filter = df_filter.dropna(subset=[prop])
     if len(df_filter) == 0 :
@@ -1352,6 +1356,15 @@ def parser():
             get_size_classes_csv(i, proj, '/home/ise/tmp_d4j/LOC/{}'.format(proj))
 
 
+def merger(dir_t = '/home/ise/eran/JARS'):
+    res = pt.walk_rec(dir_t,[],'.csv',lv=-1)
+    list_Df = []
+    for item in res:
+        list_Df.append(pd.read_csv(item))
+    df_all = pd.concat(list_Df)
+    df_all.to_csv("{}/all_H.csv".format(dir_t))
+    exit()
+
 def helper(df1 = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_Lang.csv',
            df2 = '/home/ise/tmp_d4j/out/raw_data/Lang.csv'):
     out='/home/ise'
@@ -1370,10 +1383,11 @@ if __name__ == "__main__":
     #make_FP_pred()
     #rep_exp_new('Mockito')
     #helper()
-    util(p_name="Lang")
-    exit()
+    ###merger()
     rep_exp_new(p_name='Lang')
     get_bug_ID_contains_FP()
+    exit()
+    util(p_name="Lang")
     exit()
     get_bug_d4j_major('Lang',out='/home/ise/Desktop',major=False)
     rep_exp_new('Time')

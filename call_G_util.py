@@ -302,7 +302,8 @@ if __name__ == "__main__":
     path_file = '/home/ise/Desktop/new/zzz/lang_57.txt'
     out = '/home/ise/Desktop/new/zzz'
     graph_obj = Call_g(path_file,out)
-    graph_obj.read_and_process(False)
+    graph_obj.read_and_process(True)
+    exit()
     print "--"*60,'Q',"--"*60
     graph_obj.coverage_matrix()
     #print graph_obj.G_class.adjacent(target_vs)

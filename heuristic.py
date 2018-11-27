@@ -63,8 +63,8 @@ def manger(root_dir, out_dir, filter_time_b=None):
     mk_call_graph_df(src_dir)
 
 
-def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise/eran/JARS',
-                csv_FP='/home/ise/eran/repo/ATG/D4J/FP',k=2,alpha=0.099,beta=0.1,debug=True):
+def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise/eran/JARS/JARS_D4J',
+                csv_FP='/home/ise/eran/repo/ATG/D4J/FP',k=4,alpha=0.99999,beta=0.0001,debug=True):
     df = pd.read_csv("{0}/{1}/{1}.csv".format(csv_FP, p_name), index_col=0)
     print "df size:\t{}".format(len(df))
     print df.dtypes
@@ -79,6 +79,12 @@ def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise
         date_time= '_'.join(str(item).split('/')[-2].split('_')[9:])
         df_coverage = pd.read_csv(item, index_col=0)
         df_loc = find_loc_componenets(p_name_i, bug_id)
+
+        # TODO: give zero to --> df_coverage instead of skip this bug_ID
+        if len(df_coverage) == 0:
+            continue
+
+        # extracting only the Test component
         df_coverage = filter_coverage_data(df_coverage)
         if debug:
             out_debug = pt.mkdir_system("{}/debug".format(root_jat_dir),str(item).split('/')[-2])
@@ -87,6 +93,7 @@ def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise
         df_filter = df.loc[df['bug_ID'] == int(bug_id)]
         print "df size:\t{}".format(len(df_filter))
         dict_test_picked = heuristic_process(df_filter, df_coverage, df_loc,k,alpha,beta,debug_dir=out_debug,f_name="{}_B_{}_K".format(p_name,bug_id))
+
         for test_i_key in dict_test_picked.keys():
             if dict_test_picked[test_i_key]['pick']==0:
                 continue
@@ -97,7 +104,7 @@ def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise
                              "index_pick_test":index_test_pick ,"date_time":date_time,'sum_detected':kill_sum,
                              'count_detected':all_rep})
     df_final = pd.DataFrame(res_list)
-    df_final.to_csv('{}/heuristic_{}_V_2.csv'.format(out,p_name))
+    df_final.to_csv('{}/heuristic_{}_V_max_LOC.csv'.format(out,p_name))
 
 def get_rep_kill_out_raw_by_name(name,df):
     comp_name = str(name).split('_EST')[0]
@@ -130,6 +137,8 @@ def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,be
                       ,f_name='tmp',debug_dir='/home/ise/eran/JARS/debug',debug=True):
     list_test = df_coverage['test'].unique()
     print list_test
+    if len(list_test)==0:
+        return None
     list_comp = df_coverage['component'].unique()
     print list_comp
     print "num_of_test:\t", len(list_test)
@@ -188,6 +197,7 @@ def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp):
         cur_vec_filter = cur_data.loc[cur_data.values > 0]
         list_all_comp = cur_vec_filter.index.tolist()
         data_df_filter = df_loc_comp.loc[df_loc_comp['name'].isin(list_all_comp)]
+
         sum_loc = data_df_filter['LOC'].sum()
         # end loc
         d_list.append({'test': item_test, 'val_coverage': coverage_sum,
@@ -196,7 +206,7 @@ def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp):
     if len(df_res) == 0:
         return None
     # norm all the val colounms
-    for loc in ['val_fp','val_loc','val_coverage']:
+    for loc in ['val_fp','val_coverage','val_loc']:
         if loc == 'val_fp':                         # TODO: FIX IT !!!
             continue
         df_res = call_g.min_max_noramlizer(df_res,loc,min_new_arg=0.01,max_new_arg=1)
@@ -289,7 +299,7 @@ def csv_to_dict(p_name='Lang',debug=True):
     '''
     DataFrame to python dictionary result heurisitic
     '''
-    csv_p = '/home/ise/eran/JARS/heuristic_{}_V_2.csv'.format(p_name)
+    csv_p = '/home/ise/eran/JARS/all_H.csv'.format(p_name)
     df = pd.read_csv(csv_p,index_col=0)
     print list(df)
     d={}
@@ -351,5 +361,5 @@ def main_parser():
 
 if __name__ == '__main__':
     print "\t"
-    #sys.argv = ['', 'pred']
+    sys.argv = ['', 'pred']
     main_parser()
