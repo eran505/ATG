@@ -349,7 +349,7 @@ def main_parser():
         print "---No args----"
         return
     if args[1] == 'main':
-        manger(args[2], args[3], filter_time_b=[70,90,50])
+        manger(args[2], args[3], filter_time_b=[60,70,90,50])
     if args[1] == 'jar':
         jar_making_process(args[2])
     if args[1] == 'del':
