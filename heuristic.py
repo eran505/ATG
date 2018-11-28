@@ -49,9 +49,6 @@ def manger(root_dir, out_dir, filter_time_b=None):
     df = df.reset_index()
     df.set_index(np.arange(len(df.index)), inplace=True)
     df.drop_duplicates(inplace=False)
-
-    ###df = df.head(6)  # TODO: remove it !!!!
-
     print 'len(df):\t{}'.format(len(df))
     df['out_dir'] = df.apply(gatther_info_make_dir, out=src_dir, list_info=list_jar_info, axis=1)
     util_d4j.run_tests(list_jar_info)
@@ -364,5 +361,5 @@ def main_parser():
 
 if __name__ == '__main__':
     print "\t"
-    sys.argv = ['', 'pred']
+    ####sys.argv = ['', 'pred']
     main_parser()
