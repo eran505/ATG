@@ -720,6 +720,11 @@ def main_wrapper(args=None):
         rm_dir_by_name(dico_info['o'], 'buggy')
 
 
+
+def make_csv_clss_test_each_bug(root_dir):
+    print "make_csv_clss_test_each_bug"
+
+
 def remve_F_flag(arr):
     i = 0
     new_arg = []
@@ -2307,6 +2312,7 @@ def unzip_get_the_faulty_components(bug_id, project_name, path_zip_file, fault_d
                        p_name=project_name)
 
 
+
 def GET_test_generated(path_tests, p_name):
     dico_package_test = {}
     suffix = '_ESTest.java'
@@ -2426,8 +2432,11 @@ def map_TEST(root_path):
             it_id = str(test_item).split('/')[-2]
             time_budget_id = str(test_item).split('/t=')[1].split('/')[0]
             path_tmp_out = '/'.join(str(test_item).split('/')[:-1])
+            # make a out dir
             out_tmp = pt.mkdir_system(path_tmp_out,'tmp')
+
             bol, msg, filter_only, dico_test=extract_tar(test_item,out_tmp,None,proj_id,compress=False,del_tar=False)
+
             os.system('rm -r {}'.format(out_tmp))
             #todo: get all test fail merge with the generated test
             for ky_item_test in dico_test:
@@ -2507,6 +2516,8 @@ def main_parser():
         return
     if sys.argv[1] == 'fixer':
         fixer_maven(sys.argv[2])
+    elif sys.argv[1]=='make_csv_clss_test_each_bug':
+        make_csv_clss_test_each_bug(sys.argv[2])
     elif sys.argv[1] == 'merg':
         get_results()
     elif sys.argv[1] == 'map_test':

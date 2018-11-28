@@ -966,7 +966,7 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True):
     x.to_csv('{}/rep_frq_{}.csv'.format('/home/ise/tmp_d4j/out', p_name))
     for x in range(1, max_rep + 1):
         df['{}_rep'.format(x)] = df.apply(make_rep, val=x, count='count_detected', sum='sum_detected', axis=1)
-    #    df.to_csv('/home/ise/eran/out_csvs_D4j/rep_exp/df.csv')
+    #df.to_csv('/home/ise/df.csv')
     print list(df)
     id_list_bug = df['bug_ID'].unique()
     for bug_i in id_list_bug[2+1:]:
@@ -991,6 +991,7 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True):
                 val_target = pick_by_prop(df_target, 'faulty_class',rep=rep_i,item_num=item_number)
                 d_val_heuristic = heuristic_pick(d_heuristic_res,bug_i,df_filter,rep=rep_i,item_num=item_number)
 
+
                 d_list_res.append({'bug_ID': bug_i, 'kill_val': val_target, 'method': 'target', 'rep_sampled': rep_i,'item':item_number,
                                    'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
@@ -1012,7 +1013,7 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True):
                     d_list_res.append(
                         {'bug_ID': bug_i, 'kill_val': d_val_heuristic[ky_h], 'method': ky_h, 'rep_sampled': rep_i,
                          'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
-                break
+
     df_res = pd.DataFrame(d_list_res)
     df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
 

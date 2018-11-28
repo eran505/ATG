@@ -248,7 +248,10 @@ def mk_call_graph_df(root_dir, name_find='call_graph_stdout.txt'):
         father_dir = '/'.join(str(item).split('/')[:-3])
         graph_obj = call_g.Call_g(item, father_dir)
         graph_obj.read_and_process(False)
-        graph_obj.coverage_matrix(debug=True)
+        graph_obj.info_graph_csv()
+        graph_obj.step_matrix()
+        graph_obj.adj_matrix()
+        graph_obj.coverage_matrix_BFS()
 
 
 def find_loc_componenets(p_name, bug_id, is_norm=True, path_LOC_dir='/home/ise/eran/LOC'):

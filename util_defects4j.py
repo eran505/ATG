@@ -1,5 +1,6 @@
 
 import os
+import pandas as pd
 import pit_render_test as pt
 from subprocess import Popen, PIPE, check_call, check_output
 import sys, time,shlex
@@ -139,5 +140,48 @@ def rm_dir_by_name(root, name=None):
         print "----stderr----"
         print stderr
 
+
+def check_missing_fp_class(loc_dir='/home/ise/tmp_d4j/LOC',fp_dir='/home/ise/tmp_d4j/out_pred/out',p_name='Lang'):
+    '''
+    the loc dir has all the comppnents and the line of code, so by mergeing it with the fp file,
+    we can see if ypu have mssing predection.
+    '''
+    LOC_target_dir_path = "{}/{}".format(loc_dir,p_name)
+    fp_dir_project = "{}/{}".format(fp_dir,p_name)
+    res_fp_files = pt.walk_rec(fp_dir_project ,[],'FP.csv')
+    res_loc_files = pt.walk_rec(LOC_target_dir_path ,[],'csv')
+    loc_df=[]
+    fp_df=[]
+    for item_loc in res_loc_files:
+        loc_df.append(pd.read_csv(item_loc))
+    for item_fp in res_fp_files:
+        fp_df.append(pd.read_csv(item_fp,index_col=0))
+    all_loc = pd.concat(loc_df)
+    all_fp = pd.concat(fp_df)
+    all_fp = all_fp[['name','FP','class']]
+    all_loc = all_loc[['name','bug_ID','path']]
+    loc_name = all_loc['name'].unique()
+    fp_name = all_fp['name'].unique()
+    ctr_miss =0
+    miss=[]
+    for x in loc_name:
+        if x not in fp_name:
+            print x
+            miss.append(x)
+            ctr_miss+=1
+    filter_df = all_loc.loc[all_loc['name'].isin(miss)]
+   ## print filter_df[['path','bug_ID']]
+    #print 'loc_name\t',len(loc_name)
+    #print 'fp_name\t',len(fp_name)
+    print "ctr_miss:\t",ctr_miss
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
+    check_missing_fp_class()
     print '--- util file py -----'
