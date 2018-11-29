@@ -114,6 +114,9 @@ def get_rep_kill_out_raw_by_name(name,df):
     else:
         raise Exception('more then one result in function [get_rep_kill_out_raw_by_name] ')
 def filter_coverage_data(df, filter='_ESTest', col='component'):
+    '''
+    remove Test
+    '''
     print list(df)
     print len(df)
     df = df[~df[col].str.contains(filter)]
@@ -128,6 +131,68 @@ def minus_vec(v1,v2):
 def to_binary_vec(vec):
     np.place(vec, vec > 0, [1])
     return vec
+
+
+def make_coverage_matrix(root_dir='/home/ise/eran/JARS/JARS_D4J',matrix_mode='BFS'):
+    '''
+    Return MATRIX and unique test list and unique components list
+
+    MATRIX-->
+    index = test
+    columns = component
+    value = score
+
+    LIST --> [name_1 ... name_n]
+
+    :matrix_mode= BFS / step_10 / simple_path / LOC
+
+    '''
+    dir_jars = pt.walk_rec(root_dir,[],'P_',False)
+
+    for dir_i in dir_jars:
+        dir_name_i = str(dir_i).split('/')[-1]
+        p_name_i = dir_name_i.split('_')[1]
+        b_time = dir_name_i.split('_')[5]
+        bug_id = dir_name_i.split('_')[3]
+        index_test = dir_name_i.split('_')[7]
+        date_time = '_'.join(dir_name_i.split('_')[9:])
+        df_loc = find_loc_componenets(p_name_i, bug_id)
+        df_bfs = pd.read_csv("{}/df_coverage_BFS.csv".format(dir_i),index_col=0)
+        df_adj_matrixs = pd.read_csv('{}/df_coverage_step_1.csv'.format(dir_i),index_col=0)
+
+        print df_bfs.dtypes
+
+
+
+        print "df_bfs:\t",list(df_bfs)
+        print "df_adj_matrixs:\t",list(df_adj_matrixs)
+        test_comp_list = df_bfs['test_component'].unique()
+        src_comp_list  = df_bfs['src_component'].unique()
+        for test_comp in test_comp_list[3:]:
+            filter =  df_bfs.loc[df_bfs['test_component']==test_comp]
+            filter = filter.loc[filter['depth'] < np.inf]
+            filter.sort_values("depth", inplace=True)
+            list_depth = filter.to_dict('records')
+            d={}
+            print "TEST:--->{}".format(test_comp)
+            for item in list_depth:
+                if item['depth'] not in d:
+                    d[item['depth']]=[]
+                d[item['depth']].append(item['src_component'])
+            for ky in d.keys():
+                print "{}:{}".format(ky,d[ky])
+            list_ky = d.keys()
+            for i in range(list_ky):
+                if i+1 > len(list_ky):
+                    break
+                else:
+                    list_comp_i = d[list_ky[i]]
+                    list_comp_i_1 = d[list_ky[i+1]]
+                    for comp_i in list_comp_i:
+                        for comp_j in list_comp_i_1:
+                            pass
+            break
+        break
 
 #######################################heuristic_process###################################################
 def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,beta=0.01
@@ -150,7 +215,6 @@ def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,be
     for i in range(k):
         df_res = compute_heuristic(d_set_picked, pivot_data_df, df_data, df_loc_componenet)
         df_res['rank'] = df_res['val_fp']*alpha+df_res['val_coverage']*(1-alpha)+beta*df_res['val_loc']
-        df_res
         test_picked = df_res['test'].iloc[df_res['rank'].argmax()]
         if debug:
             df_res.to_csv('{}/{}_{}.csv'.format(debug_dir,f_name,i))
@@ -251,7 +315,7 @@ def mk_call_graph_df(root_dir, name_find='call_graph_stdout.txt'):
         graph_obj.coverage_matrix_BFS()
 
 
-def find_loc_componenets(p_name, bug_id, is_norm=True, path_LOC_dir='/home/ise/eran/LOC'):
+def find_loc_componenets(p_name, bug_id, is_norm=False, path_LOC_dir='/home/ise/eran/LOC'):
     '''
     finding the loc in a given project name and bug_id in LOC dir
     '''
@@ -360,6 +424,7 @@ def main_parser():
         csv_to_dict()
 
 if __name__ == '__main__':
-    print "\t"
+    print "--in--"
+   ### make_coverage_matrix()
     ####sys.argv = ['', 'pred']
     main_parser()

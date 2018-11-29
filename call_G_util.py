@@ -245,7 +245,7 @@ class Call_g:
             test_name =g.vs[node_id]['name']
             src_name = g.vs[list_target[i]]['name']
             d_tmp={'test_component':test_name,
-                   'src_component:':src_name,
+                   'src_component':src_name,
                    'depth':result_arr[0][i]}
             dict_results_list.append(d_tmp)
         return dict_results_list
@@ -303,7 +303,12 @@ class Call_g:
         adjacency_matrix_steps = self.matrixMul_rec(adjacency_matrix, step)
         list_dict = []
 
-        for index_evo in test_index.keys():
+        list_target = test_index.keys()
+        if step == 1:
+            list_target.extend(component_index.keys())
+
+
+        for index_evo in list_target:
             tmp = adjacency_matrix_steps[:, index_evo]
             if debug:
                 print "adjacency_matrix_10_step.shape={}".format(adjacency_matrix_steps.shape)
@@ -404,8 +409,8 @@ def min_max_noramlizer(df,col,min_new_arg=0,max_new_arg=1):
 if __name__ == "__main__":
     # sudo pip install python-igraph
     print "in"
-    path_file = '/home/ise/Desktop/new/zzz/lang_57.txt'
-    out = '/home/ise/Desktop/new/zzz'
+    path_file = '/home/ise/Desktop/new/P_zzz/lang_57.txt'
+    out = '/home/ise/Desktop/new/P_zzz'
     graph_obj = Call_g(path_file,out)
     graph_obj.read_and_process(False)
     print "--"*60,'Q',"--"*60
