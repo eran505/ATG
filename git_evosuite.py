@@ -40,7 +40,6 @@ def csv_bug_process(csv_bug='/home/ise/eran/repo/ATG/tmp_files/tika_bug.csv',rep
     df['fail_test_METHOD'] = df['testcase'].apply(lambda x: str(x).split('#')[1])
     df.drop('testcase', axis=1, inplace=True)
     print len(df)
-    df.to_csv('/home/ise/test/df.csv')
     df.drop_duplicates(inplace=False)
     print len(df)
     df.apply(applyer_bug,repo=repo_path,out_dir=out,axis=1)
