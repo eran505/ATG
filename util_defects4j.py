@@ -177,11 +177,53 @@ def check_missing_fp_class(loc_dir='/home/ise/tmp_d4j/LOC',fp_dir='/home/ise/tmp
 
 
 
+def make_repo_of_test(root_dir='/home/ise/eran/JARS/JARS_D4J'):
+    res = pt.walk_rec(root_dir,[],'P_',False,lv=-1)
+    out= '/'.join(str(root_dir).split('/')[:-1])
+    DATA_folder = '/home/ise/eran/JARS/DATA_2'
+    d_l=[]
+    dico={}
+    for dir_i in res:
+        dir_name_i = str(dir_i).split('/')[-1]
+        p_name_i = dir_name_i.split('_')[1]
+        b_time = dir_name_i.split('_')[5]
+        bug_id = dir_name_i.split('_')[3]
+        index_test = dir_name_i.split('_')[7]
+        date_time = '_'.join(dir_name_i.split('_')[9:])
+        try:
+            df = pd.read_csv("{}/tree_df.csv".format(dir_i), index_col=0)
+        except IOError as e:
+            continue
+        list_test_df = df['test_component'].unique()
+        size_test_suite = len(list_test_df)
 
+        if bug_id not in dico:
+            dico[bug_id]={}
+        if size_test_suite not in dico[bug_id]:
+            dico[bug_id][size_test_suite] = []
+        dico[bug_id][size_test_suite].append(dir_i)
 
+        d={'project':p_name_i,'time_budget':b_time,'bug_ID':bug_id,
+           'dir_path':dir_i,'test_suite_size':size_test_suite}
+        d_l.append(d)
+
+    for ky_bug in dico:
+        ky_size_list = dico[ky_bug].keys()
+        ky_size_list = sorted(ky_size_list)
+        #print 'bugID:',ky_bug,'\t',ky_size_list[-1],'\tsize=',len(dico[ky_bug][ky_size_list[-1]])
+        for item in ky_size_list[:-1]:
+            for x in dico[ky_bug][item]:
+                command_mv = "mv {} {}".format(x, DATA_folder)
+                print "[OS] {}".format(command_mv)
+                os.system(command_mv)
+    df_ans = pd.DataFrame(d_l)
+    df_ans.to_csv('{}/dir_info.csv'.format(out))
+
+    exit()
 
 
 
 if __name__ == "__main__":
+    make_repo_of_test()
     check_missing_fp_class()
     print '--- util file py -----'

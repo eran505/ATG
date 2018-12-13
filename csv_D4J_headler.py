@@ -951,7 +951,17 @@ def filter_coluoms_by_bug_ID(bug_ids,p_name='Lang'):
     print len(df)
     df.to_csv('{}/{}_FP_tmp.csv'.format('/home/ise/tmp_d4j/out/result_only_fp/', p_name))
 
-def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True):
+
+
+def frange(x, y, jump):
+  while x < y:
+    yield x
+    x += jump
+
+def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True):
+    gamma_arr=[]
+    for num_val in frange(0,1,0.05):
+        gamma_arr.append(num_val)
     d_list_res = []
     if heuristic_method:
         import heuristic
@@ -982,15 +992,31 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True):
             df_filter.loc[df_filter['FP'] == 'no_fp', 'FP'] = None
         if 'no_fp' in df_filter['FP_genric'].values:
             df_filter.loc[df_filter['FP_genric'] == 'no_fp', 'FP_genric'] = None
+
+
+        for col in ['FP','LOC_P','LOC']:
+            df_filter[col] = df_filter[col].astype(float)
+
+
+
+        if pre_gen:
+            for gamma in gamma_arr:
+                df_filter['pre_gen_score_{}'.format(gamma)] = df_filter['FP'] * gamma + (1 - gamma) * df_filter['LOC_P']
+
         for item_number in range(1,item):
             for rep_i in range(1, max_all_rep + 1):
+                d_pre_gen = {}
                 val_random = pick_by_prop(df_filter, 'Random', rep=rep_i,item_num=item_number)
                 val_fp = pick_by_prop(df_filter, 'FP', rep=rep_i, item_num=item_number)
                 val_fp_gen = pick_by_prop(df_filter, 'FP_genric', rep=rep_i, item_num=item_number)
                 val_loc = pick_by_prop(df_filter, 'LOC', rep=rep_i, item_num=item_number)
                 val_target = pick_by_prop(df_target, 'faulty_class',rep=rep_i,item_num=item_number)
-                d_val_heuristic = heuristic_pick(d_heuristic_res,bug_i,df_filter,rep=rep_i,item_num=item_number)
+                if heuristic_method:
+                    d_val_heuristic = heuristic_pick(d_heuristic_res,bug_i,df_filter,rep=rep_i,item_num=item_number)
+                for gamma in gamma_arr:
 
+                    val_post_gen = pick_by_prop(df_filter,'pre_gen_score_{}'.format(gamma),rep=rep_i,item_num=item_number)
+                    d_pre_gen['pre_gen_score_{}'.format(gamma)] = val_post_gen
 
                 d_list_res.append({'bug_ID': bug_i, 'kill_val': val_target, 'method': 'target', 'rep_sampled': rep_i,'item':item_number,
                                    'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
@@ -1009,10 +1035,18 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True):
                 d_list_res.append({'bug_ID': bug_i, 'kill_val': val_fp_gen, 'method': 'FP_gen', 'rep_sampled': rep_i,'item':item_number,
                                    'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
-                for ky_h in d_val_heuristic:
-                    d_list_res.append(
-                        {'bug_ID': bug_i, 'kill_val': d_val_heuristic[ky_h], 'method': ky_h, 'rep_sampled': rep_i,
-                         'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+                if pre_gen:
+                    for ky in d_pre_gen:
+                        d_list_res.append(
+                            {'bug_ID': bug_i, 'kill_val': d_pre_gen[ky], 'method': ky, 'rep_sampled': rep_i,
+                             'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+
+
+                if heuristic_method:
+                    for ky_h in d_val_heuristic:
+                        d_list_res.append(
+                            {'bug_ID': bug_i, 'kill_val': d_val_heuristic[ky_h], 'method': ky_h, 'rep_sampled': rep_i,
+                             'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
     df_res = pd.DataFrame(d_list_res)
     df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
@@ -1124,6 +1158,10 @@ def get_max_val(d,key_traget='val'):
             val_max=d[ky_i][key_traget]
             key_val=ky_i
     return key_val
+
+
+
+
 
 def pick_by_prop(df_filter,prop='FP',rep=3,item_num=1):
     df_filter = df_filter.dropna(subset=[prop])
@@ -1385,8 +1423,8 @@ if __name__ == "__main__":
     #rep_exp_new('Mockito')
     #helper()
     ###merger()
-    rep_exp_new(p_name='Lang')
-    get_bug_ID_contains_FP()
+    rep_exp_new(p_name='Math',heuristic_method=False)
+    get_bug_ID_contains_FP(p_name='Math')
     exit()
     util(p_name="Lang")
     exit()

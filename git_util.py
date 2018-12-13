@@ -39,7 +39,7 @@ def befor_op():
 
     project_dict['Time'] = {'project_name': "Joda-Time", 'repo_path': '/home/ise/tmp_d4j/joda-time', "num_bugs": 27}
 
-    project_dict['tika'] = {'project_name': "tika", 'repo_path': '/home/ise/eran/git_repos/tika', "num_bugs": 27}
+    project_dict['tika'] = {'project_name': "tika", 'repo_path': '/home/ise/eran/git_repos/tika', "num_bugs": 1000}
 
 
 
@@ -655,9 +655,18 @@ def foo():
 
 
 
+def add_tika_tags_csv(csv_p = '/home/ise/Downloads/tika/data/valid_bugs.csv'):
+    df= pd.read_csv(csv_p)
+    print list(df)
+    df['tag_parent'] = df['parent'].apply(lambda x: get_Version_name_via_commit(x,'tika'))
+    df['tag_commit'] = df['commit'].apply(lambda x: get_Version_name_via_commit(x,'tika'))
+    df.to_csv('/home/ise/eran/tika/tika_bug.csv')
+    exit()
+
+
 if __name__ == "__main__":
     befor_op()
-
+    add_tika_tags_csv()
 
     #projects = ['Math','Lang','Mockito','Time','Chart','Closure']
     #new_data_set()

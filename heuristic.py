@@ -60,48 +60,49 @@ def manger(root_dir, out_dir, filter_time_b=None):
     mk_call_graph_df(src_dir)
 
 
-def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise/eran/JARS/JARS_D4J',
-                csv_FP='/home/ise/eran/repo/ATG/D4J/FP',k=4,alpha=0.99999,beta=0.0001,debug=True):
+def making_pred(p_name='Lang',out='/home/ise/eran/JARS' ,root_jat_dir='/home/ise/eran/JARS/JARS_D4J',dis_factor=0.01,
+                csv_FP='/home/ise/eran/repo/ATG/D4J/FP',k=4,alpha=0.009,beta=0.0001,loc='LOC',gama=0.1,debug=True):
     df = pd.read_csv("{0}/{1}/{1}.csv".format(csv_FP, p_name), index_col=0)
     print "df size:\t{}".format(len(df))
     print df.dtypes
+    if debug:
+        out_root_debug = pt.mkdir_system(out,"debug_A_{}_B_{}_loc_{}_ds_{}".format(
+                alpha,beta,loc,dis_factor))
     res_list=[]
-    res = pt.walk_rec(root_jat_dir, [], 'df_coverage.csv')
+    res = pt.walk_rec(root_jat_dir, [], 'P_',False,lv=-1)
     for item in res:
         print item
-        p_name_i = str(item).split('/')[-2].split('_')[1]
-        b_time = str(item).split('/')[-2].split('_')[5]
-        bug_id = str(item).split('/')[-2].split('_')[3]
-        index_test = str(item).split('/')[-2].split('_')[7]
-        date_time= '_'.join(str(item).split('/')[-2].split('_')[9:])
-        df_coverage = pd.read_csv(item, index_col=0)
+        p_name_i = str(item).split('/')[-1].split('_')[1]
+        b_time = str(item).split('/')[-1].split('_')[5]
+        bug_id = str(item).split('/')[-1].split('_')[3]
+        index_test = str(item).split('/')[-1].split('_')[7]
+        date_time= '_'.join(str(item).split('/')[-1].split('_')[9:])
         df_loc = find_loc_componenets(p_name_i, bug_id)
 
-        # TODO: give zero to --> df_coverage instead of skip this bug_ID
-        if len(df_coverage) == 0:
-            continue
 
-        # extracting only the Test component
-        df_coverage = filter_coverage_data(df_coverage)
         if debug:
-            out_debug = pt.mkdir_system("{}/debug".format(root_jat_dir),str(item).split('/')[-2])
-        print list(df_coverage)
+            out_debug = pt.mkdir_system(out_root_debug,str(item).split('/')[-1])
         print "----{}----".format(bug_id)
         df_filter = df.loc[df['bug_ID'] == int(bug_id)]
         print "df size:\t{}".format(len(df_filter))
-        dict_test_picked = heuristic_process(df_filter, df_coverage, df_loc,k,alpha,beta,debug_dir=out_debug,f_name="{}_B_{}_K".format(p_name,bug_id))
+        dict_test_picked = heuristic_process(df_filter, item, df_loc,k,gama=gama,loc=loc,
+                                             alpha=alpha,beta=beta,debug_dir=out_debug,discount_factor=dis_factor,
+                                             f_name="{}_B_{}_K".format(p_name,bug_id))
+
+        if dict_test_picked is None:
+            continue
 
         for test_i_key in dict_test_picked.keys():
             if dict_test_picked[test_i_key]['pick']==0:
                 continue
             kill_sum,all_rep = get_rep_kill_out_raw_by_name(test_i_key,df_filter )
             index_test_pick = dict_test_picked[test_i_key]['index']
-            res_list.append({'bug_ID':bug_id,'project':p_name_i,'time_budget':b_time,'k':k,
-                         'alpha':alpha,'beta':beta,'test_picked':test_i_key,'index_gen_suite':index_test,
+            res_list.append({'bug_ID':bug_id,'project':p_name_i,'time_budget':b_time,'k':k,"discount_factor":dis_factor,
+                         'alpha':alpha,'beta':beta,'test_picked':test_i_key,'index_gen_suite':index_test,'loc_mode':loc,
                              "index_pick_test":index_test_pick ,"date_time":date_time,'sum_detected':kill_sum,
                              'count_detected':all_rep})
     df_final = pd.DataFrame(res_list)
-    df_final.to_csv('{}/heuristic_{}_V_max_LOC.csv'.format(out,p_name))
+    df_final.to_csv('{}/heuristic_P_{}_A_{}_B_{}_loc {}_Dfact_{}.csv'.format(out,p_name,alpha,beta,loc,dis_factor))
 
 def get_rep_kill_out_raw_by_name(name,df):
     comp_name = str(name).split('_EST')[0]
@@ -133,7 +134,8 @@ def to_binary_vec(vec):
     return vec
 
 
-def make_coverage_matrix(root_dir='/home/ise/eran/JARS/JARS_D4J',matrix_mode='BFS'):
+
+def make_coverage_matrix(dir_i='/home/ise/Desktop/new',debug_dir='/tmp',matrix_mode='BFS',is_file=True,debug=False,gama=0.1,dis_factor=0.01):
     '''
     Return MATRIX and unique test list and unique components list
 
@@ -147,73 +149,179 @@ def make_coverage_matrix(root_dir='/home/ise/eran/JARS/JARS_D4J',matrix_mode='BF
     :matrix_mode= BFS / step_10 / simple_path / LOC
 
     '''
-    dir_jars = pt.walk_rec(root_dir,[],'P_',False)
+    dir_name_i = str(dir_i).split('/')[-1]
+    p_name_i = dir_name_i.split('_')[1]
+    b_time = dir_name_i.split('_')[5]
+    bug_id = dir_name_i.split('_')[3]
+    index_test = dir_name_i.split('_')[7]
+    date_time = '_'.join(dir_name_i.split('_')[9:])
+    df_loc = find_loc_componenets(p_name_i, bug_id)
+    df_bfs = pd.read_csv("{}/df_coverage_BFS.csv".format(dir_i),index_col=0)
+    df_adj_matrixs = pd.read_csv('{}/df_coverage_step_1.csv'.format(dir_i),index_col=0)
+    if len(df_bfs) == 0 :
+        return None,None,None
+    print df_bfs.dtypes
 
-    for dir_i in dir_jars:
-        dir_name_i = str(dir_i).split('/')[-1]
-        p_name_i = dir_name_i.split('_')[1]
-        b_time = dir_name_i.split('_')[5]
-        bug_id = dir_name_i.split('_')[3]
-        index_test = dir_name_i.split('_')[7]
-        date_time = '_'.join(dir_name_i.split('_')[9:])
-        df_loc = find_loc_componenets(p_name_i, bug_id)
-        df_bfs = pd.read_csv("{}/df_coverage_BFS.csv".format(dir_i),index_col=0)
-        df_adj_matrixs = pd.read_csv('{}/df_coverage_step_1.csv'.format(dir_i),index_col=0)
-
-        print df_bfs.dtypes
-
-
-
+    if bug_id == '44':
+        print ""
+    if debug:
         print "df_bfs:\t",list(df_bfs)
         print "df_adj_matrixs:\t",list(df_adj_matrixs)
-        test_comp_list = df_bfs['test_component'].unique()
-        src_comp_list  = df_bfs['src_component'].unique()
-        for test_comp in test_comp_list[3:]:
-            filter =  df_bfs.loc[df_bfs['test_component']==test_comp]
-            filter = filter.loc[filter['depth'] < np.inf]
-            filter.sort_values("depth", inplace=True)
-            list_depth = filter.to_dict('records')
-            d={}
-            print "TEST:--->{}".format(test_comp)
-            for item in list_depth:
-                if item['depth'] not in d:
-                    d[item['depth']]=[]
-                d[item['depth']].append(item['src_component'])
-            for ky in d.keys():
-                print "{}:{}".format(ky,d[ky])
-            list_ky = d.keys()
-            for i in range(list_ky):
-                if i+1 > len(list_ky):
-                    break
-                else:
-                    list_comp_i = d[list_ky[i]]
-                    list_comp_i_1 = d[list_ky[i+1]]
-                    for comp_i in list_comp_i:
-                        for comp_j in list_comp_i_1:
-                            pass
-            break
-        break
 
-#######################################heuristic_process###################################################
-def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,beta=0.01
-                      ,f_name='tmp',debug_dir='/home/ise/eran/JARS/debug',debug=True):
+    test_comp_list = df_bfs['test_component'].unique()
+    src_comp_list  = df_bfs['src_component'].unique()
+
+    # save time and re_genrate all the tree struct again
+    if is_file == True:
+        if os.path.isfile("{}/tree_df.csv".format(dir_i)):
+            df_in = pd.read_csv("{}/tree_df.csv".format(dir_i), index_col=0)
+            test_comp_list = check_any_miss_tests(debug_dir,df_in, test_comp_list, bug_id, b_time, p_name_i, date_time, index_test)
+            return make_matrix_score(df_in,gama=gama,dis_factor=dis_factor),test_comp_list, src_comp_list
+
+    list_res = []
+    for test_comp in test_comp_list:
+
+        # cut the Dataframe to the given test name and remove all inf entry
+        filter =  df_bfs.loc[df_bfs['test_component']==test_comp]
+        filter = filter.loc[filter['depth'] < np.inf]
+        filter.sort_values("depth", inplace=True)
+        print test_comp,"\t",len(filter)
+        # make a dict out of the Data_Frame
+        list_depth = filter.to_dict('records')
+        # a level dict, to know each edge to look up for
+        d_level={}
+        if debug:
+            print "TEST:--->{}".format(test_comp)
+
+        d_level[1.0]=[test_comp]
+        for item in list_depth:
+            cur_depth = item['depth'] +1
+            if cur_depth not in d_level:
+                d_level[cur_depth] = []
+            d_level[cur_depth].append(item['src_component'])
+        if debug:
+            for ky in d_level.keys():
+                print "{}:{}".format(ky, d_level[ky])
+        # list_ky are all the unique level number list
+        list_ky = d_level.keys()
+        # for each level look for the next level edge and assign the number of edge
+        d_edge={}
+        d_edge[test_comp]=1
+        for i in range(len(list_ky)):
+            if i + 1 >= len(list_ky):
+                break
+            else:
+                list_comp_i = d_level[list_ky[i]]
+                list_comp_i_1 = d_level[list_ky[i + 1]]
+                if debug:
+                    print "list_comp_i_1 = {}".format(list_comp_i_1)
+                for comp_i in list_comp_i:
+                    cut_df = df_adj_matrixs.loc[df_adj_matrixs['component'] == comp_i]
+
+                    if comp_i == 'org.apache.commons.lang3.text.translate.CharSequenceTranslator':
+                        print cut_df['test']
+
+                    for comp_j in list_comp_i_1:
+                        res_df = cut_df.loc[cut_df['test'] == comp_j]
+                        if len(res_df) == 1:
+                            edge_num =  res_df['score'].sum()
+                            if comp_j not in d_edge:
+                                d_edge[comp_j]=[]
+                            try:
+                                father_edge = np.sum(d_edge[comp_i])
+                            except Exception as e:
+                                father_edge = 0
+                                print "{}\t---->\t{}".format(comp_i,comp_j)
+                            d_edge[comp_j].append(edge_num*father_edge)
+                            list_res.append({"test_component":test_comp,
+                                             "component_father":comp_i,
+                                             "component_son":comp_j,
+                                             "depth":list_ky[i],
+                                             "edge":edge_num,
+                                             "path":np.sum(d_edge[comp_j])})
+                        else:
+                            continue
+    df = pd.DataFrame(list_res)
+    df.to_csv("{}/tree_df.csv".format(dir_i))
+
+    #check if some tests are empty if yes log them down:
+    #
+    test_comp_list = check_any_miss_tests(debug_dir,df,test_comp_list,bug_id,b_time,p_name_i,date_time,index_test)
+    # end
+
+    return make_matrix_score(df,gama=gama,dis_factor=dis_factor),test_comp_list,src_comp_list
+
+def check_any_miss_tests(debug_dir,df,test_comp_list,bug_id,b_time,p_name_i,date_time,index_test):
+    list_test_df = df['test_component'].unique()
+    empty=[]
+    for test_i in test_comp_list:
+        if test_i in list_test_df:
+            continue
+        else:
+            empty.append(test_i)
+    if len(empty)>0:
+        with open('{}/miss_tests.csv'.format(debug_dir),'a') as f:
+            for elm in empty:
+                f.write("{},{},{},{},{},{}\n".format(bug_id,b_time,p_name_i,date_time,index_test,elm))
+    test_comp_list = list_test_df
+    return test_comp_list
+
+
+def make_matrix_score(df=None,dis_factor=0.01,path_to_df='/home/ise/Desktop/new/P_Lang_B_57_T_60_I_0_D_15_21_37_56_2018/tree_df.csv',gama=0.1):
+    '''
+    making the pivot table matrix and compute the score by the score = A^depth*number_path
+    '''
+
+    if df is None:
+        df = pd.read_csv('{}'.format(path_to_df),index_col=0)
+
+    df['score'] = df['path'] * np.power(dis_factor,df['depth'])
+
+    print df['score'][:5]
+    print list(df)
+    df.rename(columns={'component_son': 'component', 'test_component': 'test'}, inplace=True)
+    pivot_data_df = df.reset_index().pivot_table(index='test', columns='component', values='score').fillna(0)
+    return pivot_data_df
+
+
+def matrix_step_10(dir):
+    '''
+    making a pivot table out of the 10 step matrix
+    :param dir:
+    :return:
+    '''
+    df_coverage = pd.read_csv("{}/df_coverage_step_10.csv".format(dir),index_col=0)
+    # extracting only the Test component
+    if len(df_coverage) == 0:
+        return None
+    df_coverage = filter_coverage_data(df_coverage)
     list_test = df_coverage['test'].unique()
     print list_test
-    if len(list_test)==0:
-        return None
     list_comp = df_coverage['component'].unique()
     print list_comp
     print "num_of_test:\t", len(list_test)
-    d_set_picked = {}
     print df_coverage.dtypes
     # g = df_coverage.groupby('test')['score'].sum().reset_index(name='score_sum')
     pivot_data_df = df_coverage.pivot(index='test', columns='component', values='score').fillna(0)
+    return pivot_data_df , list_test,list_comp
+
+#######################################heuristic_process###################################################
+def heuristic_process(df_data, dir_i, df_loc_componenet, k=2, alpha=0.7,beta=0.01,loc='LOC',gama=0.1,
+                      discount_factor=0.01,f_name='tmp',debug_dir='/home/ise/eran/JARS/debug',debug=True):
+
+    #pivot_data_df,list_test,list_comp = matrix_step_10(dir_i)
+
+    pivot_data_df, list_test, list_comp = make_coverage_matrix(dir_i,debug_dir,dis_factor=discount_factor,gama=gama)
+
+    if pivot_data_df is None:
+        return None
+    d_set_picked = {}
     for item_test in list_test:
         d_set_picked[item_test] = {'pick': 0}
     if k > len(list_test):
         k = len(list_test)
     for i in range(k):
-        df_res = compute_heuristic(d_set_picked, pivot_data_df, df_data, df_loc_componenet)
+        df_res = compute_heuristic(d_set_picked, pivot_data_df, df_data, df_loc_componenet,loc_mode=loc)
         df_res['rank'] = df_res['val_fp']*alpha+df_res['val_coverage']*(1-alpha)+beta*df_res['val_loc']
         test_picked = df_res['test'].iloc[df_res['rank'].argmax()]
         if debug:
@@ -222,7 +330,7 @@ def heuristic_process(df_data, df_coverage, df_loc_componenet, k=2, alpha=0.7,be
         d_set_picked[test_picked]['index'] = i
     return d_set_picked
 
-def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp):
+def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp,binary=False,norm=True,loc_mode='LOC'):
     '''
     compute LOC
     compute Coverage
@@ -248,18 +356,22 @@ def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp):
         cur_vec = cur_data.values
 
         #to_binary
-        cur_vec = to_binary_vec(cur_vec)
-        vector_picked = to_binary_vec(vector_picked)
+        if binary:
+            cur_vec = to_binary_vec(cur_vec)
+            vector_picked = to_binary_vec(vector_picked)
 
         res = minus_vec(cur_vec, vector_picked)
         coverage_sum = np.sum(res)
         # end coverage
         # compute LOC
-        cur_vec_filter = cur_data.loc[cur_data.values > 0]
-        list_all_comp = cur_vec_filter.index.tolist()
-        data_df_filter = df_loc_comp.loc[df_loc_comp['name'].isin(list_all_comp)]
-
-        sum_loc = data_df_filter['LOC'].sum()
+        val = 0
+        if loc_mode == 'LOC':
+            val = compute_LOC(cur_data, df_loc_comp, item_test, mode='LOC')
+        elif loc_mode == 'simple':
+            val = compute_LOC(cur_data,df_loc_comp,item_test,mode='simple')
+        elif loc_mode == 'multi':
+            val = compute_LOC(cur_data, df_loc_comp, item_test, mode='multi')
+        sum_loc = val
         # end loc
         d_list.append({'test': item_test, 'val_coverage': coverage_sum,
                        'val_loc': sum_loc, 'val_fp': sum_fp})
@@ -267,14 +379,29 @@ def compute_heuristic(d_pick, pivot_data, df_raw_data, df_loc_comp):
     if len(df_res) == 0:
         return None
     # norm all the val colounms
-    for loc in ['val_fp','val_coverage','val_loc']:
-        if loc == 'val_fp':                         # TODO: FIX IT !!!
-            continue
-        df_res = call_g.min_max_noramlizer(df_res,loc,min_new_arg=0.01,max_new_arg=1)
+    if norm:
+        for loc in ['val_coverage','val_loc']:
+            df_res = call_g.min_max_noramlizer(df_res,loc,min_new_arg=0.01,max_new_arg=1)
     return df_res
 
+def compute_LOC(cur_data,df_loc_comp,test_name,mode='simple'):
+    '''
+    compute the loc val for the heuristic
+    '''
+    cur_vec_filter = cur_data.loc[cur_data.values > 0]
+    list_all_comp = cur_vec_filter.index.tolist()
+    data_df_filter = df_loc_comp.loc[df_loc_comp['name'].isin(list_all_comp)]
+    if mode =='simple':
+        return data_df_filter['LOC'].sum()
+    elif mode=='multi':
+        data_df_filter['power'] = data_df_filter['name'].apply(lambda x: cur_vec_filter[x])
+        data_df_filter['score'] = data_df_filter['power']*data_df_filter['LOC']
+        return data_df_filter['score'].sum()
+    elif mode == 'LOC':
+        data_df_filter = data_df_filter.loc[data_df_filter['name']==str(test_name).split('_EST')[0]]
+        return data_df_filter['LOC'].sum()
 
-#########################################heuristic_process#####################################################
+    #########################################heuristic_process#####################################################
 
 
 def jar_making_process(src_dir):
@@ -363,8 +490,13 @@ def csv_to_dict(p_name='Lang',debug=True):
     '''
     DataFrame to python dictionary result heurisitic
     '''
-    csv_p = '/home/ise/eran/JARS/all_H.csv'.format(p_name)
-    df = pd.read_csv(csv_p,index_col=0)
+    res = pt.walk_rec('/home/ise/eran/JARS',[],'heuristic',lv=-1)
+    df_list=[]
+    for x in res:
+        df_list.append(pd.read_csv(x,index_col=0))
+    df = pd.concat(df_list)
+    #csv_p = '/home/ise/eran/JARS/all_H.csv'.format(p_name)
+    #df = pd.read_csv(csv_p,index_col=0)
     print list(df)
     d={}
     df.apply(dict_insert,dico=d,axis=1)
@@ -392,7 +524,9 @@ def dict_insert(row, dico):
     index_pick_test = row['index_pick_test']
     test_picked = row['test_picked']
     index_gen_suite = row['index_gen_suite']
-    hyper_parm_key = "A_{}_B_{}".format(alpha,beta)
+    loc_mode = row['loc_mode']
+    discount_factor = row['discount_factor']
+    hyper_parm_key = "A_{}_B_{}_loc_{}_ds_{}".format(alpha,beta,loc_mode,discount_factor)
     key_date = 'I_{}_D_{}'.format(index_gen_suite,date_time)
     if id_bug not in dico:
         dico[id_bug]={}
@@ -410,7 +544,7 @@ def main_parser():
         print "---No args----"
         return
     if args[1] == 'main':
-        manger(args[2], args[3], filter_time_b=[60,70,90,50])
+        manger(args[2], args[3], filter_time_b=[65])
     if args[1] == 'jar':
         jar_making_process(args[2])
     if args[1] == 'del':
@@ -425,6 +559,21 @@ def main_parser():
 
 if __name__ == '__main__':
     print "--in--"
-   ### make_coverage_matrix()
-    ####sys.argv = ['', 'pred']
+    #root_jat_dir='/home/ise/Desktop/new',out='/home/ise/Desktop/new/out_pred'
+    #making_pred(dis_factor=0.05,alpha=0.999,loc='LOC',beta=0.00001)
+    making_pred(dis_factor=0.05, alpha=1, loc='LOC', beta=0.4)
+    #making_pred(dis_factor=0.05, alpha=0.5, loc='LOC', beta=1000)
+    ######
+    # loc : multi , LOC , simple
+    ######
+   # making_pred(dis_factor=0.1, alpha=0.5, loc='simple', beta=1)
+   # making_pred(dis_factor=1, alpha=0.5, loc='multi', beta=1)
+
+
+    #exit()
+    #making_pred(root_jat_dir='/home/ise/Desktop/new',out='/home/ise/Desktop/new/out_pred'
+    #            ,dis_factor=0.05,alpha=0.5,loc='multi',beta=0.5)
+    #making_pred(root_jat_dir='/home/ise/Desktop/new',out='/home/ise/Desktop/new/out_pred'
+    #            ,dis_factor=0.05,alpha=0.5,loc='multi',beta=0.5)
+    #sys.argv = ['', 'pred']
     main_parser()

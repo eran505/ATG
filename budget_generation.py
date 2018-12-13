@@ -361,6 +361,7 @@ def get_all_class_v1(root):
             arr = arr[:-1]
             path_class = '/'.join(arr)
             class_list.append([path_class, name_class])
+    class_list = [x for x in class_list if str(x[1]).split('.')[-1] == 'class']
     return class_list
 
 
@@ -462,6 +463,7 @@ Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals
         file_name_class = str(test)
         str_log = "{} >> {}log_evo/{}.txt 2>&1".format(command, dis_path, file_name_class)
         os.system(str_log)
+
     if os.path.exists(dis_path + 'statistics.csv'):
         remove_dot_csv(dis_path + 'statistics.csv')
     text_file = open(dis_path + "command.txt", "w")
@@ -559,10 +561,11 @@ def int_exp(args):
         if 'U' in comp:
             lower_b = 0
     else:
-        csv_path = get_csv_fp(v_path)
-        fp_budget, d = get_time_fault_prediction(csv_path, 'FileName', 'prediction',
+        if 'FP' in comp:
+            csv_path = get_csv_fp(v_path)
+            fp_budget, d = get_time_fault_prediction(csv_path, 'FileName', 'prediction',
                                                  v_path, upper_b, lower_b, b_klass)
-        dict_to_csv(d, v_dis_path)
+            dict_to_csv(d, v_dis_path)
     if sys.argv[5] != 'd4j':
         uni_budget = {}
     target_list = get_all_class_v1(v_path)
@@ -732,6 +735,8 @@ def get_bug_object(bug_obj):
 
 
 if __name__ == "__main__":
+    #sys.argv = ['.py','/home/ise/test/tika/tika-core/target/classes/org/apache/tika','evosuite-1.0.5.jar','/home/ise/eran/evosuite/jar/','/home/ise/test/evo_tmp','exp','100','1','10','1','U']
+    #python ${ATG}budget_generation.py /home/ise/eran/repo/lang/commons-lang3-3.5-src/target/classes/org/apache/commons/lang3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} ${m} 1 50 ${t} 2 U
     init_main()
 
 # get_time_dico1("budget.csv")

@@ -1,0 +1,6 @@
+<dependency>
+  <groupId>org.evosuite</groupId>
+  <artifactId>evosuite-standalone-runtime</artifactId>
+  <version>1.0.5</version>
+  <scope>test</scope>
+</dependency>

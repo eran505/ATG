@@ -46,7 +46,7 @@ class Call_g:
             flag = 0
             for pat in remove_pattrens:
                 if str(line).__contains__(pat):
-                    print pat
+                    #print pat
                     flag = 1
                     break
             if flag == 1:
@@ -359,13 +359,11 @@ class Call_g:
         all_info_list=[]
         for test_id_node_i in test_index.keys():
             test_name_node_i = test_index[test_id_node_i]
-            l_result = self.get_tree_distance_node(test_id_node_i  ,target_nodes_dict=component_index.keys())
+            l_result = self.get_tree_distance_node(test_id_node_i, target_nodes_dict=component_index.keys())
             all_info_list.extend(l_result)
         df = pd.DataFrame(all_info_list)
         self.cover_df = df
         self.cover_df.to_csv('{}/df_coverage_BFS.csv'.format(self.out_dir_data))
-
-
 
     def matrixMul_rec(self,a, n):
         '''
@@ -392,8 +390,6 @@ def g_test():
     exit()
 
 def min_max_noramlizer(df,col,min_new_arg=0,max_new_arg=1):
-    print col
-    print df[col]
     min_score = df[col].min()
     max_score = df[col].max()
     max_minus_min = float(max_score - min_score)
@@ -409,8 +405,9 @@ def min_max_noramlizer(df,col,min_new_arg=0,max_new_arg=1):
 if __name__ == "__main__":
     # sudo pip install python-igraph
     print "in"
-    path_file = '/home/ise/Desktop/new/P_zzz/lang_57.txt'
-    out = '/home/ise/Desktop/new/P_zzz'
+
+    path_file = '/home/ise/Desktop/new/P_Lang_B_57_T_60_I_0_D_15_21_37_56_2018/lang_57.txt'
+    out = '/home/ise/Desktop/new/P_Lang_B_57_T_60_I_0_D_15_21_37_56_2018'
     graph_obj = Call_g(path_file,out)
     graph_obj.read_and_process(False)
     print "--"*60,'Q',"--"*60
