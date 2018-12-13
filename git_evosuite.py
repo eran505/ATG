@@ -1,7 +1,7 @@
 import pit_render_test as pt
 import sys,os
 import re
-sys.path.append("/home/ise/eran/git_repos/mvnpy")
+#sys.path.append("/home/ise/eran/git_repos/mvnpy")
 from subprocess import Popen, PIPE
 import subprocess
 import shlex
