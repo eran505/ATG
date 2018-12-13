@@ -3,10 +3,8 @@ import sys,os
 import re
 #sys.path.append("/home/ise/eran/git_repos/mvnpy")
 from subprocess import Popen, PIPE
-import subprocess
 import shlex
 import budget_generation as bg
-import git_util as gu
 import pandas as pd
 import xml.etree.ElementTree as ET
 
