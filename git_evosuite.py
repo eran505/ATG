@@ -1,6 +1,7 @@
 import pit_render_test as pt
-import sys,os
+import sys,os,xml
 import re
+import numpy as np
 #sys.path.append("/home/ise/eran/git_repos/mvnpy")
 from subprocess import Popen, PIPE
 import shlex
@@ -19,21 +20,30 @@ E.G -> mvn install -pl B -am
 '''
 
 
-def checkout_tika(dir_dis):
-    url='https://github.com/apache/tika.git'
+def checkout_tika(dir_dis,p_name):
+    if p_name == 'tika':
+        url='https://github.com/apache/tika.git'
+    elif p_name =='commons-math':
+        url='https://github.com/apache/commons-math.git'
+    else:
+        raise Exception('known project name = {} cant clone repo'.format(p_name))
     cwd = os.getcwd()
     os.chdir(dir_dis)
     os.system('git clone {}'.format(url))
     os.chdir(cwd)
-    print "Done cloning TIKA"
+    print "Done cloning {}".format(p_name)
 
-def csv_bug_process(csv_bug='/home/ise/eran/repo/ATG/tmp_files/tika_bug.csv',repo_path='/home/ise/eran/tika_exp/tika',out='/home/ise/eran/tika_exp/res'):
 
+
+def csv_bug_process(p_name,repo_path='/home/ise/eran/tika_exp/tika',out='/home/ise/eran/tika_exp/res'):
+    csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
-        checkout_tika(repo_path_father)
+        checkout_tika(repo_path_father,p_name)
+    if os.path.isdir(out) is False:
+        os.system('mkdir {}'.format(out))
     print "{}".format(csv_bug)
-    df = pd.read_csv(csv_bug,index_col=0)
+    df = pd.read_csv(csv_bug)
     print list(df)
     df['package'] = df['testcase'].apply(lambda x : '/'.join(str(x).split('.')[:-1]))
     df['fail_test'] = df['testcase'].apply(lambda x : str(x).split('#')[0])
@@ -46,6 +56,7 @@ def csv_bug_process(csv_bug='/home/ise/eran/repo/ATG/tmp_files/tika_bug.csv',rep
     exit()
 
 def applyer_bug(row,out_dir,repo):
+    p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
     module = row['module']
     commit_p = row['parent']
@@ -53,40 +64,45 @@ def applyer_bug(row,out_dir,repo):
     bug_name = row['issue']
     index_bug = row['index_bug']
     ######
-    #look_for = "{}_{}".format(bug_name,index_bug)
-    #ans  = to_del()
-    #ans = ['TIKA-781_47']
-    #if look_for not in ans:
-    #   return
+    look_for = "{}_{}".format(bug_name,index_bug)
+    ans = ['MATH-175_6']
+    if look_for not in ans:
+       return
     ######
     package = row['package']
     out_dir_new = pt.mkdir_system(out_dir,"{}_{}".format(bug_name,index_bug))
     out_evo = pt.mkdir_system(out_dir_new,'EVOSUITE')
     path_to_pom = "{}/pom.xml".format(repo)
-    dir_to_gen = '{}/target/classes/{}'.format(repo, package)
-    if str(module).__contains__('-'):
-        path_to_pom = '{}/{}/pom.xml'.format(repo,module)
-        dir_to_gen = '{}/{}/target/classes/{}'.format(repo, module, package)
+
     print "module={} \t tag_p = {} \t commit_p ={}".format(module,tag_parent,commit_p)
     checkout_version(commit_p,repo,out_dir_new)
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
-    rm_exsiting_test(proj_dir)
+
+    rm_exsiting_test(proj_dir,p_name)
+
     out_log = pt.mkdir_system(out_dir_new, 'LOG', False)
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'compile', out_log)
+    discover_dir_repo('{}/target'.format(repo),p_name,is_test=False)
 
-
+    if str(module).__contains__('-'):
+        path_to_pom = '{}/{}/pom.xml'.format(repo,module)
+        dir_to_gen = '{}/{}/target/classes/{}'.format(repo, module, package)
+        dir_to_gen = discover_dir_repo('{}/{}'.format(repo,module),p_name,is_test=False)
+    else:
+        dir_to_gen = discover_dir_repo('{}'.format(repo), p_name, is_test=False)
+    dir_to_gen = '{}/{}'.format(dir_to_gen, package)
     # Run Evosuite generation mode
     add_evosuite_text(path_to_pom,None)
     sys.argv = ['.py', dir_to_gen , 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo+'/', 'exp', '100', '1', '75', '2', 'U']
+                '/home/ise/eran/evosuite/jar/', out_evo+'/', 'exp', '100', '1', '3', '1', 'U']
     bg.init_main()
     evo_test_run(out_evo,repo,module,proj_dir,mode='fixed')
     checkout_version(commit_p,repo,out_dir_new,clean=True)
 
     # Run test-suite on the buugy version
     checkout_version(commit_bug,repo,out_dir_new)
-    rm_exsiting_test(proj_dir)
+    rm_exsiting_test(proj_dir,p_name)
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'compile', out_log)
     add_evosuite_text(path_to_pom,None)
@@ -97,20 +113,22 @@ def applyer_bug(row,out_dir,repo):
     mvn_command(repo, module,'clean',out_log)
 
 def evo_test_run(out_evo,mvn_repo,moudle,project_dir,mode='fix'):
+    p_name = str(mvn_repo).split('/')[-1]
     out_evo = '/'.join(str(out_evo).split('/')[:-1])
     res = pt.walk_rec(out_evo,[],'org',False)
     if len(res) == 0:
         return
-    test_dir = "{}/src/test/java/".format(project_dir)
-    rm_exsiting_test(project_dir)
+    test_dir = get_test_dir(project_dir)
+    rm_exsiting_test(project_dir,p_name)
     for path_res in res:
         command_cp_test = "cp -r {} {}".format(path_res,test_dir)
         dir_name_evo = str(path_res).split('/')[-2]
         print "[OS] {}".format(command_cp_test)
         out_log = pt.mkdir_system(out_evo,'LOG',False)
         os.system(command_cp_test)
-        mvn_command(mvn_repo,moudle,'test-compile',out_log)
-        mvn_command(mvn_repo, moudle, 'test', out_log)
+        mvn_command(mvn_repo,moudle,'install',out_log)
+        #mvn_command(mvn_repo,moudle,'test-compile',out_log)
+        #mvn_command(mvn_repo, moudle, 'test', out_log)
 
 
         # moving the results to the evo_out dir
@@ -124,18 +142,21 @@ def evo_test_run(out_evo,mvn_repo,moudle,project_dir,mode='fix'):
             command_mv = "mv {} {}".format(test_item,out_results_evo)
             print "[OS] {}".format(command_mv)
             os.system(command_mv)
-        rm_exsiting_test(project_dir)
+        rm_exsiting_test(project_dir,p_name)
 
 
-def rm_exsiting_test(path_p):
+def rm_exsiting_test(path_p,p_name):
     dir_to_del  = '{}/src/test/java/org'.format(path_p)
+    dir_to_del = discover_dir_repo(path_p,p_name)
+    if dir_to_del is None:
+        print('[Warning] cant find the test dir of the project -> {}'.format(path_p))
+        return
     if os.path.isdir(dir_to_del):
         command_ram='rm -r {}'.format(dir_to_del)
         print "[OS] {}".format(command_ram)
         os.system(command_ram)
     else:
         print '[Warning] cant find the test dir of the project -> {}'.format(path_p)
-
 
 
 def log_to_file(dir_log, name_file, txt_to_log):
@@ -145,6 +166,32 @@ def log_to_file(dir_log, name_file, txt_to_log):
     with open('{}/{}.log'.format(dir_log, name_file), 'w+') as file_log:
         file_log.write(txt_to_log)
 
+
+
+def discover_dir_repo(path,p_name,target='org',is_test=True):
+    if p_name == 'tika':
+        if is_test is False:
+            return "{}/target/classes".format(path)
+        else:
+            return "{}/src/test/java/org".format(path)
+    res = pt.walk_rec(path,[],target,False,lv=-4)
+    for item in res:
+        if is_test:
+            if str(item).__contains__('/src/test') or str(item).__contains__('src/test/java'):
+                return item
+        else:
+            item='/'.join(str(item).split('/')[:-1])
+            if str(item).__contains__('/target/classes'):
+                return item
+
+def get_test_dir(project_dir):
+    if os.path.isdir("{}/src/test/java".format(project_dir)):
+        test_dir = "{}/src/test/java".format(project_dir)
+        return test_dir
+    if os.path.isdir("{}/src/test".format(project_dir)):
+        test_dir = "{}/src/test".format(project_dir)
+        return test_dir
+    raise Exception("cant find the test dir in the Project --> {}".format(project_dir))
 
 def run_GIT_command_and_log(repo_path, cmd, log_dir, name, log=True):
     '''
@@ -174,15 +221,15 @@ def checkout_version(commit,repo,log_dir,clean=False):
 def mvn_command(repo,module,command_mvn='clean',log_dir=None):
     os.chdir(repo)
     if str(module).__contains__('-'):
-        command_mvn = 'mvn {} -pl {} -am -fn'.format(command_mvn,module)
+        command_mvn_str = 'mvn {} -pl {} -am -fn'.format(command_mvn,module)
     else:
-        command_mvn = 'mvn {} -fn'.format(command_mvn, module)
-    process = Popen(shlex.split(command_mvn), stdout=PIPE, stderr=PIPE)
+        command_mvn_str= 'mvn {} -fn'.format(command_mvn)
+    process = Popen(shlex.split(command_mvn_str), stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
     if log_dir is None:
         return
-    log_to_file(log_dir, '{}_stdout'.format(command_mvn), stdout)
-    log_to_file(log_dir, '{}_stderr'.format(command_mvn,), stderr)
+    log_to_file(log_dir, '{}_stdout'.format(command_mvn_str), stdout)
+    log_to_file(log_dir, '{}_stderr'.format(command_mvn_str), stderr)
 
 
 def add_evosuite_pom(path_xml='/home/ise/eran/git_repos/tika/tika-core/pom.xml',out='/home/ise/test/pom'):
@@ -298,8 +345,177 @@ def to_del(p='/home/ise/test/pom_3'):
         #print str(item).split('/')[-1]
     exit()
 
+
+def get_results(dir_res='/home/ise/test/pom_3'):
+    res = pt.walk_rec(dir_res,[],'TIKA',False,lv=-1)
+    d_l=[]
+    d_l_empty=[]
+    for item in res:
+        print "----{}----".format(str(item).split('/')[-1])
+        name = str(item).split('/')[-1]
+        d_test={}
+        id_bug = str(name).split('_')[1]
+        bug_name = str(name).split('_')[0]
+        folder_log_evo = pt.walk_rec(item,[],'log_evo',False)
+        folder_org = pt.walk_rec(item, [],'org', False)
+        res_log_test = pt.walk_rec(folder_log_evo[0],[],'.txt')
+        for log_t in  res_log_test:
+            name = str(log_t).split('/')[-1][:-4]
+            if name not in d_test:
+                d_test[name]={'id':id_bug,'bug_name':bug_name,'log':1,'name':name,'test':0}
+            else:
+                msg='[Error] duplication in the test log dir := {}'.format(folder_log_evo)
+                raise Exception(msg)
+        if len(folder_org) > 0:
+            res_test =  pt.walk_rec(folder_org[0],[],'ESTest.java')
+            for test_i in res_test:
+                test_name_package = pt.path_to_package('org',test_i,-5)
+                test_name_package = test_name_package[:-7]
+                if test_name_package not in d_test:
+                    d_test[test_name_package]={'id':id_bug,'bug_name':bug_name,'log':0,'name':test_name_package,'test':1}
+                else:
+                    d_test[test_name_package]['test']=1
+        d_l_empty.extend(d_test.values())
+    df = pd.DataFrame(d_l_empty)
+    father = '/'.join(str(dir_res).split('/')[:-1])
+    df.to_csv("{}/result_info_empty.csv".format(father))
+
+
+def get_test_xml_csv(dir_res='/home/ise/test/res'):
+    d_l=[]
+    res = pt.walk_rec(dir_res,[],'Result',False)
+    for item_dir in res:
+        bug_id = str(item_dir).split('/')[-2].split('_')[1]
+        if bug_id =='133':
+            print ""
+        bug_name = str(item_dir).split('/')[-2].split('_')[0]
+        xml_files = pt.walk_rec(item_dir,[],'.xml')
+        for xml_item in xml_files:
+            d=None
+            name_dir = str(xml_item).split('/')[-2]
+            name_file_xml = str(xml_item).split('/')[-1]
+            test_mode = str(name_dir).split('_')[-1]
+            test_it = str(name_dir).split('_')[-2].split('=')[1]
+            test_time_b = str(name_dir).split('_')[-3].split('=')[1]
+            test_date = '_'.join(str(name_dir).split('_')[3:7])
+            d= pars_xml_test_file(xml_item)
+            d['test_mode']=test_mode
+            d['test_it']=test_it
+            d['test_time_b']=test_time_b
+            d['test_date']=test_date
+            d['bug_id']=bug_id
+            d['bug_name']=bug_name
+            d_l.append(d)
+    df = pd.DataFrame(d_l)
+    dir_father = '/'.join(str(dir_res).split('/')[:-1])
+    df.to_csv("{}/res.csv".format(dir_father))
+
+
+def make_csv_diff(csv_raw_data_res='/home/ise/test/res.csv'):
+    father_dir = '/'.join(str(csv_raw_data_res).split('/')[:-1])
+    df = pd.read_csv(csv_raw_data_res, index_col=0)
+    print list(df)
+    df['diff_fail'] = df.apply(differ,df=df,axis=1)
+    df['diff_fail_count'] = df['diff_fail'].apply(lambda x: str(x).count('ESTest'))
+    df.to_csv('{}/tmp_df.csv'.format(father_dir))
+
+def differ(row,df):
+    '''
+    '''
+    bug_id = row['bug_id']
+    bug_name = row['bug_name']
+    name = row['name']
+    test_it = row['test_it']
+    test_time_b = row['test_time_b']
+    test_mode = row['test_mode']
+    filter_df = df.query("test_mode != @test_mode & bug_id == @bug_id & bug_name == @bug_name & name == @name & test_it == @test_it & test_time_b==@test_time_b ")
+    if len(filter_df) != 1 :
+        return "Err"
+    if str(filter_df['class_fail'].iloc[0]).__contains__('--') is False:
+        diff_other=[]
+    else:
+        diff_other = str(filter_df['class_fail'].iloc[0]).split('--')
+    if str(row['class_fail']).__contains__('--') is False:
+        diff_cur = []
+    else:
+        diff_cur = str(row['class_fail']).split('--')
+    if len(diff_cur) == 0 :
+        return None
+    res_arry = []
+    for item in diff_cur:
+        if item not in diff_other:
+                res_arry.append(item)
+    if len(res_arry) == 0:
+        return None
+    print "{}_{} it={}".format(bug_name,bug_id,test_it)
+    return '\t'.join(res_arry)
+
+def pars_xml_test_file(path_file, dico=None):
+    """
+    parsing the xml tree and return the results
+    """
+
+    name_test = str(path_file).split('/')[-1][:-11] # remove xml + _ESTest
+    d = {"err": float(0), "fail": float(0), "bug": 'no', 'class_err': [], 'class_fail': []}
+    d['name'] = name_test
+    if dico is not None:
+        for ky in dico:
+            d[ky] = dico[ky]
+    if os.path.isfile(path_file) is False:
+        raise Exception("'[Error] the path: {} is not valid ".format(path_file))
+    root_node = xml.etree.ElementTree.parse(path_file).getroot()
+    val, bol = _intTryParse(root_node.attrib['errors'])
+    if bol is False:
+        print "[Error] cant parse the xml file error val input : {}".format(path_file)
+    errors_num = val
+    val, bol = _intTryParse(root_node.attrib['failures'])
+    if bol is False:
+        print "[Error] cant parse the xml file failures val input : {}".format(path_file)
+    failures_num = val
+    if failures_num or errors_num > 0:
+        d['bug'] = 'yes'
+        for elt in root_node.iter():
+            if elt.tag == 'testcase':
+                if len(elt._children) > 0:
+                    for msg in elt:
+                        if msg.tag == 'error':
+                            class_name = elt.attrib['classname']
+                            test_case_number = elt.attrib['name']
+                            d['class_err'].append("{}_{}".format(class_name, test_case_number))
+                            d['err'] = d['err'] + 1
+                        elif msg.tag == 'failure':
+                            class_name = elt.attrib['classname']
+                            test_case_number = elt.attrib['name']
+                            d['class_fail'].append("{}_{}".format(class_name, test_case_number))
+                            d['fail'] = d['fail'] + 1
+    d['class_fail'] = '--'.join(d['class_fail'])
+    d['class_err'] = '--'.join(d['class_err'])
+    return d
+
+
+
+def _intTryParse(value):
+    try:
+        return int(value), True
+    except ValueError:
+        return value, False
+
+
+def parser():
+    if sys.argv[1] == 'main':
+        csv_bug_process()
+
+
 if __name__ == "__main__":
+    xml_file= '/home/ise/test/pom_3/TIKA-121_2/Result/U_exp_tThu_Dec_13_02:21:32_2018_t=2_it=0_fixed/TEST-org.apache.tika.detect.MagicDetector_ESTest.xml'
+    #get_test_xml_csv()
+    #make_csv_diff()
+    #exit()
     #to_del()
     #add_evosuite_text('/home/ise/test/pom.xml','/home/ise')
-    csv_bug_process()
+    #get_results()
+    repo_math='/home/ise/bug_miner/math/commons-math'
+    out_p = '/home/ise/bug_miner/math/res'
+    #csv_p='/home/ise/bug_miner/math/commons-math_vail_bug.csv'
+    csv_bug_process('commons-math',repo_math,out_p)
     print ""

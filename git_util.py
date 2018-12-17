@@ -41,7 +41,7 @@ def befor_op():
 
     project_dict['tika'] = {'project_name': "tika", 'repo_path': '/home/ise/eran/git_repos/tika', "num_bugs": 1000}
 
-
+    project_dict['commons-math'] = {'project_name': "commons-math", 'repo_path': '/home/ise/bug_miner/math/commons-math', "num_bugs": 1000}
 
 def new_data_set():
     project_dict['accumulo']={'repo_path':'/home/ise/programs/bugs-dot-jar/accumulo'}
@@ -655,18 +655,20 @@ def foo():
 
 
 
-def add_tika_tags_csv(csv_p = '/home/ise/Downloads/tika/data/valid_bugs.csv'):
+def add_tika_tags_csv(csv_p = '/home/ise/Downloads/tika/data/valid_bugs.csv',p_name='tika'):
     df= pd.read_csv(csv_p)
+    father_dir = '/'.join(str(csv_p).split('/')[:-1])
     print list(df)
-    df['tag_parent'] = df['parent'].apply(lambda x: get_Version_name_via_commit(x,'tika'))
-    df['tag_commit'] = df['commit'].apply(lambda x: get_Version_name_via_commit(x,'tika'))
-    df.to_csv('/home/ise/eran/tika/tika_bug.csv')
+    df['tag_parent'] = df['parent'].apply(lambda x: get_Version_name_via_commit(x,p_name))
+    df['tag_commit'] = df['commit'].apply(lambda x: get_Version_name_via_commit(x,p_name))
+    df.to_csv('{}/{}_vail_bug.csv'.format(father_dir,p_name))
     exit()
 
 
 if __name__ == "__main__":
     befor_op()
-    add_tika_tags_csv()
+    #add_tika_tags_csv()
+    add_tika_tags_csv(csv_p='/home/ise/bug_miner/math/valid_bugs.csv',p_name='commons-math')
 
     #projects = ['Math','Lang','Mockito','Time','Chart','Closure']
     #new_data_set()

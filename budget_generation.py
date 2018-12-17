@@ -463,7 +463,7 @@ Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals
         file_name_class = str(test)
         str_log = "{} >> {}log_evo/{}.txt 2>&1".format(command, dis_path, file_name_class)
         os.system(str_log)
-
+        break
     if os.path.exists(dis_path + 'statistics.csv'):
         remove_dot_csv(dis_path + 'statistics.csv')
     text_file = open(dis_path + "command.txt", "w")
