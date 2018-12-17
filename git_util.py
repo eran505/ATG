@@ -43,6 +43,9 @@ def befor_op():
 
     project_dict['commons-math'] = {'project_name': "commons-math", 'repo_path': '/home/ise/bug_miner/math/commons-math', "num_bugs": 1000}
 
+    project_dict['commons-lang'] = {'project_name': "commons-lang",'repo_path': '/home/ise/bug_miner/lang/commons-lang', "num_bugs": 1000}
+
+
 def new_data_set():
     project_dict['accumulo']={'repo_path':'/home/ise/programs/bugs-dot-jar/accumulo'}
     project_dict['camel'] = {'repo_path': '/home/ise/programs/bugs-dot-jar/camel'}
@@ -668,7 +671,8 @@ def add_tika_tags_csv(csv_p = '/home/ise/Downloads/tika/data/valid_bugs.csv',p_n
 if __name__ == "__main__":
     befor_op()
     #add_tika_tags_csv()
-    add_tika_tags_csv(csv_p='/home/ise/bug_miner/math/valid_bugs.csv',p_name='commons-math')
+    #add_tika_tags_csv(csv_p='/home/ise/bug_miner/math/valid_bugs.csv',p_name='commons-math')
+    add_tika_tags_csv(csv_p='/home/ise/bug_miner/lang/commons-lang.csv', p_name='commons-lang')
 
     #projects = ['Math','Lang','Mockito','Time','Chart','Closure']
     #new_data_set()

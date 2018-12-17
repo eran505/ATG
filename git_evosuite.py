@@ -23,8 +23,10 @@ E.G -> mvn install -pl B -am
 def checkout_tika(dir_dis,p_name):
     if p_name == 'tika':
         url='https://github.com/apache/tika.git'
-    elif p_name =='commons-math':
+    elif p_name == 'commons-math':
         url='https://github.com/apache/commons-math.git'
+    elif p_name == 'commons-lang':
+        url='https://github.com/apache/commons-lang.git'
     else:
         raise Exception('known project name = {} cant clone repo'.format(p_name))
     cwd = os.getcwd()
@@ -94,7 +96,7 @@ def applyer_bug(row,out_dir,repo):
     # Run Evosuite generation mode
     add_evosuite_text(path_to_pom,None)
     sys.argv = ['.py', dir_to_gen , 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo+'/', 'exp', '100', '1', '75', '2', 'U']
+                '/home/ise/eran/evosuite/jar/', out_evo+'/', 'exp', '100', '1', '2', '1', 'U']
     bg.init_main()
     evo_test_run(out_evo,repo,module,proj_dir,mode='fixed')
     checkout_version(commit_p,repo,out_dir_new,clean=True)
@@ -513,8 +515,8 @@ if __name__ == "__main__":
     #to_del()
     #add_evosuite_text('/home/ise/test/pom.xml','/home/ise')
     #get_results()
-    repo_math='/home/ise/bug_miner/math/commons-math'
-    out_p = '/home/ise/bug_miner/math/res'
+    repo_math='/home/ise/bug_miner/lang/commons-lang'
+    out_p = '/home/ise/bug_miner/lang/res'
     #csv_p='/home/ise/bug_miner/math/commons-math_vail_bug.csv'
-    csv_bug_process('commons-math',repo_math,out_p)
+    csv_bug_process('commons-lang',repo_math,out_p)
     print ""
