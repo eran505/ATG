@@ -96,7 +96,7 @@ def applyer_bug(row,out_dir,repo):
     # Run Evosuite generation mode
     add_evosuite_text(path_to_pom,None)
     sys.argv = ['.py', dir_to_gen , 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo+'/', 'exp', '100', '1', '2', '1', 'U']
+                '/home/ise/eran/evosuite/jar/', out_evo+'/', 'exp', '100', '1', '75', '2', 'U']
     bg.init_main()
     evo_test_run(out_evo,repo,module,proj_dir,mode='fixed')
     checkout_version(commit_p,repo,out_dir_new,clean=True)
