@@ -53,7 +53,6 @@ def csv_bug_process(p_name,repo_path='/home/ise/eran/tika_exp/tika',out='/home/i
     df.drop_duplicates(inplace=False)
     print len(df)
     df.apply(applyer_bug,repo=repo_path,out_dir=out,axis=1)
-    exit()
 
 def applyer_bug(row,out_dir,repo):
     p_name = str(repo).split('/')[-1]
