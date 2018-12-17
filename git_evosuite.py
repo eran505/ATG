@@ -63,10 +63,10 @@ def applyer_bug(row,out_dir,repo):
     bug_name = row['issue']
     index_bug = row['index_bug']
     ######
-    look_for = "{}_{}".format(bug_name,index_bug)
-    ans = ['MATH-175_6']
-    if look_for not in ans:
-       return
+   # look_for = "{}_{}".format(bug_name,index_bug)
+   # ans = ['MATH-175_6']
+   # if look_for not in ans:
+   #    return
     ######
     package = row['package']
     out_dir_new = pt.mkdir_system(out_dir,"{}_{}".format(bug_name,index_bug))
