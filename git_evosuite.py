@@ -55,6 +55,9 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
     df.apply(applyer_bug, repo=repo_path, out_dir=out, axis=1)
 
 
+
+
+
 def applyer_bug(row, out_dir, repo):
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
@@ -567,7 +570,7 @@ def parser():
     if len(sys.argv) > 1:
         dir_bug_miner = '/home/ise/bug_miner'
         project = sys.argv[1]
-        if project == 'Math':
+        if project == 'math':
             repo_path = '{}/{}/commons-math'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process('commons-math', repo_path, out_p)
