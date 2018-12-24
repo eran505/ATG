@@ -958,10 +958,13 @@ def frange(x, y, jump):
     yield x
     x += jump
 
-def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True):
+def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True,pre_gen=True):
     gamma_arr=[]
-    for num_val in frange(0,1,0.05):
+    list_d_ranking = []
+    intreval = 0.05
+    for num_val in frange(0,1+intreval,intreval):
         gamma_arr.append(num_val)
+    gamma_arr=[1,0]
     d_list_res = []
     if heuristic_method:
         import heuristic
@@ -997,12 +1000,17 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True):
         for col in ['FP','LOC_P','LOC']:
             df_filter[col] = df_filter[col].astype(float)
 
+        # add to clean the missing value rows that have no FP value
+        df_filter.dropna(subset=['FP'], how='any', inplace=True)
 
+        # this section is mapping between the faulty component and the ranking from LOC and FP
+        l_bug_i = get_ranking_bug(df_filter,bug_i)
+        list_d_ranking.extend(l_bug_i)
 
         if pre_gen:
             for gamma in gamma_arr:
-                df_filter['pre_gen_score_{}'.format(gamma)] = df_filter['FP'] * gamma + (1 - gamma) * df_filter['LOC_P']
-
+                df_filter['pre_gen_score_{}'.format(gamma)] = df_filter['FP'] * gamma + (1.0 - gamma) * df_filter['LOC_P']
+                df_filter.to_csv("{}/{}.csv".format('/home/ise/tmp',bug_i))
         for item_number in range(1,item):
             for rep_i in range(1, max_all_rep + 1):
                 d_pre_gen = {}
@@ -1048,8 +1056,37 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True):
                             {'bug_ID': bug_i, 'kill_val': d_val_heuristic[ky_h], 'method': ky_h, 'rep_sampled': rep_i,
                              'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
-    df_res = pd.DataFrame(d_list_res)
-    df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
+    #df_res = pd.DataFrame(d_list_res)
+    #df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
+
+    # flushing out the ranking csv
+    df_rank = pd.DataFrame(list_d_ranking)
+    df_rank.to_csv('{}/{}_RANK.csv'.format('/home/ise/tmp', p_name))
+
+
+def clean_missing_value_row(df,col):
+    df.dropna(axis=1, how='any', subset=[col], inplace=True)
+    return df
+
+
+def get_ranking_bug(df,bug_id,path_to_disk='/home/ise/tmp'):
+    d_list=[]
+    df['rank_fp'] = df['FP'].rank(ascending=False)
+    df['rank_loc'] = df['LOC'].rank(ascending=False)
+    size = len(df)
+    fault_component_df = df.loc[df['faulty_class'] > 0 ]
+    if len(fault_component_df)==0:
+        d = {'bug_id':bug_id,'rank_fp':None,'rank_loc':None,'size':0}
+        d_list.append(d)
+        return d_list
+    fp_list_rank = fault_component_df['rank_fp'].tolist()
+    loc_list_rank = fault_component_df['rank_loc'].tolist()
+    for i in range(len(fp_list_rank)):
+        d={'bug_id':bug_id,'rank_fp':fp_list_rank[i],'rank_loc':loc_list_rank[i],'size':size}
+        d_list.append(d)
+    df.to_csv('{}/{}_rank.csv'.format(path_to_disk,bug_id))
+    return d_list
+
 
 def rep_exp(p_name='Math',rep=4):
     d_list_res=[]
@@ -1423,15 +1460,17 @@ if __name__ == "__main__":
     #rep_exp_new('Mockito')
     #helper()
     ###merger()
-    rep_exp_new(p_name='Chart',heuristic_method=False)
-    get_bug_ID_contains_FP(p_name='Chart')
+
+    project_arr=['Chart','Time','Lang','Mockito','Math']
+    for x in project_arr:
+        rep_exp_new(p_name=x,heuristic_method=False)
+        get_bug_ID_contains_FP(p_name=x)
     exit()
     util(p_name="Lang")
     exit()
     get_bug_d4j_major('Lang',out='/home/ise/Desktop',major=False)
     rep_exp_new('Time')
     get_bug_ID_contains_FP('Time')
-    #project_arr=['Chart','Time','Closure','Lang','Mockito','Math']
     get_bug_ID_contains_FP(p_name='Lang')
 
     #exit()
