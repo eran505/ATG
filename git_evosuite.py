@@ -585,6 +585,7 @@ def parser():
 
 
 if __name__ == "__main__":
+  ##  sys.argv=['','lang']
     parser()
     exit()
     print "---Done"*10

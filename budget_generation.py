@@ -16,6 +16,8 @@ def csv_to_dict(path, key_name, val_name):
     return dico
 
 
+
+
 def clean_dict(dic, prefix, start, end):
     dico_result = {}
     for key in dic.keys():
@@ -365,6 +367,30 @@ def get_all_class_v1(root):
     return class_list
 
 
+
+def get_all_class_mode(root,pack=True):
+    size = 0
+    class_list = []
+    for path, subdirs, files in os.walk(root):
+        for name in files:
+            # print os.path.join(path, name)
+            if name.__contains__("$") is False:
+                size += 1
+                class_list.append([str(path), str(name)])
+    if len(class_list) == 0:
+        path_class = "{}.class".format(root)
+        if os.path.isfile(path_class):
+            arr = str(path_class).split('/')
+            name_class = str(arr[-1]) + ''
+            arr = arr[:-1]
+            path_class = '/'.join(arr)
+            class_list.append([path_class, name_class])
+    class_list = [x for x in class_list if str(x[1]).split('.')[-1] == 'class']
+    if pack:
+        class_list = [x for x in class_list if str(x[0]) == root]
+    return class_list
+
+
 '''
 "The term original in our context refers to the version which EvoSuiteR considers as correct,
 and the term regression refers to the version which EvoSuiteR considers to have potential regressions.
@@ -568,7 +594,7 @@ def int_exp(args):
             dict_to_csv(d, v_dis_path)
     if sys.argv[5] != 'd4j':
         uni_budget = {}
-    target_list = get_all_class_v1(v_path)
+    target_list = get_all_class_mode(v_path)
 
     for i in range(it):
         seed = time.strftime('%s')[-5:]
@@ -737,6 +763,7 @@ def get_bug_object(bug_obj):
 if __name__ == "__main__":
     #sys.argv = ['.py','/home/ise/test/tika/tika-core/target/classes/org/apache/tika','evosuite-1.0.5.jar','/home/ise/eran/evosuite/jar/','/home/ise/test/evo_tmp','exp','100','1','10','1','U']
     #python ${ATG}budget_generation.py /home/ise/eran/repo/lang/commons-lang3-3.5-src/target/classes/org/apache/commons/lang3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} ${m} 1 50 ${t} 2 U
+
     init_main()
 
 # get_time_dico1("budget.csv")
