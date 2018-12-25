@@ -762,8 +762,5 @@ def get_bug_object(bug_obj):
 
 if __name__ == "__main__":
     #sys.argv = ['.py','/home/ise/test/tika/tika-core/target/classes/org/apache/tika','evosuite-1.0.5.jar','/home/ise/eran/evosuite/jar/','/home/ise/test/evo_tmp','exp','100','1','10','1','U']
-    #python ${ATG}budget_generation.py /home/ise/eran/repo/lang/commons-lang3-3.5-src/target/classes/org/apache/commons/lang3/ evosuite-1.0.5.jar /home/ise/eran/evosuite/jar/ ${newdir} ${m} 1 50 ${t} 2 U
-
     init_main()
-
-# get_time_dico1("budget.csv")
+    print "---Done"*10

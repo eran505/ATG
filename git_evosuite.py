@@ -19,7 +19,7 @@ E.G -> mvn install -pl B -am
 '''
 
 
-def checkout_tika(dir_dis, p_name):
+def checkout_repo(dir_dis, p_name):
     if p_name == 'tika':
         url = 'https://github.com/apache/tika.git'
     elif p_name == 'commons-math':
@@ -39,7 +39,7 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
-        checkout_tika(repo_path_father, p_name)
+        checkout_repo(repo_path_father, p_name)
     if os.path.isdir(out) is False:
         os.system('mkdir {}'.format(out))
     print "{}".format(csv_bug)
@@ -55,8 +55,9 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
     df.apply(applyer_bug, repo=repo_path, out_dir=out, axis=1)
 
 
-
-
+def start_where_stop_res(res_dir):
+    dirs_res = pt.walk_rec(res_dir,[],'',False,lv=-1,full=False)
+    return dirs_res
 
 def applyer_bug(row, out_dir, repo):
     p_name = str(repo).split('/')[-1]
@@ -67,10 +68,10 @@ def applyer_bug(row, out_dir, repo):
     bug_name = row['issue']
     index_bug = row['index_bug']
     ######
-    # look_for = "{}_{}".format(bug_name,index_bug)
-    # ans = ['MATH-175_6']
-    # if look_for not in ans:
-    #    return
+    list_done = start_where_stop_res(out_dir)
+    look_for = "{}_{}".format(bug_name,index_bug)
+    if look_for in list_done:
+        return
     ######
     package = row['package']
     out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug))
@@ -418,7 +419,7 @@ def get_test_xml_csv(dir_res='/home/ise/test/res'):
     df = pd.DataFrame(d_l)
     dir_father = '/'.join(str(dir_res).split('/')[:-1])
     df.to_csv("{}/res.csv".format(dir_father))
-
+    return "{}/res.csv".format(dir_father)
 
 def make_csv_diff(csv_raw_data_res='/home/ise/test/res.csv'):
     father_dir = '/'.join(str(csv_raw_data_res).split('/')[:-1])
@@ -548,6 +549,9 @@ def merge_csv_info_bug(csv_bug='/home/ise/bug_miner/math/tmp_df.csv', project_na
 
 
 def get_minmal_csv_bug_miner(p_name='Math'):
+    '''
+    remove duplicaion from the raw csv
+    '''
     d_project = project_to_csv()
     df_info = pd.read_csv(d_project[p_name], index_col=0)
     father_dir = '/home/ise/bug_miner/math'
@@ -561,7 +565,6 @@ def get_minmal_csv_bug_miner(p_name='Math'):
     print len(df_info)
     df_info
     df_info = df_info.drop_duplicates()
-
     df_info.to_csv('{}/{}.csv'.format(father_dir, 'dup_off_info'))
     print len(df_info)
 
@@ -582,10 +585,12 @@ def parser():
             repo_path = '{}/{}/tika'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process('tika', repo_path, out_p)
-
+        elif sys.argv[1] == 'res':
+            project = sys.argv[2]
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_path_res = get_test_xml_csv(out_p)
+            make_csv_diff(csv_path_res)
 
 if __name__ == "__main__":
-  ##  sys.argv=['','lang']
     parser()
-    exit()
     print "---Done"*10
