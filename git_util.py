@@ -163,7 +163,6 @@ def commit_log_by_day(after, untill, repo_path):
     stdout, stderr = process.communicate()
     return stdout, stderr
 
-
 def run_GIT_command_and_log(repo_path, cmd, log_dir, name, log=True):
     '''
     run git command
@@ -223,6 +222,8 @@ def get_Version_name_via_commit(commit_id,p_name):
     '''
     get the version that the commit id contains in.
     '''
+    if p_name is None:
+        return None
     path_repo = project_dict[p_name]['repo_path']
     command_git = 'git describe --tag {}'.format(commit_id)
     std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None, False)
@@ -383,7 +384,7 @@ def get_tag_commit(csv_file='/home/ise/tmp_d4j/projects/csvs/Closure_commit_Git.
     #df['TAG_DATE'] = df['buggy_Git_ID_commit'].apply(
     #    lambda commit_i: make_auto_config_TAG(config_out_files, log_out_files, project_name, commit_i, time_bol=True))
     df.to_csv('{}/df.csv'.format(out_proj_curr))
-   # df.apply(make_file_config, out_path=config_out_files, p_name=project_name, axis=1)
+    #df.apply(make_file_config, out_path=config_out_files, p_name=project_name, axis=1)
 
 
 def get_all_version_sorted(p_name):
@@ -488,6 +489,8 @@ def jira_is_bug(msg_str,p_name):
     #        return 0,'not bug JIRA'
 
 def classifier_is_fixed(msg,p_name):
+    if p_name is None:
+        return None,None
     msg_str = str(msg).lower()
     if msg_str.__contains__('typo'):
         return 0,'typo'
@@ -549,7 +552,7 @@ def look_for_commit(string_info,out,p_name):
     df.to_csv('{}/log_commits.csv'.format(out))
 
 def pars_commit_block(txt_block,p_name):
-    print txt_block
+    #print txt_block
     d={}
     size_max = len(txt_block)
     id_commit = ''
@@ -603,6 +606,7 @@ def str_acc_helper(txt,strat,end):
             end_indx=i
             break
     return acc,end_indx
+
 def acc_commit_lookup(indx,max_size,string_info):
     starting_commit_index =-1
     acc=''

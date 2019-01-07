@@ -19,23 +19,53 @@ E.G -> mvn install -pl B -am
 '''
 
 
-def checkout_repo(dir_dis, p_name):
-    if p_name == 'tika':
-        url = 'https://github.com/apache/tika.git'
-    elif p_name == 'commons-math':
-        url = 'https://github.com/apache/commons-math.git'
-    elif p_name == 'commons-lang':
-        url = 'https://github.com/apache/commons-lang.git'
+
+def get_Tag_name_by_commit(commit_id, path_repo):
+    '''
+    getting the tag that the commit with in.
+    '''
+    command_git = 'git describe --tag {}'.format(commit_id)
+    std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None, False)
+    if len(std_out) < 1:
+        command_git = 'git describe --contains {}'.format(commit_id)
+        std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None,False)
+        if len(std_out)<1:
+            command_git = 'git describe --tag --contains --all {}'.format(commit_id)
+            std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None, False)
+            if len(std_out) < 1:
+                print "[Error] the stdout return empty --> {} ".format(commit_id)
+                return None
+    if str(std_out).__contains__('~'):
+        delim='~'
+    elif str(std_out).__contains__('-'):
+        delim = '-'
+    elif str(std_out).__contains__('^'):
+        delim = '^'
     else:
-        raise Exception('known project name = {} cant clone repo'.format(p_name))
+        return std_out
+    current_tag = str(std_out).split(delim)[0]
+    if current_tag.__contains__('^'):
+        current_tag = current_tag.split('^')[0]
+    current_tag = current_tag.replace('\n', '')
+    return current_tag
+
+
+def checkout_repo(dir_dis, p_name):
+    path_ATG = os.getcwd()
+    df= pd.read_csv('{}/tmp_files/git_clone.csv'.format(path_ATG), index_col=0)
+    res = df.loc[df['project']==p_name]
+    if len(res)!=1:
+        print "[Error] no Project name in the data_set git_clone --> {}".format(p_name)
+    url_i = df.iloc[0]['url']
+    print "url_i -> {}".format(url_i)
     cwd = os.getcwd()
     os.chdir(dir_dis)
-    os.system('git clone {}'.format(url))
+    os.system('git clone {}'.format(url_i))
     os.chdir(cwd)
     print "Done cloning {}".format(p_name)
 
 
-def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res'):
+def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=True,remove_dup=False):
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
@@ -45,13 +75,23 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
     print "{}".format(csv_bug)
     df = pd.read_csv(csv_bug)
     print list(df)
-    df['package'] = df['testcase'].apply(lambda x: '/'.join(str(x).split('.')[:-1]))
-    df['fail_test'] = df['testcase'].apply(lambda x: str(x).split('#')[0])
-    df['fail_test_METHOD'] = df['testcase'].apply(lambda x: str(x).split('#')[1])
-    df.drop('testcase', axis=1, inplace=True)
-    print len(df)
-    df.drop_duplicates(inplace=False)
-    print len(df)
+
+    if 'testcase' in df:
+        df['package'] = df['testcase'].apply(lambda x: '/'.join(str(x).split('.')[:-1]))
+        df['fail_component'] = df['testcase'].apply(lambda x: str(x).split('#')[0])
+        df.drop('testcase', axis=1, inplace=True)
+
+    if oracle:
+        df['target'] = df['fail_component'].apply(lambda x: '/'.join(str(x).split('.')) )
+        #df.rename(columns={'fail_component': 'target'}, inplace=True)
+    else:
+        df['target'] = df['package'].apply(lambda x: '/'.join(str(x).split('.')))
+        #df.rename(columns={'package': 'target'}, inplace=True)
+    if remove_dup:
+        print len(df)
+        df.drop_duplicates(subset=['commit','parent','package'],inplace=False)
+        print len(df)
+
     df.apply(applyer_bug, repo=repo_path, out_dir=out, axis=1)
 
 
@@ -73,7 +113,7 @@ def applyer_bug(row, out_dir, repo):
     if look_for in list_done:
         return
     ######
-    package = row['package']
+    target = row['target']
     out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug))
     out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE')
     path_to_pom = "{}/pom.xml".format(repo)
@@ -91,15 +131,15 @@ def applyer_bug(row, out_dir, repo):
 
     if str(module).__contains__('-'):
         path_to_pom = '{}/{}/pom.xml'.format(repo, module)
-        dir_to_gen = '{}/{}/target/classes/{}'.format(repo, module, package)
+        dir_to_gen = '{}/{}/target/classes/{}'.format(repo, module, target)
         dir_to_gen = discover_dir_repo('{}/{}'.format(repo, module), p_name, is_test=False)
     else:
         dir_to_gen = discover_dir_repo('{}'.format(repo), p_name, is_test=False)
-    dir_to_gen = '{}/{}'.format(dir_to_gen, package)
+    dir_to_gen = '{}/{}'.format(dir_to_gen, target)
     # Run Evosuite generation mode
     add_evosuite_text(path_to_pom, None)
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '75', '2', 'U']
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '2', '2', 'U']
     bg.init_main()
     evo_test_run(out_evo, repo, module, proj_dir, mode='fixed')
     checkout_version(commit_fix, repo, out_dir_new, clean=True)
@@ -226,7 +266,7 @@ def checkout_version(commit, repo, log_dir, clean=False):
 
 def mvn_command(repo, module, command_mvn='clean', log_dir=None):
     os.chdir(repo)
-    if str(module).__contains__('-'):
+    if module is not None and str(module).__contains__('-'):
         command_mvn_str = 'mvn {} -pl {} -am -fn'.format(command_mvn, module)
     else:
         command_mvn_str = 'mvn {} -fn'.format(command_mvn)
@@ -434,7 +474,7 @@ def make_csv_diff(csv_raw_data_res='/home/ise/test/res.csv'):
     print "number of issue that Evosuit found:"
     print len(arr)
     df.to_csv('{}/tmp_df.csv'.format(father_dir))
-
+    return '{}/tmp_df.csv'.format(father_dir)
 
 def differ(row, df, set_l):
     '''
@@ -548,6 +588,41 @@ def merge_csv_info_bug(csv_bug='/home/ise/bug_miner/math/tmp_df.csv', project_na
     exit()
 
 
+def add_fulty_bug(path_df,p_name,path_csv_info=None):
+    csv_p_info = "{}/tmp_files/{}_bug.csv".format(os.getcwd(),p_name)
+    df_info = pd.read_csv(csv_p_info,index_col=0)
+    df_info['fauly_component'] = df_info['testcase'].apply(lambda x: str(x).split('#')[0].split('Test')[0])
+    df_bugs = pd.read_csv(path_df,index_col=0)
+    df_info['is_faulty'] =1
+    df_faulty = df_info[['index_bug','issue','fauly_component','is_faulty']]
+
+    df_bugs['name'] = df_bugs['name'].apply(lambda x_i : str(x_i)[5:])
+    #df_faulty['is_faulty'] = 1
+
+    df_faulty.rename(columns={'index_bug': 'bug_id',
+                       'issue': 'bug_name',
+                       'fauly_component': 'name'}, inplace=True)
+
+
+
+    print 'df_faulty: ',len(df_faulty)
+    print 'df_bugs: ',len(df_bugs)
+    df_merge = pd.merge(df_bugs,df_faulty, how='left', on=['bug_id','bug_name','name'] )
+    df_merge['binary_kill'] = df_merge['diff_fail_count'].apply(lambda x: 1 if float(x)>0 else 0)
+
+    print 'df_merge: ',len(df_merge)
+    print list(df_merge)
+
+
+    df_merge.to_csv('/home/ise/bug_miner/commons-math/merge.csv')
+    to_del = ['bug', 'class_err','test_it', 'fail','class_fail', 'err', 'test_date', 'diff_fail', 'diff_fail_count' ]
+    df_merge.drop(to_del, axis=1, inplace=True)
+    df_merge['is_faulty'].fillna(0, inplace=True)
+    df_merge.to_csv('/home/ise/bug_miner/commons-math/G.csv')
+    print df_merge.dtypes
+    df_merge['bb'] = df_merge.groupby(['bug_id', 'bug_name','name','test_mode','test_time_b','is_faulty'])['binary_kill'].transform('sum')
+    df_merge.to_csv('/home/ise/bug_miner/commons-math/fin.csv')
+
 def get_minmal_csv_bug_miner(p_name='Math'):
     '''
     remove duplicaion from the raw csv
@@ -573,11 +648,11 @@ def parser():
     if len(sys.argv) > 1:
         dir_bug_miner = '/home/ise/bug_miner'
         project = sys.argv[1]
-        if project == 'math':
+        if project == 'commons-math':
             repo_path = '{}/{}/commons-math'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process('commons-math', repo_path, out_p)
-        elif project == 'lang':
+        elif project == 'commons-lang':
             repo_path = '{}/{}/commons-lang'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process('commons-lang', repo_path, out_p)
@@ -585,12 +660,20 @@ def parser():
             repo_path = '{}/{}/tika'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process('tika', repo_path, out_p)
+        elif project == 'pig':
+            repo_path = '{}/{}/pig'.format(dir_bug_miner, project)
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_bug_process('pig', repo_path, out_p)
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_path_res = get_test_xml_csv(out_p)
-            make_csv_diff(csv_path_res)
+            #csv_path_res = get_test_xml_csv(out_p)
+            #df_path = make_csv_diff(csv_path_res)
+            add_fulty_bug('{}/{}/tmp_df.csv'.format(dir_bug_miner, project),project)
+
 
 if __name__ == "__main__":
+    sys.argv=['','commons-math']
     parser()
+    print '\n\n'
     print "---Done"*10

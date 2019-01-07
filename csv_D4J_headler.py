@@ -1056,8 +1056,8 @@ def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True,pre_gen=True):
                             {'bug_ID': bug_i, 'kill_val': d_val_heuristic[ky_h], 'method': ky_h, 'rep_sampled': rep_i,
                              'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
-    #df_res = pd.DataFrame(d_list_res)
-    #df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
+    df_res = pd.DataFrame(d_list_res)
+    df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
 
     # flushing out the ranking csv
     df_rank = pd.DataFrame(list_d_ranking)
@@ -1378,6 +1378,7 @@ def make_FP_pred(dir_target='/home/ise/tmp_d4j/out_pred/out/Lang/Lang_2'):
     concat the two csv files from the weka dir to one big Dateframe and make the probabily for bug,
     by 1-probablit for a vaild component
     '''
+    print "dir_target=\t{}".format(dir_target)
     out = '/'.join(str(dir_target).split('/')[:-1])
     name = str(dir_target).split('/')[-1]
     p_name = str(name).split('_')[0]
@@ -1456,12 +1457,14 @@ def helper(df1 = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_Lang.csv',
     exit()
 
 if __name__ == "__main__":
-    #make_FP_pred()
+    #make_FP_pred('/home/ise/tmp_d4j/out_pred/out/Math/Math_3')
+    #exit()
     #rep_exp_new('Mockito')
     #helper()
     ###merger()
-
-    project_arr=['Chart','Time','Lang','Mockito','Math']
+   # get_bug_d4j_major(p_name='Math')
+    #exit()
+    project_arr=['Math']
     for x in project_arr:
         rep_exp_new(p_name=x,heuristic_method=False)
         get_bug_ID_contains_FP(p_name=x)

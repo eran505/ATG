@@ -721,9 +721,6 @@ def main_wrapper(args=None):
 
 
 
-def make_csv_clss_test_each_bug(root_dir):
-    print "make_csv_clss_test_each_bug"
-
 
 def remve_F_flag(arr):
     i = 0
@@ -2516,8 +2513,6 @@ def main_parser():
         return
     if sys.argv[1] == 'fixer':
         fixer_maven(sys.argv[2])
-    elif sys.argv[1]=='make_csv_clss_test_each_bug':
-        make_csv_clss_test_each_bug(sys.argv[2])
     elif sys.argv[1] == 'merg':
         get_results()
     elif sys.argv[1] == 'map_test':

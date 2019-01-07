@@ -377,6 +377,8 @@ def get_all_class_mode(root,pack=True):
             if name.__contains__("$") is False:
                 size += 1
                 class_list.append([str(path), str(name)])
+    if pack:
+        class_list = [x for x in class_list if str(x[0]) == root]
     if len(class_list) == 0:
         path_class = "{}.class".format(root)
         if os.path.isfile(path_class):
@@ -386,8 +388,6 @@ def get_all_class_mode(root,pack=True):
             path_class = '/'.join(arr)
             class_list.append([path_class, name_class])
     class_list = [x for x in class_list if str(x[1]).split('.')[-1] == 'class']
-    if pack:
-        class_list = [x for x in class_list if str(x[0]) == root]
     return class_list
 
 
