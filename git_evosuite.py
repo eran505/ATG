@@ -100,6 +100,7 @@ def start_where_stop_res(res_dir):
     return dirs_res
 
 def applyer_bug(row, out_dir, repo):
+
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
     module = row['module']
@@ -107,6 +108,8 @@ def applyer_bug(row, out_dir, repo):
     commit_fix = row['commit']  # new
     bug_name = row['issue']
     index_bug = row['index_bug']
+    component_path = row['component_path']
+    print "{}".format(component_path)
     ######
     list_done = start_where_stop_res(out_dir)
     look_for = "{}_{}".format(bug_name,index_bug)
@@ -122,19 +125,23 @@ def applyer_bug(row, out_dir, repo):
     checkout_version(commit_fix, repo, out_dir_new)
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
 
-    rm_exsiting_test(proj_dir, p_name)
+    prefix = src_to_target(component_path)
+    repo_look = "{}{}".format(repo,prefix)
+
+    rm_exsiting_test(repo_look , p_name)
 
     out_log = pt.mkdir_system(out_dir_new, 'LOG', False)
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'compile', out_log)
-    discover_dir_repo('{}/target'.format(repo), p_name, is_test=False)
+
+    discover_dir_repo('{}/target'.format(repo_look), p_name, is_test=False)
 
     if str(module).__contains__('-'):
         path_to_pom = '{}/{}/pom.xml'.format(repo, module)
         dir_to_gen = '{}/{}/target/classes/{}'.format(repo, module, target)
         dir_to_gen = discover_dir_repo('{}/{}'.format(repo, module), p_name, is_test=False)
     else:
-        dir_to_gen = discover_dir_repo('{}'.format(repo), p_name, is_test=False)
+        dir_to_gen = discover_dir_repo('{}'.format(repo_look), p_name, is_test=False)
     dir_to_gen = '{}/{}'.format(dir_to_gen, target)
     # Run Evosuite generation mode
     add_evosuite_text(path_to_pom, None)
@@ -146,7 +153,7 @@ def applyer_bug(row, out_dir, repo):
 
     # Run test-suite on the buugy version
     checkout_version(commit_buggy, repo, out_dir_new)
-    rm_exsiting_test(proj_dir, p_name)
+    rm_exsiting_test(repo_look, p_name)
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'compile', out_log)
     add_evosuite_text(path_to_pom, None)
@@ -190,7 +197,7 @@ def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix'):
 
 
 def rm_exsiting_test(path_p, p_name):
-    dir_to_del = '{}/src/test/java/org'.format(path_p)
+    #dir_to_del = '{}/src/test/java/org'.format(path_p)
     dir_to_del = discover_dir_repo(path_p, p_name)
     if dir_to_del is None:
         print('[Warning] cant find the test dir of the project -> {}'.format(path_p))
@@ -210,6 +217,22 @@ def log_to_file(dir_log, name_file, txt_to_log):
     with open('{}/{}.log'.format(dir_log, name_file), 'w+') as file_log:
         file_log.write(txt_to_log)
 
+
+def src_to_target(comp_path,s='src',end='org',prefix=True):
+    comp_path = str(comp_path).split('\\')
+    index_src = comp_path.index(s)
+    index_org = comp_path.index(end)
+    arr=['target','classes']
+    prefix_path = comp_path[:index_src]
+    if len(prefix_path) == 0:
+        prefix_path=''
+    if prefix:
+        prefix_path_str = '/'.join(prefix_path)
+        prefix_path_str = '/'+prefix_path_str
+        return prefix_path_str
+    target_arr = comp_path[:index_src] + arr + comp_path[index_org:]
+    test_arr = comp_path[:index_src+1]
+    return '/'.join(target_arr )
 
 def discover_dir_repo(path, p_name, target='org', is_test=True):
     if p_name == 'tika':
@@ -591,7 +614,9 @@ def merge_csv_info_bug(csv_bug='/home/ise/bug_miner/math/tmp_df.csv', project_na
 def add_fulty_bug(path_df,p_name,path_csv_info=None):
     csv_p_info = "{}/tmp_files/{}_bug.csv".format(os.getcwd(),p_name)
     df_info = pd.read_csv(csv_p_info,index_col=0)
-    df_info['fauly_component'] = df_info['testcase'].apply(lambda x: str(x).split('#')[0].split('Test')[0])
+    #df_info['fauly_component'] = df_info['testcase'].apply(lambda x: str(x).split('#')[0].split('Test')[0])
+    df_info['fauly_component'] = df_info['fail_component']
+    #fail_component
     df_bugs = pd.read_csv(path_df,index_col=0)
     df_info['is_faulty'] =1
     df_faulty = df_info[['index_bug','issue','fauly_component','is_faulty']]
@@ -664,16 +689,20 @@ def parser():
             repo_path = '{}/{}/pig'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process('pig', repo_path, out_p)
+        elif project == 'accumulo':
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_bug_process('accumulo', repo_path, out_p)
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            #csv_path_res = get_test_xml_csv(out_p)
-            #df_path = make_csv_diff(csv_path_res)
+            csv_path_res = get_test_xml_csv(out_p)
+            df_path = make_csv_diff(csv_path_res)
             add_fulty_bug('{}/{}/tmp_df.csv'.format(dir_bug_miner, project),project)
 
 
 if __name__ == "__main__":
-    sys.argv=['','commons-math']
+    sys.argv=['','res','commons-math']
     parser()
     print '\n\n'
     print "---Done"*10
