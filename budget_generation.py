@@ -447,10 +447,10 @@ def regression_test(evo_name, evo_path, list_fixed, list_buggy, budget_dic, dis_
     text_file.close()
 
 
-def single_call_EvoSuite(evo_name, evo_path, classes_list, time, dis_path, lower_b, seed, b_class):
+def single_call_EvoSuite(evo_name, evo_path, classes_list, time, dis_path, lower_b, seed, b_class,jarz):
     evo_string = "java -jar " + evo_path + evo_name
 
-    criterion = " "
+    criterion = " -criterion BRANCH:EXCEPTION:METHOD "
 
     parms3 = " -Dreport_dir=" + dis_path
     parms4 = " -Dtest_dir=" + dis_path
@@ -483,7 +483,10 @@ Total_Branches,Covered_Branches,Size,Length,Total_Time,Covered_Goals,Total_Goals
                 print "[Warning] the {} did not get any budget time in the FP mode".format(test)
         all_time = get_all_command(time_budget, seed)
         all_p = all_time + " " + all_p
-        command = evo_string + " -class " + test + " -projectCP " + pre + criterion + all_p
+        if len(jarz)>0:
+            command = evo_string + " -class " + test + " -projectCP " + pre + ":{}".format(jarz) + criterion + all_p
+        else:
+            command = evo_string + " -class " + test + " -projectCP " + pre + criterion + all_p
         print (command)
         all_command = all_command + '\n' * 2 + command
         file_name_class = str(test)
@@ -566,6 +569,7 @@ def init_main():
 def int_exp(args):
     only_dict=False
     print 'exp...'
+    jarz=''
     it = 2  # TODO : change it back to two (2)
     comp = ["FP", "U"]
     v_path = sys.argv[1]  # target = /home/eran/thesis/test_gen/poc/commons-math3-3.5-src/target/classes/org
@@ -578,6 +582,8 @@ def int_exp(args):
     if len(sys.argv) > 9 and sys.argv[5] == 'exp':
         it = int(sys.argv[9])
         comp = [str(sys.argv[10])]
+        if len(sys.argv) == 12:
+            jarz = sys.argv[11]
     ###rel_path = os.getcwd() + '/'
     if sys.argv[5] == 'd4j':
         comp = [sys.argv[11]]
@@ -613,9 +619,9 @@ def int_exp(args):
                 print('[Error] -- cant make dir log')
                 exit(1)
             if str(parm) == 'FP':
-                single_call_EvoSuite(v_evo_name, v_evo_path, target_list, fp_budget, full_dis, lower_b, seed, b_klass)
+                single_call_EvoSuite(v_evo_name, v_evo_path, target_list, fp_budget, full_dis, lower_b, seed, b_klass,jarz)
             else:
-                single_call_EvoSuite(v_evo_name, v_evo_path, target_list, uni_budget, full_dis, lower_b, seed, b_klass)
+                single_call_EvoSuite(v_evo_name, v_evo_path, target_list, uni_budget, full_dis, lower_b, seed, b_klass,jarz)
 
 
 def Defect4J_analysis(obj_BUG):

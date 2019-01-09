@@ -65,7 +65,21 @@ def checkout_repo(dir_dis, p_name):
     print "Done cloning {}".format(p_name)
 
 
-def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=True,remove_dup=False):
+def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
+    '''
+    get all dependency jars
+    '''
+    res_jar2 = pt.walk_rec('/home/ise/.m2/repository', [], '.jar')
+    print len(res_jar2)
+    res_jar2 = [x for x in res_jar2 if str(x).split('.')[-1] == 'jar']
+    print len(res_jar2)
+    res_jar1 = pt.walk_rec('{}/{}'.format(repo, dir_jars), [], '.jar')
+    jarz = res_jar2 + res_jar1
+    str_jarz = ':'.join(jarz)
+    return str_jarz
+
+
+def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=True,remove_dup=False,jarz=False):
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
@@ -92,15 +106,15 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
         df.drop_duplicates(subset=['commit','parent','package'],inplace=False)
         print len(df)
 
-    df.apply(applyer_bug, repo=repo_path, out_dir=out, axis=1)
+    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz, axis=1)
 
 
 def start_where_stop_res(res_dir):
     dirs_res = pt.walk_rec(res_dir,[],'',False,lv=-1,full=False)
     return dirs_res
 
-def applyer_bug(row, out_dir, repo):
-
+def applyer_bug(row, out_dir, repo,not_fix=True, jarz=True):
+    fix=False
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
     module = row['module']
@@ -110,15 +124,20 @@ def applyer_bug(row, out_dir, repo):
     index_bug = row['index_bug']
     component_path = row['component_path']
     print "{}".format(component_path)
+
     ######
-    list_done = start_where_stop_res(out_dir)
-    look_for = "{}_{}".format(bug_name,index_bug)
-    if look_for in list_done:
-        return
-    ######
+    #list_done = start_where_stop_res(out_dir)
+    #list_done=['270']
+    #look_for = "{}".format(index_bug)
+    #if look_for not in list_done:
+    #    return
+    ##########
+
     target = row['target']
-    out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug))
-    out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE')
+    if os.path.isdir("{}/{}_{}".format(out_dir,bug_name,index_bug)):
+        fix=True
+    out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),not_fix)
+    out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE',not_fix)
     path_to_pom = "{}/pom.xml".format(repo)
 
     print "module={} \t tag_p = {} \t commit_p ={}".format(module, tag_parent, commit_fix)
@@ -134,6 +153,12 @@ def applyer_bug(row, out_dir, repo):
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'compile', out_log)
 
+    # Get all jars dependency
+    str_dependency=''
+    if jarz:
+        mvn_command(repo, module, 'package', out_log)
+        str_dependency = dependency_getter(repo,dir_jars='lib')
+
     discover_dir_repo('{}/target'.format(repo_look), p_name, is_test=False)
 
     if str(module).__contains__('-'):
@@ -144,9 +169,15 @@ def applyer_bug(row, out_dir, repo):
         dir_to_gen = discover_dir_repo('{}'.format(repo_look), p_name, is_test=False)
     dir_to_gen = '{}/{}'.format(dir_to_gen, target)
     # Run Evosuite generation mode
-    add_evosuite_text(path_to_pom, None)
+
+    # add Evosuite to pom xml
+    #add_evosuite_text(path_to_pom, None)
+    get_all_poms_and_add_evo(repo)
+
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '75', '2', 'U']
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '80', '2', 'U',str_dependency ]
+
+
     bg.init_main()
     evo_test_run(out_evo, repo, module, proj_dir, mode='fixed')
     checkout_version(commit_fix, repo, out_dir_new, clean=True)
@@ -156,13 +187,22 @@ def applyer_bug(row, out_dir, repo):
     rm_exsiting_test(repo_look, p_name)
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'compile', out_log)
-    add_evosuite_text(path_to_pom, None)
+
+    # add Evosuite to pom xml
+    #add_evosuite_text(path_to_pom, None)
+    get_all_poms_and_add_evo(repo)
+
     evo_test_run(out_evo, repo, module, proj_dir, mode='buggy')
     checkout_version(commit_buggy, repo, out_dir_new, clean=True)
 
     # rm pom.xml for the next checkout
     mvn_command(repo, module, 'clean', out_log)
 
+
+def get_all_poms_and_add_evo(repo):
+    res = pt.walk_rec(repo,[],'pom.xml')
+    for item in res:
+        add_evosuite_text(item,None)
 
 def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix'):
     p_name = str(mvn_repo).split('/')[-1]
@@ -183,8 +223,8 @@ def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix'):
         # mvn_command(mvn_repo, moudle, 'test', out_log)
 
         # moving the results to the evo_out dir
-        test_dir = "{}/target/surefire-reports".format(project_dir)
-        res_test_file = pt.walk_rec(test_dir, [], '.xml')
+        test_dir_suff = "{}/target/surefire-reports".format(project_dir)
+        res_test_file = pt.walk_rec(test_dir_suff, [], '.xml')
         # filter only the evo_suite test
         res_test_file = [x for x in res_test_file if str(x).split('/')[-1].__contains__('_ESTest')]
         out_results = pt.mkdir_system(out_evo, 'Result', False)
@@ -224,8 +264,9 @@ def src_to_target(comp_path,s='src',end='org',prefix=True):
     index_org = comp_path.index(end)
     arr=['target','classes']
     prefix_path = comp_path[:index_src]
-    if len(prefix_path) == 0:
+    if len(prefix_path) == 0 and prefix:
         prefix_path=''
+        return prefix_path
     if prefix:
         prefix_path_str = '/'.join(prefix_path)
         prefix_path_str = '/'+prefix_path_str
@@ -692,7 +733,7 @@ def parser():
         elif project == 'accumulo':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process('accumulo', repo_path, out_p)
+            csv_bug_process('accumulo', repo_path, out_p,jarz=True)
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -702,7 +743,23 @@ def parser():
 
 
 if __name__ == "__main__":
-    sys.argv=['','res','commons-math']
+    sys.argv=['','commons-math']
     parser()
     print '\n\n'
     print "---Done"*10
+    exit()
+
+
+    # count dir
+    p='/home/ise/bug_miner/commons-math/res'
+    res_xml = pt.walk_rec(p,[],'.xml')
+    d={}
+
+    for item in res_xml:
+        bug_iss = str(item).split('/')[-4]
+        if bug_iss not in d:
+            d[bug_iss]=0
+        d[bug_iss]+=1
+    z =  d.values()
+    from collections import Counter
+    print Counter(z)
