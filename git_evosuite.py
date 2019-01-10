@@ -178,7 +178,7 @@ def applyer_bug(row, out_dir, repo,not_fix=True, jarz=True):
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '80', '2', 'U',str_dependency ]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '80', '4', 'U',str_dependency ]
 
 
     bg.init_main()
