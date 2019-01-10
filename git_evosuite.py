@@ -752,7 +752,7 @@ def parser():
 
 
 if __name__ == "__main__":
-    sys.argv=['','commons-lang']
+    #sys.argv=['','commons-lang']
     parser()
     print '\n\n'
     print "---Done"*10
