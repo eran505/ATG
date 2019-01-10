@@ -715,25 +715,33 @@ def parser():
         dir_bug_miner = '/home/ise/bug_miner'
         project = sys.argv[1]
         if project == 'commons-math':
-            repo_path = '{}/{}/commons-math'.format(dir_bug_miner, project)
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process('commons-math', repo_path, out_p)
+            csv_bug_process(project, repo_path, out_p)
         elif project == 'commons-lang':
-            repo_path = '{}/{}/commons-lang'.format(dir_bug_miner, project)
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process('commons-lang', repo_path, out_p)
+            csv_bug_process(project, repo_path, out_p)
         elif project == 'tika':
-            repo_path = '{}/{}/tika'.format(dir_bug_miner, project)
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process('tika', repo_path, out_p)
+            csv_bug_process(project, repo_path, out_p)
         elif project == 'pig':
-            repo_path = '{}/{}/pig'.format(dir_bug_miner, project)
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process('pig', repo_path, out_p)
+            csv_bug_process(project, repo_path, out_p)
+        elif project == 'commons-bcel':
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_bug_process(project, repo_path, out_p)
+        elif project == 'commons-beanutils':
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_bug_process(project, repo_path, out_p)
         elif project == 'accumulo':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process('accumulo', repo_path, out_p,jarz=True)
+            csv_bug_process(project, repo_path, out_p,jarz=True)
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -743,7 +751,7 @@ def parser():
 
 
 if __name__ == "__main__":
-    sys.argv=['','commons-math']
+    #sys.argv=['','commons-math']
     parser()
     print '\n\n'
     print "---Done"*10

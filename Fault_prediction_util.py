@@ -153,9 +153,14 @@ if __name__ == "__main__":
     db_Csv = '/home/ise/bug_miner/db_bugs/commons-math_db.csv'
     out = '/home/ise/bug_miner/commons-math/out'
 
-    repo = '/home/ise/bug_miner/accumulo/accumulo'
-    db_Csv = '/home/ise/bug_miner/db_bugs/accumulo_db.csv'
-    out = '/home/ise/bug_miner/accumulo/out'
+    repo = '/home/ise/bug_miner/commons-beanutils/commons-beanutils'
+    db_Csv = '/home/ise/bug_miner/db_bugs/commons-beanutils_db.csv'
+    out = '/home/ise/bug_miner/commons-beanutils/out'
+
+    repo = '/home/ise/bug_miner/commons-lang/commons-lang'
+    db_Csv = '/home/ise/bug_miner/db_bugs/commons-lang_db.csv'
+    out = '/home/ise/bug_miner/commons-lang/out'
+
 
     csv_commit_db(repo=repo,out_dir_path=out,csv_db=db_Csv)
 

@@ -4,3 +4,5 @@
 2,commons-lang,https://github.com/apache/commons-lang.git
 3,pig,https://github.com/apache/pig.git
 4,accumulo,https://github.com/apache/accumulo.git
+5,commons-beanutils,https://github.com/apache/commons-beanutils.git
+6,commons-bcel,https://github.com/apache/commons-bcel.git
