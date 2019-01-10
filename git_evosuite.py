@@ -126,6 +126,7 @@ def applyer_bug(row, out_dir, repo,not_fix=True, jarz=True):
     component_path = row['component_path']
     print "{}".format(component_path)
 
+
     ######
     #list_done = start_where_stop_res(out_dir)
     #list_done=['270']
@@ -144,7 +145,8 @@ def applyer_bug(row, out_dir, repo,not_fix=True, jarz=True):
     print "module={} \t tag_p = {} \t commit_p ={}".format(module, tag_parent, commit_fix)
     checkout_version(commit_fix, repo, out_dir_new)
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
-
+    if os.path.isfile('{}/pom.xml'.format(repo)) is False:
+        return
     prefix = src_to_target(component_path)
     repo_look = "{}{}".format(repo,prefix)
 
@@ -752,7 +754,7 @@ def parser():
 
 
 if __name__ == "__main__":
-    #sys.argv=['','commons-lang']
+    #sys.argv=['','commons-beanutils']
     parser()
     print '\n\n'
     print "---Done"*10
