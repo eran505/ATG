@@ -55,8 +55,9 @@ def checkout_repo(dir_dis, p_name):
     df= pd.read_csv('{}/tmp_files/git_clone.csv'.format(path_ATG), index_col=0)
     res = df.loc[df['project']==p_name]
     if len(res)!=1:
-        print "[Error] no Project name in the data_set git_clone --> {}".format(p_name)
-    url_i = df.iloc[0]['url']
+        msg = "[Error] no Project name in the data_set git_clone --> {}".format(p_name)
+        raise Exception(msg)
+    url_i = res.iloc[0]['url']
     print "url_i -> {}".format(url_i)
     cwd = os.getcwd()
     os.chdir(dir_dis)
@@ -751,7 +752,7 @@ def parser():
 
 
 if __name__ == "__main__":
-    #sys.argv=['','commons-math']
+    sys.argv=['','commons-lang']
     parser()
     print '\n\n'
     print "---Done"*10
