@@ -80,7 +80,7 @@ def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
     return str_jarz
 
 
-def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=True,remove_dup=False,jarz=False):
+def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=False,remove_dup=False,jarz=False,killable=True):
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
@@ -106,15 +106,23 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
         print len(df)
         df.drop_duplicates(subset=['commit','parent','package'],inplace=False)
         print len(df)
-
-    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz, axis=1)
+    list_index = None
+    if killable:
+        p_csv = '{}/{}/killable_index.csv'.format('/home/ise/bug_miner',p_name)
+        if os.path.isfile(p_csv):
+            df_index = pd.read_csv(p_csv)
+            list_index = df_index['bug_id'].tolist()
+        else:
+            print "No killable.csv file as been found !!!! --> path = {}".format(p_csv)
+            return None
+    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index ,axis=1)
 
 
 def start_where_stop_res(res_dir):
     dirs_res = pt.walk_rec(res_dir,[],'',False,lv=-1,full=False)
     return dirs_res
 
-def applyer_bug(row, out_dir, repo,not_fix=False, jarz=True):
+def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True):
     fix=False
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
@@ -129,10 +137,9 @@ def applyer_bug(row, out_dir, repo,not_fix=False, jarz=True):
 
     ######
     #list_done = start_where_stop_res(out_dir)
-    list_done=['10']
-    look_for = "{}".format(index_bug)
-    if look_for not in list_done:
-        return
+    if list_index is not None :
+        if index_bug not in list_index:
+            return
     ##########
 
     target = row['target']
@@ -758,8 +765,8 @@ def parser():
 
 
 if __name__ == "__main__":
+   # sys.argv=['','commons-math']
 
-#    sys.argv=['','res','commons-lang']
     parser()
     print '\n\n'
     print "---Done"*10
