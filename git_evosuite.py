@@ -114,7 +114,7 @@ def start_where_stop_res(res_dir):
     dirs_res = pt.walk_rec(res_dir,[],'',False,lv=-1,full=False)
     return dirs_res
 
-def applyer_bug(row, out_dir, repo,not_fix=True, jarz=True):
+def applyer_bug(row, out_dir, repo,not_fix=False, jarz=True):
     fix=False
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
@@ -129,10 +129,10 @@ def applyer_bug(row, out_dir, repo,not_fix=True, jarz=True):
 
     ######
     #list_done = start_where_stop_res(out_dir)
-    #list_done=['270']
-    #look_for = "{}".format(index_bug)
-    #if look_for not in list_done:
-    #    return
+    list_done=['10']
+    look_for = "{}".format(index_bug)
+    if look_for not in list_done:
+        return
     ##########
 
     target = row['target']
@@ -180,8 +180,8 @@ def applyer_bug(row, out_dir, repo,not_fix=True, jarz=True):
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
                 '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '80', '4', 'U',str_dependency ]
 
-
-    bg.init_main()
+    if fix is False:
+        bg.init_main()
     evo_test_run(out_evo, repo, module, proj_dir, mode='fixed')
     checkout_version(commit_fix, repo, out_dir_new, clean=True)
 
@@ -541,6 +541,10 @@ def make_csv_diff(csv_raw_data_res='/home/ise/test/res.csv'):
     print "number of issue that Evosuit found:"
     print len(arr)
     df.to_csv('{}/tmp_df.csv'.format(father_dir))
+    df_killable = df[df['diff_fail_count']>0]
+    df_killable = df_killable[['bug_name','bug_id']]
+    df_killable.drop_duplicates(inplace=True)
+    df_killable.to_csv('{}/killable.csv'.format(father_dir))
     return '{}/tmp_df.csv'.format(father_dir)
 
 def differ(row, df, set_l):
@@ -754,7 +758,8 @@ def parser():
 
 
 if __name__ == "__main__":
-    #sys.argv=['','commons-beanutils']
+
+#    sys.argv=['','res','commons-lang']
     parser()
     print '\n\n'
     print "---Done"*10
@@ -762,7 +767,7 @@ if __name__ == "__main__":
 
 
     # count dir
-    p='/home/ise/bug_miner/commons-math/res'
+    p='/home/ise/bug_miner/commons-beanutils/res'
     res_xml = pt.walk_rec(p,[],'.xml')
     d={}
 
