@@ -694,14 +694,14 @@ def add_fulty_bug(path_df,p_name,path_csv_info=None):
     print list(df_merge)
 
 
-    df_merge.to_csv('/home/ise/bug_miner/commons-math/merge.csv')
+    df_merge.to_csv('/home/ise/bug_miner/{}/merge.csv'.format(p_name))
     to_del = ['bug', 'class_err','test_it', 'fail','class_fail', 'err', 'test_date', 'diff_fail', 'diff_fail_count' ]
     df_merge.drop(to_del, axis=1, inplace=True)
     df_merge['is_faulty'].fillna(0, inplace=True)
-    df_merge.to_csv('/home/ise/bug_miner/commons-math/G.csv')
+    df_merge.to_csv('/home/ise/bug_miner/{}/G.csv'.format(p_name))
     print df_merge.dtypes
     df_merge['bb'] = df_merge.groupby(['bug_id', 'bug_name','name','test_mode','test_time_b','is_faulty'])['binary_kill'].transform('sum')
-    df_merge.to_csv('/home/ise/bug_miner/commons-math/fin.csv')
+    df_merge.to_csv('/home/ise/bug_miner/{}/fin.csv'.format(p_name))
 
 def get_minmal_csv_bug_miner(p_name='Math'):
     '''
