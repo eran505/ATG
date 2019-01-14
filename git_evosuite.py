@@ -132,6 +132,7 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True):
     bug_name = row['issue']
     index_bug = row['index_bug']
     component_path = row['component_path']
+    print 'index_bug = {}'.format(index_bug)
     print "{}".format(component_path)
 
 
@@ -155,6 +156,8 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True):
     if os.path.isfile('{}/pom.xml'.format(repo)) is False:
         return
     prefix = src_to_target(component_path)
+    if prefix is None:
+        return
     repo_look = "{}{}".format(repo,prefix)
 
     rm_exsiting_test(repo_look , p_name)
@@ -270,8 +273,12 @@ def log_to_file(dir_log, name_file, txt_to_log):
 
 def src_to_target(comp_path,s='src',end='org',prefix=True):
     comp_path = str(comp_path).split('\\')
-    index_src = comp_path.index(s)
-    index_org = comp_path.index(end)
+    try:
+        index_src = comp_path.index(s)
+        index_org = comp_path.index(end)
+    except Exception as e:
+        print e.message
+        return None
     arr=['target','classes']
     prefix_path = comp_path[:index_src]
     if len(prefix_path) == 0 and prefix:
@@ -747,7 +754,7 @@ def parser():
         elif project == 'commons-bcel':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p)
+            csv_bug_process(project, repo_path, out_p,killable=False)
         elif project == 'commons-beanutils':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -764,9 +771,27 @@ def parser():
             add_fulty_bug('{}/{}/tmp_df.csv'.format(dir_bug_miner, project),project)
 
 
-if __name__ == "__main__":
-   # sys.argv=['','commons-math']
+def dic_parser(arr_args):
+    usage='no usage'
+    dico_args = {}
+    array = arr_args
+    i = 1
+    while i < len(array):
+        if str(array[i]).startswith('-'):
+            key = array[i][1:]
+            i += 1
+            val = array[i]
+            dico_args[key] = val
+            i += 1
+        else:
+            msg = "the symbol {} is not a valid flag".format(array[i])
+            print(msg)
+            print(usage)
+            raise Exception('[Error] in parsing Args')
+    return dico_args
 
+if __name__ == "__main__":
+   # sys.argv=['','commons-bcel']
     parser()
     print '\n\n'
     print "---Done"*10
