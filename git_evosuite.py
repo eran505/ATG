@@ -697,6 +697,8 @@ def add_fulty_bug(path_df,p_name,path_csv_info=None):
     print 'df_faulty: ',len(df_faulty)
     print 'df_bugs: ',len(df_bugs)
     df_merge = pd.merge(df_bugs,df_faulty, how='left', on=['bug_id','bug_name','name'] )
+
+
     df_merge['binary_kill'] = df_merge['diff_fail_count'].apply(lambda x: 1 if float(x)>0 else 0)
 
     print 'df_merge: ',len(df_merge)
@@ -707,13 +709,20 @@ def add_fulty_bug(path_df,p_name,path_csv_info=None):
     to_del = ['bug', 'class_err','test_it', 'fail','class_fail', 'err', 'test_date', 'diff_fail', 'diff_fail_count' ]
     df_merge.drop(to_del, axis=1, inplace=True)
     df_merge['is_faulty'].fillna(0, inplace=True)
-    df_merge.to_csv('/home/ise/bug_miner/{}/G.csv'.format(p_name))
+
+
+    df_merge['count_rep'] = df_merge.groupby(['bug_id', 'bug_name', 'name', 'test_mode', 'test_time_b', 'is_faulty', 'binary_kill'])['name'].transform('count')
+
+    df_merge.to_csv('/home/ise/bug_miner/{}/count_rep.csv'.format(p_name))
+
+
+
+    print list(df_merge)
     print df_merge.dtypes
     df_merge['sum_rep'] = df_merge.groupby(['bug_id', 'bug_name', 'name', 'test_mode', 'test_time_b', 'is_faulty'])[
         'binary_kill'].transform('sum')
 
-    df_merge['count_rep'] = df_merge.groupby(['bug_id', 'bug_name','name','test_mode'
-                                                 ,'test_time_b','is_faulty','sum_rep'])['binary_kill'].transform('count')
+
 
     df_fixed = df_merge[df_merge['test_mode'] == 'fixed']
     df_buggy = df_merge[df_merge['test_mode'] == 'buggy']
