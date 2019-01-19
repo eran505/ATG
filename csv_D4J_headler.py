@@ -1382,8 +1382,9 @@ def make_FP_pred(dir_target='/home/ise/tmp_d4j/out_pred/out/Lang/Lang_2'):
     out = '/'.join(str(dir_target).split('/')[:-1])
     name = str(dir_target).split('/')[-1]
     p_name = str(name).split('_')[0]
-    res_test_set = pt.walk_rec(dir_target,[],'testing__results_pred.csv')
-    most_csv = pt.walk_rec(dir_target,[],'Most_names_File.csv')
+    res_test_set = pt.walk_rec(dir_target,[],'testing')
+    res_test_set = [x for x in res_test_set if str(x).endswith('csv')]
+    most_csv = pt.walk_rec(dir_target,[],'Most_names_File')
     if len(most_csv)==1 and len(res_test_set)==1 is False:
         print "[Error] no csv in the dir-> {}".format(dir_target)
         return None
@@ -1399,6 +1400,7 @@ def make_FP_pred(dir_target='/home/ise/tmp_d4j/out_pred/out/Lang/Lang_2'):
     if p_name == 'Lang':
         df['name_genric'] = df['name'].apply(lambda x: str(x).replace('.lang2.','.lang.').replace('.lang3.','.lang.').replace('.lang4.','.lang.'))
     df.to_csv("{}/{}_FP.csv".format(dir_target,name))
+    return "{}/{}_FP.csv".format(dir_target,name)
 
 
 def path_to_package_name(p_name,path_input):

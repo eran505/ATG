@@ -1,6 +1,8 @@
 import pit_render_test as pt
 import sys, os, xml
 import re
+from csv_D4J_headler import get_LOC
+from csv_D4J_headler import make_FP_pred
 import numpy as np
 # sys.path.append("/home/ise/eran/git_repos/mvnpy")
 from subprocess import Popen, PIPE
@@ -326,7 +328,7 @@ def run_GIT_command_and_log(repo_path, cmd, log_dir, name, log=True):
     os.chdir(repo_path)
     process = Popen(shlex.split(cmd), stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
-    if log:
+    if log and log_dir is not None:
         log_to_file(log_dir, '{}_stderr'.format(name), stderr)
         log_to_file(log_dir, '{}_stdout'.format(name), stdout)
     return stdout, stderr
@@ -707,8 +709,21 @@ def add_fulty_bug(path_df,p_name,path_csv_info=None):
     df_merge['is_faulty'].fillna(0, inplace=True)
     df_merge.to_csv('/home/ise/bug_miner/{}/G.csv'.format(p_name))
     print df_merge.dtypes
-    df_merge['bb'] = df_merge.groupby(['bug_id', 'bug_name','name','test_mode','test_time_b','is_faulty'])['binary_kill'].transform('sum')
-    df_merge.to_csv('/home/ise/bug_miner/{}/fin.csv'.format(p_name))
+    df_merge['sum_rep'] = df_merge.groupby(['bug_id', 'bug_name', 'name', 'test_mode', 'test_time_b', 'is_faulty'])[
+        'binary_kill'].transform('sum')
+
+    df_merge['count_rep'] = df_merge.groupby(['bug_id', 'bug_name','name','test_mode'
+                                                 ,'test_time_b','is_faulty','sum_rep'])['binary_kill'].transform('count')
+
+    df_fixed = df_merge[df_merge['test_mode'] == 'fixed']
+    df_buggy = df_merge[df_merge['test_mode'] == 'buggy']
+
+    df_fixed.drop_duplicates(inplace=True)
+    df_buggy.drop_duplicates(inplace=True)
+
+
+    df_fixed.to_csv('/home/ise/bug_miner/{}/fin_df_fixed.csv'.format(p_name))
+    df_buggy.to_csv('/home/ise/bug_miner/{}/fin_df_buggy.csv'.format(p_name))
 
 def get_minmal_csv_bug_miner(p_name='Math'):
     '''
@@ -729,6 +744,100 @@ def get_minmal_csv_bug_miner(p_name='Math'):
     df_info = df_info.drop_duplicates()
     df_info.to_csv('{}/{}.csv'.format(father_dir, 'dup_off_info'))
     print len(df_info)
+
+def dic_parser(arr_args):
+    usage='no usage'
+    dico_args = {}
+    array = arr_args
+    i = 1
+    while i < len(array):
+        if str(array[i]).startswith('-'):
+            key = array[i][1:]
+            i += 1
+            val = array[i]
+            dico_args[key] = val
+            i += 1
+        else:
+            msg = "the symbol {} is not a valid flag".format(array[i])
+            print(msg)
+            print(usage)
+            raise Exception('[Error] in parsing Args')
+    return dico_args
+
+def tmp_function(df_path='/home/ise/bug_miner/commons-math/fin_df_buggy.csv'):
+    df = pd.read_csv(df_path,index_col=0)
+    print list(df)
+    print df['count_rep'].value_counts(sort=False)
+    print ""
+    exit()
+
+
+def add_loc(csv_p='/home/ise/bug_miner/commons-math/fin_df_buggy.csv'):
+    df_fin = pd.read_csv(csv_p, index_col=0)
+    p_name = str(csv_p).split('/')[-2]
+    father_dir='/'.join(str(csv_p).split('/')[:-1])
+    out_loc = pt.mkdir_system(father_dir,'LOC',False)
+    repo_path = "{}/{}".format('/'.join(str(csv_p).split('/')[:-1]),p_name)
+    print repo_path
+    df_info = pd.read_csv("{}/tmp_files/{}_bug.csv".format(os.getcwd(),p_name),index_col=0)
+    list_bug_generated = df_fin['bug_name'].unique()
+    print list(df_info)
+    print len(df_info)
+    df_info = df_info[df_info['issue'].isin(list_bug_generated)]
+    #df_info.apply(add_loc_helper,repo=repo_path,out=out_loc,axis=1)
+    # get all df loc from LOC folder
+    res_df_loc_path = pt.walk_rec(out_loc,[],'.csv')
+    all_loc_list = []
+    for item_loc_path in res_df_loc_path:
+        all_loc_list.append(pd.read_csv(item_loc_path,index_col=0))
+    df_all_loc = pd.concat(all_loc_list)
+    print list(df_all_loc)
+    print list(df_fin)
+    print len(df_fin)
+    df_all_loc.to_csv('{}/{}.csv'.format(father_dir,'loc'))
+    result_df = pd.merge(df_all_loc,df_fin,'right',on=['bug_name', 'name'])
+    result_df.to_csv('{}/{}.csv'.format(father_dir,'exp'))
+    print len(result_df)
+
+def add_loc_helper(row,repo,out):
+    '''
+    getting the loc info to LOC dir
+    :param repo: path to repo
+    :param out: path where to write the csv
+    '''
+    commit_buggy = row['parent']
+    bug_id = row['issue']
+    path_to_faulty = row['component_path']
+    package_name = row['package']
+    print path_to_faulty
+    checkout_version(commit_buggy,repo,None)
+    pack = '/'.join(str(path_to_faulty).split('\\')[:-1])
+    klasses = pt.walk_rec('{}/{}'.format(repo,pack),[],'.java')
+    d_l=[]
+    for class_i in klasses:
+        name = pt.path_to_package('org',class_i,-5)
+        size = get_LOC(class_i)
+        d_l.append({'name':name,'LOC':size,'bug_name':bug_id})
+    df=pd.DataFrame(d_l)
+    df.to_csv('{}/{}_LOC.csv'.format(out,bug_id))
+
+
+def FP_dir_clean(dir_p='/home/ise/bug_miner/commons-math/FP/raw'):
+    res = pt.walk_rec(dir_p,[],'testing')
+    res = [x for x in res if str(x).endswith('csv')]
+    for csv_p in res:
+        continue
+        father_path = '/'.join(str(csv_p).split('/')[:-1])
+        new_name='testing__results_pred.csv'
+        command = 'mv {} {}/{}'.format(csv_p , father_path,new_name)
+        print '[OS] {}'.format(command)
+        os.system('{}'.format(command))
+    res_father_folder = ['/'.join(str(x).split('/')[:-1]) for x in res]
+    for item in res_father_folder:
+        name_tag = str(item).split('/')[-1]
+        print name_tag
+        df_path = make_FP_pred(item)
+
 
 
 def parser():
@@ -769,29 +878,16 @@ def parser():
             csv_path_res = get_test_xml_csv(out_p)
             df_path = make_csv_diff(csv_path_res)
             add_fulty_bug('{}/{}/tmp_df.csv'.format(dir_bug_miner, project),project)
-
-
-def dic_parser(arr_args):
-    usage='no usage'
-    dico_args = {}
-    array = arr_args
-    i = 1
-    while i < len(array):
-        if str(array[i]).startswith('-'):
-            key = array[i][1:]
-            i += 1
-            val = array[i]
-            dico_args[key] = val
-            i += 1
-        else:
-            msg = "the symbol {} is not a valid flag".format(array[i])
-            print(msg)
-            print(usage)
-            raise Exception('[Error] in parsing Args')
-    return dico_args
+        elif sys.argv[1]=='add_loc':
+            add_loc()
+        elif sys.argv[1] == 'make_fp_raw':
+            FP_dir_clean()
 
 if __name__ == "__main__":
-   # sys.argv=['','commons-bcel']
+    #FP_dir_clean()
+    #add_loc()
+    #exit()
+    #sys.argv=['','res','commons-math']
     parser()
     print '\n\n'
     print "---Done"*10

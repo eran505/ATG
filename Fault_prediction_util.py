@@ -127,6 +127,59 @@ def connect_name_pred_FP( most_csv_name, p_name, csv_pred,dir_target=None):
 
 
 
+def add_FP_val(project):
+    father_dir ='/home/ise/bug_miner/{}'.format(project)
+    df_exp = pd.read_csv('{}/exp.csv'.format(father_dir),index_col=0)
+    res_fp_dfs = pt.walk_rec('{}/FP'.format(father_dir),[],'FP.csv')
+    all_df_fps=[]
+    for item in res_fp_dfs:
+        df_i = pd.read_csv(item,index_col=0)
+        df_i['tag'] = '_'.join(str(item).split('/')[-1].split('_')[:-1])
+        all_df_fps.append(df_i)
+    df_all_fp = pd.concat(all_df_fps)
+    df_info=pd.read_csv('{}/tmp_files/{}_bug.csv'.format(os.getcwd(),project),index_col=0)
+    print list(df_info)
+    print list(df_exp)
+    print list(df_all_fp)
+    # add tag to exp DF
+    df_info= df_info[['issue','tag_parent']]
+    print len(df_exp)
+    res_exp = pd.merge(df_exp,df_info,'left',right_on=['issue'],left_on=['bug_name'])
+    print len(res_exp)
+    res_exp.to_csv('{}/exp_new.csv'.format(father_dir))
+
+    # get sorted version repo
+    git_command = r"git for-each-ref --sort=taggerdate --format '%(tag)' "
+    std_out,std_err = ge.run_GIT_command_and_log('{}/{}'.format(father_dir,project),git_command,None,None,False)
+    arry_tag_sorted = str(std_out).split()
+
+    # Fill the FP values
+    res_exp['fault_pred_raw'] = res_exp.apply(add_FP_val_helper,sorted_tag=arry_tag_sorted,fp_df_all=df_all_fp,axis=1)
+    res_exp['FP'] = res_exp['fault_pred_raw'].apply(lambda x: str(x).split('_')[0] if x is not None else None)
+    res_exp['tag_FP_val'] = res_exp['fault_pred_raw'].apply(lambda x: '_'.join(str(x).split('_')[1:]) if x is not None else None)
+    res_exp.drop('fault_pred_raw', axis=1, inplace=True)
+
+    res_exp.to_csv('{}/exp_new_new.csv'.format(father_dir))
+
+def add_FP_val_helper(row,sorted_tag,fp_df_all):
+    tag_cur = row['tag_parent']
+    klass = row['name']
+    print "tag_cur={}".format(tag_cur)
+    try:
+        index_start = list(sorted_tag).index(tag_cur)
+    except Exception as e:
+        print '[Error] in the add_FP_val_helper function e={}'.format(e.message)
+        return None
+    sorted_tag[:index_start].reverse()
+    for tag in sorted_tag:
+        print tag
+        filter_tag_df = fp_df_all[fp_df_all['tag']==tag]
+        if len(filter_tag_df)>0:
+            filter_klass = filter_tag_df[filter_tag_df['name']==klass]
+            if len(filter_klass)>0:
+                fp_val = filter_klass['FP'].iloc[0]
+                return '{}_{}'.format(fp_val,tag)
+    return None
 
 def path_to_package_name(p_name,path_input):
     item = str(path_input).replace('\\','/')
@@ -143,11 +196,8 @@ def path_to_package_name(p_name,path_input):
 
 
 if __name__ == "__main__":
-    pig_name = '/home/ise/bug_miner/PIG/Most_names_File.csv'
-    pig_pred = '/home/ise/bug_miner/PIG/testing__results_pred_I_3K.csv.csv'
-    dv_commit = '/home/ise/bug_miner/PIG/db_commit.csv'
-    dir_db = '/home/ise/bug_miner/db_bugs'
-
+    add_FP_val('commons-math')
+    exit()
 
     repo='/home/ise/bug_miner/commons-math/commons-math'
     db_Csv = '/home/ise/bug_miner/db_bugs/commons-math_db.csv'
@@ -162,7 +212,7 @@ if __name__ == "__main__":
     out = '/home/ise/bug_miner/commons-lang/out'
 
 
-    csv_commit_db(repo=repo,out_dir_path=out,csv_db=db_Csv)
+    #csv_commit_db(repo=repo,out_dir_path=out,csv_db=db_Csv)
 
 
     print("done--"*8)
