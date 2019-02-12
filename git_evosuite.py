@@ -28,11 +28,14 @@ def get_Tag_name_by_commit(commit_id, path_repo):
     '''
     command_git = 'git describe --tag {}'.format(commit_id)
     std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None, False)
+    print "tag"
     if len(std_out) < 1:
         command_git = 'git describe --contains {}'.format(commit_id)
         std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None,False)
+        print "contains"
         if len(std_out)<1:
             command_git = 'git describe --tag --contains --all {}'.format(commit_id)
+            print "all"
             std_out, std_err = run_GIT_command_and_log(path_repo, command_git, None, None, False)
             if len(std_out) < 1:
                 print "[Error] the stdout return empty --> {} ".format(commit_id)
@@ -49,6 +52,7 @@ def get_Tag_name_by_commit(commit_id, path_repo):
     if current_tag.__contains__('^'):
         current_tag = current_tag.split('^')[0]
     current_tag = current_tag.replace('\n', '')
+    print "std_out={}".format(std_out)
     return current_tag
 
 
@@ -82,7 +86,7 @@ def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
     return str_jarz
 
 
-def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=False,remove_dup=False,jarz=False,killable=True):
+def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=False,remove_dup=False,jarz=False,killable=False,pref='org'):
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
@@ -117,14 +121,15 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
         else:
             print "No killable.csv file as been found !!!! --> path = {}".format(p_csv)
             return None
-    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index ,axis=1)
+    df = df.reindex(index=df.index[::-1])
+    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref ,axis=1)
 
 
 def start_where_stop_res(res_dir):
     dirs_res = pt.walk_rec(res_dir,[],'',False,lv=-1,full=False)
     return dirs_res
 
-def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True):
+def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_str='org'):
     fix=False
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
@@ -157,7 +162,7 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True):
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
     if os.path.isfile('{}/pom.xml'.format(repo)) is False:
         return
-    prefix = src_to_target(component_path)
+    prefix = src_to_target(component_path,end=prefix_str)
     if prefix is None:
         return
     repo_look = "{}{}".format(repo,prefix)
@@ -166,7 +171,7 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True):
 
     out_log = pt.mkdir_system(out_dir_new, 'LOG', False)
     mvn_command(repo, module, 'clean', out_log)
-    mvn_command(repo, module, 'compile', out_log)
+    mvn_command(repo, module, 'install -DskipTests=true', out_log)
 
     # Get all jars dependency
     str_dependency=''
@@ -181,7 +186,7 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True):
         dir_to_gen = '{}/{}/target/classes/{}'.format(repo, module, target)
         dir_to_gen = discover_dir_repo('{}/{}'.format(repo, module), p_name, is_test=False)
     else:
-        dir_to_gen = discover_dir_repo('{}'.format(repo_look), p_name, is_test=False)
+        dir_to_gen = discover_dir_repo('{}'.format(repo_look), p_name, is_test=False,target=prefix_str)
     dir_to_gen = '{}/{}'.format(dir_to_gen, target)
     # Run Evosuite generation mode
 
@@ -190,7 +195,7 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True):
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '80', '4', 'U',str_dependency ]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '70', '1', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
@@ -676,6 +681,7 @@ def merge_csv_info_bug(csv_bug='/home/ise/bug_miner/math/tmp_df.csv', project_na
 
 
 def add_fulty_bug(path_df,p_name,path_csv_info=None):
+
     csv_p_info = "{}/tmp_files/{}_bug.csv".format(os.getcwd(),p_name)
     df_info = pd.read_csv(csv_p_info,index_col=0)
     #df_info['fauly_component'] = df_info['testcase'].apply(lambda x: str(x).split('#')[0].split('Test')[0])
@@ -705,34 +711,24 @@ def add_fulty_bug(path_df,p_name,path_csv_info=None):
     print list(df_merge)
 
 
-    df_merge.to_csv('/home/ise/bug_miner/{}/merge.csv'.format(p_name))
     to_del = ['bug', 'class_err','test_it', 'fail','class_fail', 'err', 'test_date', 'diff_fail', 'diff_fail_count' ]
     df_merge.drop(to_del, axis=1, inplace=True)
     df_merge['is_faulty'].fillna(0, inplace=True)
 
-
-    df_merge['count_rep'] = df_merge.groupby(['bug_id', 'bug_name', 'name', 'test_mode', 'test_time_b', 'is_faulty', 'binary_kill'])['name'].transform('count')
-
-    df_merge.to_csv('/home/ise/bug_miner/{}/count_rep.csv'.format(p_name))
+    df_merge = df_merge[df_merge['test_mode'] == 'buggy']
 
 
+    df_merge['count_rep'] = df_merge.groupby(['bug_id', 'bug_name', 'name', 'test_mode', 'test_time_b', 'is_faulty'])['name'].transform('count')
 
-    print list(df_merge)
+    df_merge['sum_rep'] = df_merge.groupby(['bug_id', 'bug_name', 'name', 'test_mode', 'test_time_b'])['binary_kill'].transform('sum')
+
     print df_merge.dtypes
-    df_merge['sum_rep'] = df_merge.groupby(['bug_id', 'bug_name', 'name', 'test_mode', 'test_time_b', 'is_faulty'])[
-        'binary_kill'].transform('sum')
+
+    df_merge.drop_duplicates(subset=['bug_id', 'bug_name', 'name', 'test_mode', 'test_time_b'],inplace=True)
 
 
+    df_merge.to_csv('/home/ise/bug_miner/{}/fin_df_buggy.csv'.format(p_name))
 
-    df_fixed = df_merge[df_merge['test_mode'] == 'fixed']
-    df_buggy = df_merge[df_merge['test_mode'] == 'buggy']
-
-    df_fixed.drop_duplicates(inplace=True)
-    df_buggy.drop_duplicates(inplace=True)
-
-
-    df_fixed.to_csv('/home/ise/bug_miner/{}/fin_df_fixed.csv'.format(p_name))
-    df_buggy.to_csv('/home/ise/bug_miner/{}/fin_df_buggy.csv'.format(p_name))
 
 def get_minmal_csv_bug_miner(p_name='Math'):
     '''
@@ -781,7 +777,8 @@ def tmp_function(df_path='/home/ise/bug_miner/commons-math/fin_df_buggy.csv'):
     exit()
 
 
-def add_loc(csv_p='/home/ise/bug_miner/commons-math/fin_df_buggy.csv'):
+def add_loc(project_name):
+    csv_p = '/home/ise/bug_miner/{}/fin_df_buggy.csv'.format(project_name)
     df_fin = pd.read_csv(csv_p, index_col=0)
     p_name = str(csv_p).split('/')[-2]
     father_dir='/'.join(str(csv_p).split('/')[:-1])
@@ -831,7 +828,7 @@ def add_loc_helper(row,repo,out):
     df.to_csv('{}/{}_LOC.csv'.format(out,bug_id))
 
 
-def FP_dir_clean(dir_p='/home/ise/bug_miner/commons-math/FP/raw'):
+def FP_dir_clean(dir_p='/home/ise/bug_miner/commons-lang/FP/raw'):
     res = pt.walk_rec(dir_p,[],'testing')
     res = [x for x in res if str(x).endswith('csv')]
     for csv_p in res:
@@ -865,39 +862,49 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p)
-        elif project == 'pig':
-            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
+        elif project == 'evosuite':
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project,killable=False)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p)
         elif project == 'commons-bcel':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False)
+        elif project == 'commons-codec':
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_bug_process(project, repo_path, out_p, killable=False)
         elif project == 'commons-beanutils':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p)
+        elif project == 'opennlp':
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp')
         elif project == 'accumulo':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,jarz=True)
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
-            out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_path_res = get_test_xml_csv(out_p)
-            df_path = make_csv_diff(csv_path_res)
+            #out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            #csv_path_res = get_test_xml_csv(out_p)
+            #df_path = make_csv_diff(csv_path_res)
             add_fulty_bug('{}/{}/tmp_df.csv'.format(dir_bug_miner, project),project)
         elif sys.argv[1]=='add_loc':
-            add_loc()
+            add_loc(sys.argv[2])
         elif sys.argv[1] == 'make_fp_raw':
             FP_dir_clean()
 
 if __name__ == "__main__":
+    sys.argv=["",'opennlp']
+    parser()
+    exit()
     #FP_dir_clean()
     #add_loc()
+    get_all_poms_and_add_evo('/home/ise/bug_miner/commons-codec/commons-codec')
     #exit()
-    #sys.argv=['','res','commons-math']
-    parser()
     print '\n\n'
     print "---Done"*10
     exit()

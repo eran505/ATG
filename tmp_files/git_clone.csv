@@ -6,3 +6,6 @@
 4,accumulo,https://github.com/apache/accumulo.git
 5,commons-beanutils,https://github.com/apache/commons-beanutils.git
 6,commons-bcel,https://github.com/apache/commons-bcel.git
+7,commons-codec,https://github.com/apache/commons-codec.git
+8,commons-dbutils,https://github.com/apache/commons-dbutils.git
+9,commons-email,https://github.com/apache/commons-email.git

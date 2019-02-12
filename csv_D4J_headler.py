@@ -958,31 +958,35 @@ def frange(x, y, jump):
     yield x
     x += jump
 
-def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True,pre_gen=True):
+def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True,out=None):
     gamma_arr=[]
     list_d_ranking = []
     intreval = 0.05
     for num_val in frange(0,1+intreval,intreval):
         gamma_arr.append(num_val)
-    gamma_arr=[1,0]
+    #gamma_arr=[1,0]
     d_list_res = []
     if heuristic_method:
         import heuristic
         d_heuristic_res = heuristic.csv_to_dict(p_name,False)
-    csv_path = '/home/ise/tmp_d4j/out/raw_data/{}.csv'.format(p_name)
+    if p_name.endswith('csv'):
+        csv_path=p_name
+    else:
+        csv_path = '/home/ise/tmp_d4j/out/raw_data/{}.csv'.format(p_name)
     df = pd.read_csv(csv_path, index_col=0)
     max_all_rep = df['count_detected'].max()
     print 'max_rep', df['count_detected'].max()
     print 'min_rep', df['count_detected'].min()
     max_rep = df['count_detected'].max()
     x =  df['count_detected'].value_counts().reset_index().rename(columns={'index': 'Rep Index', 'count_detected': 'Value'})
-    x.to_csv('{}/rep_frq_{}.csv'.format('/home/ise/tmp_d4j/out', p_name))
+#    x.to_csv('{}/rep_frq_{}.csv'.format('/home/ise/tmp_d4j/out', p_name))
     for x in range(1, max_rep + 1):
         df['{}_rep'.format(x)] = df.apply(make_rep, val=x, count='count_detected', sum='sum_detected', axis=1)
     #df.to_csv('/home/ise/df.csv')
     print list(df)
     id_list_bug = df['bug_ID'].unique()
-    for bug_i in id_list_bug[2+1:]:
+    for bug_i in id_list_bug:
+
         print "--- BUG {} ----".format(bug_i)
         df_filter = df.loc[df['bug_ID'] == bug_i]
         df_target = df_filter.loc[df_filter['faulty_class'] == 1]
@@ -993,8 +997,8 @@ def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True,pre_gen=True):
         print "rep_target_max: {}".format(rep_target_max)
         if 'no_fp' in df_filter['FP'].values :
             df_filter.loc[df_filter['FP'] == 'no_fp', 'FP'] = None
-        if 'no_fp' in df_filter['FP_genric'].values:
-            df_filter.loc[df_filter['FP_genric'] == 'no_fp', 'FP_genric'] = None
+#        if 'no_fp' in df_filter['FP_genric'].values:
+#            df_filter.loc[df_filter['FP_genric'] == 'no_fp', 'FP_genric'] = None
 
 
         for col in ['FP','LOC_P','LOC']:
@@ -1012,11 +1016,11 @@ def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True,pre_gen=True):
                 df_filter['pre_gen_score_{}'.format(gamma)] = df_filter['FP'] * gamma + (1.0 - gamma) * df_filter['LOC_P']
                 df_filter.to_csv("{}/{}.csv".format('/home/ise/tmp',bug_i))
         for item_number in range(1,item):
-            for rep_i in range(1, max_all_rep + 1):
+            for rep_i in range(max_all_rep, max_all_rep + 1):
                 d_pre_gen = {}
                 val_random = pick_by_prop(df_filter, 'Random', rep=rep_i,item_num=item_number)
                 val_fp = pick_by_prop(df_filter, 'FP', rep=rep_i, item_num=item_number)
-                val_fp_gen = pick_by_prop(df_filter, 'FP_genric', rep=rep_i, item_num=item_number)
+                #val_fp_gen = pick_by_prop(df_filter, 'FP_genric', rep=rep_i, item_num=item_number)
                 val_loc = pick_by_prop(df_filter, 'LOC', rep=rep_i, item_num=item_number)
                 val_target = pick_by_prop(df_target, 'faulty_class',rep=rep_i,item_num=item_number)
                 if heuristic_method:
@@ -1040,8 +1044,8 @@ def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True,pre_gen=True):
                 d_list_res.append({'bug_ID': bug_i, 'kill_val': val_loc, 'method': 'LOC', 'rep_sampled': rep_i,'item':item_number,
                                    'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
-                d_list_res.append({'bug_ID': bug_i, 'kill_val': val_fp_gen, 'method': 'FP_gen', 'rep_sampled': rep_i,'item':item_number,
-                                   'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
+                #d_list_res.append({'bug_ID': bug_i, 'kill_val': val_fp_gen, 'method': 'FP_gen', 'rep_sampled': rep_i,'item':item_number,
+                #                   'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
                 if pre_gen:
                     for ky in d_pre_gen:
@@ -1057,11 +1061,13 @@ def rep_exp_new(p_name='Lang',rep=4,item=2,heuristic_method=True,pre_gen=True):
                              'item': item_number,'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
     df_res = pd.DataFrame(d_list_res)
-    df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
-
+    if out is None:
+        df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
+    else:
+        df_res.to_csv('{}/results_rep_exp.csv'.format(out))
     # flushing out the ranking csv
-    df_rank = pd.DataFrame(list_d_ranking)
-    df_rank.to_csv('{}/{}_RANK.csv'.format('/home/ise/tmp', p_name))
+#    df_rank = pd.DataFrame(list_d_ranking)
+#    df_rank.to_csv('{}/{}_RANK.csv'.format('/home/ise/tmp', p_name))
 
 
 def clean_missing_value_row(df,col):
@@ -1463,13 +1469,16 @@ if __name__ == "__main__":
     #exit()
     #rep_exp_new('Mockito')
     #helper()
+
     ###merger()
    # get_bug_d4j_major(p_name='Math')
     #exit()
-    project_arr=['Math']
+    p_name_suffix='math'
+    out='/home/ise/bug_miner/commons-{}'.format(p_name_suffix)
+    project_arr=['/home/ise/bug_miner/commons-{}/exp_new_new.csv'.format(p_name_suffix)]
     for x in project_arr:
-        rep_exp_new(p_name=x,heuristic_method=False)
-        get_bug_ID_contains_FP(p_name=x)
+        rep_exp_new(p_name=x,heuristic_method=False,out=out)
+        #get_bug_ID_contains_FP(p_name=x)
     exit()
     util(p_name="Lang")
     exit()

@@ -32,3 +32,9 @@ class tester_gen:
                     arr_tmp = line.split(':=')
                     d[arr_tmp[0]]=arr_tmp[1]
         self.dict_config = d
+
+
+
+
+if __name__ == "__main__":
+    pass

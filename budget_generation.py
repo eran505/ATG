@@ -179,10 +179,10 @@ def mkdir_Os(path, name):
 
 
 
-def assemble_path_string2(str_i, word_cut='org'):
+def assemble_path_string2(str_i, word_cut='classes'):
     msg = '[Error] the word {} is not in the path:{}'.format(word_cut,str_i)
     arr_list_path = str(str_i).split('/')
-    index_cut = arr_list_path.index(word_cut)
+    index_cut = arr_list_path.index(word_cut)+1
     if index_cut > 0:
         prefix = '/'.join(arr_list_path[:index_cut])
         suffix = '.'.join(arr_list_path[index_cut:])

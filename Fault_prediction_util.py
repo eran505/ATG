@@ -4,6 +4,7 @@ import numpy as np
 import pit_render_test as pt
 import git_util
 import git_evosuite as ge
+from csv_D4J_headler import path_to_package_name
 
 def csv_commit_db(csv_db,repo,out_dir_path,is_max=True,is_test=True,only_java=True):
 
@@ -41,7 +42,7 @@ def csv_commit_db(csv_db,repo,out_dir_path,is_max=True,is_test=True,only_java=Tr
     df['date_commit'] = pd.to_datetime(df['date_commit'])
     df["module"] = np.nan
     # make path to package name
-    df['fail_component'] = df['component_path'].apply(lambda x: '.'.join(str(pt.path_to_package('org', x, -5)).split('\\')))
+    df['fail_component'] = df['component_path'].apply(lambda x: '.'.join(str(pt.path_to_package('opennlp', x, -5)).split('\\')))
     df['package'] = df['fail_component'].apply(lambda x: '.'.join(str(x).split('.')[:-1]))
 
     # sorted DF
@@ -127,14 +128,24 @@ def connect_name_pred_FP( most_csv_name, p_name, csv_pred,dir_target=None):
 
 
 
-def add_FP_val(project):
+def add_FP_val(project,xgb=True):
     father_dir ='/home/ise/bug_miner/{}'.format(project)
     df_exp = pd.read_csv('{}/exp.csv'.format(father_dir),index_col=0)
     res_fp_dfs = pt.walk_rec('{}/FP'.format(father_dir),[],'FP.csv')
+    if xgb:
+        res_fp_dfs = pt.walk_rec('{}/FP/best_FP/best'.format(father_dir), [], '.csv')
     all_df_fps=[]
     for item in res_fp_dfs:
         df_i = pd.read_csv(item,index_col=0)
-        df_i['tag'] = '_'.join(str(item).split('/')[-1].split('_')[:-1])
+        if xgb is False:
+            tag_name = '_'.join(str(item).split('/')[-1].split('_')[:-1])
+        else:
+            if project=='commons-math':
+                tag_name ='_'.join(str(item).split('/')[-1].split('_CONF_')[0].split('_')[1:])
+            elif project == 'commons-lang':
+                tag_name = '_'.join(str(item).split('/')[-1].split('_CONF_')[0].split('_')[2:])
+        df_i['tag'] = tag_name
+        print tag_name
         all_df_fps.append(df_i)
     df_all_fp = pd.concat(all_df_fps)
     df_info=pd.read_csv('{}/tmp_files/{}_bug.csv'.format(os.getcwd(),project),index_col=0)
@@ -152,32 +163,62 @@ def add_FP_val(project):
     git_command = r"git for-each-ref --sort=taggerdate --format '%(tag)' "
     std_out,std_err = ge.run_GIT_command_and_log('{}/{}'.format(father_dir,project),git_command,None,None,False)
     arry_tag_sorted = str(std_out).split()
+    arry_tag_sorted = [ str(x).replace('-','_') for x in arry_tag_sorted]
 
-    # Fill the FP values
+    # make a Genric class path
+    print list(res_exp)
+    print list(df_all_fp)
+    res_exp['G_package']=res_exp['name'].apply(lambda x: '.'.join(str(x).split('.')[4:]))
+    df_all_fp['G_package']=df_all_fp['name'].apply(lambda x: '.'.join(str(x).split('.')[4:]))
+    df_all_fp.to_csv('{}/df_all_fp.csv'.format(father_dir))
+   ### exit()
+
+
+    # Fill the FP
     res_exp['fault_pred_raw'] = res_exp.apply(add_FP_val_helper,sorted_tag=arry_tag_sorted,fp_df_all=df_all_fp,axis=1)
     res_exp['FP'] = res_exp['fault_pred_raw'].apply(lambda x: str(x).split('_')[0] if x is not None else None)
     res_exp['tag_FP_val'] = res_exp['fault_pred_raw'].apply(lambda x: '_'.join(str(x).split('_')[1:]) if x is not None else None)
     res_exp.drop('fault_pred_raw', axis=1, inplace=True)
 
+    res_exp = prep_df_for_exp(res_exp)
+
     res_exp.to_csv('{}/exp_new_new.csv'.format(father_dir))
 
-def add_FP_val_helper(row,sorted_tag,fp_df_all):
+
+def prep_df_for_exp(df):
+    max_LOC = df['LOC'].max()
+    min_LOC = df['LOC'].min()
+    df['LOC_P'] = df['LOC'].apply(lambda x: float(x - min_LOC) / float(max_LOC - min_LOC))
+    df['Random'] = np.random.random_sample(size=len(df))
+    df.rename(columns={'name': 'TEST', 'count_rep': 'count_detected','bug_name':'bug_ID',
+                       'sum_rep':'sum_detected','is_faulty':'faulty_class'}, inplace=True)
+
+    return df
+
+def add_FP_val_helper(row,sorted_tag,fp_df_all,col_name_class='name'):
     tag_cur = row['tag_parent']
-    klass = row['name']
+    tag_cur = str(tag_cur).replace('-','_')
+    klass = row[col_name_class]
     print "tag_cur={}".format(tag_cur)
     try:
         index_start = list(sorted_tag).index(tag_cur)
     except Exception as e:
         print '[Error] in the add_FP_val_helper function e={}'.format(e.message)
         return None
-    sorted_tag[:index_start].reverse()
-    for tag in sorted_tag:
+    cut_list = sorted_tag[:index_start+1]
+    cut_list.reverse()
+    for tag in cut_list:
         print tag
         filter_tag_df = fp_df_all[fp_df_all['tag']==tag]
         if len(filter_tag_df)>0:
-            filter_klass = filter_tag_df[filter_tag_df['name']==klass]
+            filter_klass = filter_tag_df[filter_tag_df[col_name_class]==klass]
             if len(filter_klass)>0:
-                fp_val = filter_klass['FP'].iloc[0]
+                if row['is_faulty']>0:
+                    print "max"
+                    fp_val = filter_klass['FP'].max()
+                else:
+                    fp_val = filter_klass['FP'].min()
+                #fp_val = filter_klass['FP'].iloc[0]
                 return '{}_{}'.format(fp_val,tag)
     return None
 
@@ -195,9 +236,206 @@ def path_to_package_name(p_name,path_input):
     return pack
 
 
-if __name__ == "__main__":
-    add_FP_val('commons-math')
+
+def get_miss_classes(project_path_repo,fp_name_dir,out_info):
+    '''
+    the main func that count the missing class inrespect to the bug commit and FP results tags
+    '''
+    project = str(project_path_repo).split('/')[-1]
+    atg_path=os.getcwd()
+    df_bug = pd.read_csv('{}/tmp_files/{}_bug.csv'.format(atg_path,project))
+    print list(df_bug)
+    res_file = pt.walk_rec(fp_name_dir,[],'Most_names')
+    d_name_tag={}
+    tag_l=[]
+    for item in res_file:
+        tag_name = '_'.join(str(item).split('/')[-2].split('_')[1:])
+        tag_index = str(item).split('/')[-2].split('_')[0]
+        tag_l.append([tag_name,int(tag_index)])
+        d_name_tag[tag_name]={'csv':item,'index':tag_index}
+
+    # get sorted list tags
+    sorted_tags = sorted(tag_l, key=lambda tup: tup[-1])
+    tags_sort = []
+    for item_t in sorted_tags:
+        tags_sort.append(item_t[0])
+
+    # Go over each bug commit and get the list of classes
+  #  df_bug.apply(get_miss_classes_applyer,out_dir=out_info,repo_path=project_path_repo,axis=1)
+
+    # make a comparison
+    res_csv = pt.walk_rec(out_info,[],'.csv')
+
+    for item in res_csv:
+        df_commit = pd.read_csv(item,index_col=0)
+        if len(df_commit)==0:
+            continue
+        tag_bug = df_commit['tag_bug'].iloc[0]
+        tag_bug = str(tag_bug).replace('-','_')
+        df_fp_res_tag_cur = pd.read_csv(d_name_tag[tag_bug]['csv'],names=['path'])
+        index = tags_sort.index(tag_name)
+        if index>0:
+            old_tag = tags_sort[index-1]
+            df_fp_res_tag_old = pd.read_csv(d_name_tag[old_tag]['csv'], names=['path'])
+            df_fp_res_tag_old['name'] = df_fp_res_tag_old['path'].apply(lambda x: path_to_package_name(None,x))
+        else:
+            df_fp_res_tag_old=None
+        df_fp_res_tag_cur['name'] = df_fp_res_tag_cur['path'].apply(lambda x: path_to_package_name(None, x))
+        df_commit['is_exists'] = df_commit.apply(is_exists_helper,df_cur=df_fp_res_tag_cur,df_old=df_fp_res_tag_old,axis=1)
+        df_commit.to_csv('{}_mod.csv'.format(str(item)[:-4]))
+
+        # get all mod file
+        res_mod(out_info)
+
+def res_mod(out_info):
+    res_mod = pt.walk_rec(out_info, [], 'mod.csv')
+    l_df = []
+    for item in res_mod:
+        l_df.append(pd.read_csv(item, index_col=0))
+    df_all = pd.concat(l_df)
+    x = df_all['is_exists'].value_counts()
+    print "missing class % \n {}".format(x)
+
+def is_exists_helper(row,df_cur,df_old):
+    class_name = row['name']
+
+    # try find the name in the cur df
+    res_cur = df_cur.loc[df_cur['name'] == class_name, 'path']
+    print len(res_cur)
+    if len(res_cur) == 0 :
+        res_old = df_old.loc[df_old['name'] == class_name, 'path']
+        if len(res_old)==0:
+            return 0
+
+    return 1
+
+
+def get_miss_classes_applyer(row,out_dir,repo_path):
+    '''
+    Go over each bug commit and get the list of classes
+    '''
+    commit_bug=row['parent']
+    commit_fix = row['commit']
+    bug_tag = row['tag_parent']
+    issue_id = row['issue']
+    index_bug = row['index_bug']
+
+    #checkout the buugy version
+    git_cmd = 'git checkout {}'.format(commit_bug)
+    print ge.run_GIT_command_and_log(repo_path,git_cmd,None,None,False)
+
+    # get classes from src
+    d_l=[]
+    res = pt.walk_rec('{}/src'.format(repo_path),[],'.java')
+    for item_java in res:
+        class_name = pt.path_to_package('org',item_java,-5)
+        d_l.append({'class_path':item_java,'name':class_name,'tag_bug':bug_tag,'commit_bug':commit_bug})
+    df = pd.DataFrame(d_l)
+    df.to_csv('{}/{}_{}.csv'.format(out_dir,issue_id,index_bug))
+
+
+
+
+def xgb_FP_wrapper(info_weka_dir,results_csv,mode='most',out_dir=None):
+    '''
+    this function is mereging the name file with the pred file on the XGBoost model
+    '''
+    # get the info from the Weka dir
+    dico_info = get_weka_info(info_weka_dir,mode)
+
+    # get the results from the FP-Model
+    d_results={}
+    csvz_res = pt.walk_rec(results_csv,[],'.csv')
+    for item in csvz_res :
+        file_name = str(item).split('/')[-1][:-4]
+        proj_minor_name = str(file_name).split('_CONF_')[0][2:]
+        conf_ID = str(file_name).split('_CONF_')[1].split('_')[0]
+        d_results[file_name]={'conf':conf_ID,'file_pred':item,'minor':proj_minor_name}
+        if proj_minor_name in dico_info:
+            name_path = dico_info[proj_minor_name]['name']
+            d_results[file_name]['name']=name_path
+        else:
+            print '[Error] MISSING --> {}'.format(proj_minor_name)
+
+    # the merge process
+    for ky in d_results.keys():
+        merge_xgboost_name_pred(d_results[ky]['name'],d_results[ky]['file_pred'],out_dir)
+
+
+def merge_xgboost_name_pred(name_file,pred_csv,out=None,debug=False):
+    name_file_i=str(pred_csv).split('/')[-1][:-4]
+    df_name = pd.read_csv(name_file,names=['path'])
+    df_pred = pd.read_csv(pred_csv,index_col=0)
+    assert len(df_name) == len(df_pred)
+    df = pd.concat([df_name, df_pred], axis=1)
+    assert len(df_name) == len(df)
+    df.drop(['name'], inplace=True, axis=1, errors='ignore')
+    df['FP'] = df['test_predictions'].apply(lambda x: x if x < 0 else x)
+    df['name'] = df['path'].apply(lambda x: path_to_package_name('', x))
+    size_s = len(df)
+    df = df.dropna()
+    if debug:
+        if size_s-len(df) > 0:
+            print "[Debug] from {} del num rows:\t{}".format(name_file_i,size_s-len(df))
+    if out is None:
+        df.to_csv(pred_csv)
+    else:
+        df.to_csv('{}/FP_{}.csv'.format(out,name_file_i))
+
+
+def get_weka_info(p_path,mode):
+    d_tags = {}
+    res = pt.walk_rec(p_path, [], '_{}'.format(mode), False)
+    arff_path, pred_1_path = None, None
+    for item in res:
+        if str(item).endswith('arff_{}'.format(mode)):
+            arff_path = item
+        elif str(item).endswith('pred_1_{}'.format(mode)):
+            pred_1_path = item
+    res_minor = pt.walk_rec(pred_1_path, [], '', False, lv=-1)
+    res_models = pt.walk_rec(arff_path, [], '.arff')
+    for item in res_minor:
+        name = '_'.join(str(item).split('/')[-1].split('_')[1:])
+        index_sort = str(item).split('/')[-1].split('_')[0]
+        files_res = pt.walk_rec(item, [], '')
+        d_tags[name] = {'sort_index': index_sort}
+        d_tags[name]['model'] = None
+        for file_i in files_res:
+            if str(file_i).endswith('.csv'):
+                d_tags[name]['name'] = file_i
+            elif str(file_i).endswith(".arff"):
+                d_tags[name]['test'] = file_i
+    for item_arff in res_models:
+        name = str(item_arff).split('/')[-1].split('.')[0]
+        if name in d_tags:
+            d_tags[name]['model'] = item_arff
+        else:
+            d_tags[name] = {'model': item_arff, 'test': None, 'name': None, 'sort_index': None}
+    return d_tags
+
+def rearrange_folder_conf_xgb(p_path_dir='/home/ise/bug_miner/XGB/Lang_DATA/csv_res/TEST'):
+    res_csv_all = pt.walk_rec(p_path_dir,[],'.csv')
+    for i in res_csv_all:
+        tmp=str(i).split('/')[-1].split('_')
+        num_conf= tmp[-2]
+        path_conf_dir = pt.mkdir_system(p_path_dir,'conf_{}'.format(num_conf),False)
+        os.system('mv {} {}'.format(i,path_conf_dir))
     exit()
+if __name__ == "__main__":
+    #rearrange_folder_conf_xgb('/home/ise/bug_miner/XGB/csv_res/TEST')
+    results_csvz = '/home/ise/bug_miner/XGB/Lang_DATA/csv_res/TEST'
+    weka_info = '/home/ise/bug_miner/commons-lang/FP/all_lang'
+    out_dir = '/home/ise/bug_miner/commons-lang/FP/xgb'
+
+
+    results_csvz = '/home/ise/bug_miner/XGB/csv_res/TEST'
+    weka_info ='/home/ise/bug_miner/commons-math/FP/all_math'
+    out_dir = None
+
+    #xgb_FP_wrapper(weka_info,results_csvz,out_dir=out_dir)
+    #exit()
+    #add_FP_val('commons-math')
+
 
     repo='/home/ise/bug_miner/commons-math/commons-math'
     db_Csv = '/home/ise/bug_miner/db_bugs/commons-math_db.csv'
@@ -207,12 +445,19 @@ if __name__ == "__main__":
     db_Csv = '/home/ise/bug_miner/db_bugs/commons-beanutils_db.csv'
     out = '/home/ise/bug_miner/commons-beanutils/out'
 
-    repo = '/home/ise/bug_miner/commons-lang/commons-lang'
-    db_Csv = '/home/ise/bug_miner/db_bugs/commons-lang_db.csv'
-    out = '/home/ise/bug_miner/commons-lang/out'
+    repo = '/home/ise/bug_miner/commons-dbutils/commons-dbutils'
+    db_Csv = '/home/ise/bug_miner/db_bugs/DBUTILS_1_1_RC2.csv'
+    out = '/home/ise/bug_miner/commons-dbutils'
 
+    repo='/home/ise/bug_miner/jenkins-artifactory-plugin/jenkins-artifactory-plugin'
+    db_Csv='/home/ise/bug_miner/db_bugs/artifactory_db.csv'
+    out='/home/ise/bug_miner/jenkins-artifactory-plugin'
 
-    #csv_commit_db(repo=repo,out_dir_path=out,csv_db=db_Csv)
+    repo='/home/ise/bug_miner/opennlp/opennlp'
+    db_Csv='/home/ise/bug_miner/db_bugs/opennlp_db.csv'
+    out='/home/ise/bug_miner/opennlp'
+
+    csv_commit_db(repo=repo,out_dir_path=out,csv_db=db_Csv)
 
 
     print("done--"*8)

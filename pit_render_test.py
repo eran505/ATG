@@ -124,7 +124,9 @@ def path_to_package(first, path, cut):
     arr_newer=[]
     dim = 0
     while (path.find(first, dim) != -1):
-        arr.append(path.find(first, dim))
+        res = path.find(first, dim)
+        if res>0:
+            arr.append(res)
         dim = path.find(first, dim) + len(first)
     if len(arr) != 1:
         for candidt in arr:

@@ -15,9 +15,9 @@ def compile_java_class(dir_to_compile, output_dir, dependent_dir):
     :param dependent_dir: .jar for the compilation process
     :return: output dir path
     """
-    if path.isdir(dir_to_compile) is False:
-        msg = "no dir : {}".format(dir_to_compile)
-        raise Exception(msg)
+    #if path.isdir(dir_to_compile) is False:
+    #    msg = "no dir : {}".format(dir_to_compile)
+    #    raise Exception(msg)
     out_dir = pt.mkdir_system(output_dir, 'test_classes')
     files = pt.walk_rec(dependent_dir, [], '.jar', lv=-2)
     files.append('/home/ise/eran/evosuite/jar/evosuite-standalone-runtime-1.0.5.jar')
@@ -45,6 +45,7 @@ def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org'):
     :return: None
     '''
     out = pt.mkdir_system(out_dir,'junit_output')
+    running_dir=None
     files_jars = pt.walk_rec(dir_jars, [], '.jar')
     files_jars.append('/home/ise/eran/evosuite/jar/evosuite-standalone-runtime-1.0.5.jar')
     files_jars.append(dir_class)
@@ -56,16 +57,19 @@ def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org'):
         split_arr = str(item).split('/')
         name = split_arr[-1].split('.')[0]
         split_arr[-1] = name
-        index = split_arr.index(prefix_package)
+        index = split_arr.index('test_classes')+1
         if index >= 0:
             package_string = '.'.join(split_arr[index:])
-            d[package_string] = item
+            running_dir='/'.join(split_arr[:index])
+            d[package_string] = {'item':item,'chdir':running_dir}
+
         else:
             msg = 'no prefix package {} in the path: {}'.format(prefix_package, item)
             raise Exception(msg)
     command_Junit = "java -cp {} org.junit.runner.JUnitCore".format(jars_string)
     d_res={}
     for ky in d:
+        os.chdir(d[ky]['chdir'])
         print ky
         final_command = "{} {}".format(command_Junit, ky)
         print final_command
@@ -222,17 +226,11 @@ def parser():
         get_static_dir(args[2])
     exit()
 if __name__ == "__main__":
-    parser()
-    fix_p='/home/ise/eran/eran_D4j/Lang_t=5/P_Lang_B_36_Mon_Aug_13_22_00_06_2018/fix_jar'
-    dir_compile='{}/org/apache/'.format(fix_p)
-    out_dir = '{}/out_test'.format(fix_p)
-    jar_dir='{}/jars/'.format(fix_p)
-    class_dir = '{}/test_classes'.format(fix_p)
-    get_static_dir('/home/ise/eran/eran_D4j/')
-    ##wrapper_har_all('/home/ise/eran/eran_D4j/')
-    dir_compile = '/home/ise/eran/eran_D4j/Lang_t=2/P_Lang_B_36_Mon_Aug_13_22_04_06_2018/Evo_Test/org.apache.commons.lang3.math/U_exp_tMon_Aug_13_22:04:26_2018_t=5_it=0/org/'
-    out_dir = '/home/ise/eran/eran_D4j/Lang_t=2/P_Lang_B_36_Mon_Aug_13_22_04_06_2018'
-    jar_dir = '/home/ise/eran/eran_D4j/Lang_t=2/P_Lang_B_36_Mon_Aug_13_22_04_06_2018/jar_dir'
-    class_dir = '/home/ise/Desktop/mock_ex/test_classes'
-    compile_java_class(dir_compile, out_dir, jar_dir)
-    #test_junit_commandLine(class_dir, jar_dir,out_dir)
+    #parser()
+    class_dir='/home/ise/bug_miner/opennlp/res/1212_170/EVOSUITE/U_exp_tTue_Feb_12_20:10:16_2019_t=3_it=0/opennlp/tools/util/featuregen/DictionaryFeatureGenerator_ESTest.java'
+    class_dir='/home/ise/bug_miner/opennlp/res/1212_170/EVOSUITE/U_exp_tTue_Feb_12_20:10:16_2019_t=3_it=0/opennlp/tools/util/featuregen/'
+    jar_dir='/home/ise/bug_miner/opennlp/res/1212_170/dep'
+    out_dir='/home/ise/bug_miner/opennlp/res/1212_170/out'
+    #compile_java_class(class_dir,out_dir,jar_dir)
+    test_class='/home/ise/bug_miner/opennlp/res/1212_170/out/test_classes'
+    test_junit_commandLine(test_class,jar_dir,out_dir,'opennlp')
