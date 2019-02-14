@@ -37,7 +37,7 @@ def compile_java_class(dir_to_compile, output_dir, dependent_dir):
     return out_dir
 
 
-def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org'):
+def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org',d_add=None):
     '''
     this function go over all the test clases and run the Junit test
     :param dir_class: 
@@ -79,7 +79,11 @@ def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org'):
         print stdout
         print "----stderr----"
         print stderr
-        d_res.append({'out':stdout,'err':stderr,'status':parser_std_out_junit(stdout),'class':ky})
+        d_tmp = {'out':stdout,'err':stderr,'status':parser_std_out_junit(stdout),'class':ky}
+        if d_add is not None:
+            for key_d in d_add.keys():
+                d_tmp[key_d]=d_add[key_d]
+        d_res.append(d_tmp)
         with open('{}/{}_out_test.txt'.format(out,ky),'w') as f:
             f.write("stdout:\n{}stderr:\n{}".format(stdout,stderr))
     for k in d_res:

@@ -86,7 +86,7 @@ def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
     return str_jarz
 
 
-def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=False,remove_dup=False,jarz=False,killable=False,pref='org'):
+def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=False,remove_dup=False,jarz=False,killable=False,pref='org',self_complie=True):
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
@@ -123,6 +123,14 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
             return None
     df = df.reindex(index=df.index[::-1])
     df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref,axis=1)
+
+    if self_complie:
+        res = pt.walk_rec(out,[],'report.csv')
+        l_df = []
+        for item in res:
+            l_df.append(pd.read_csv(item))
+        all_df = pd.concat(l_df)
+        all_df.to_csv("{}/all_report.csv".format(out))
 
 
 def start_where_stop_res(res_dir):
@@ -242,7 +250,7 @@ def get_all_poms_and_add_evo(repo):
     for item in res:
         add_evosuite_text(item,None)
 
-def self_complie_bulider_func(repo,dir_cur,prefix,suffix='fix'):
+def self_complie_bulider_func(repo,dir_cur,prefix,suffix='fix',bug_id=''):
     if os.path.isdir("{}/EVOSUITE".format(dir_cur)):
         d={}
         java_dirz = pt.walk_rec("{}/EVOSUITE".format(dir_cur),[],'',False,lv=-1)
@@ -257,6 +265,7 @@ def self_complie_bulider_func(repo,dir_cur,prefix,suffix='fix'):
     else:
         print "[error] no dir {}/EVOSUITE".format(dir_cur)
         return None
+    d_adder = {'bug_id':str(dir_cur).split('/')[-1],'mode':suffix}
     res,path_jarz=package_mvn_cycle(repo)
     remove_junit(path_jarz)
     if path_jarz is None:
@@ -267,7 +276,7 @@ def self_complie_bulider_func(repo,dir_cur,prefix,suffix='fix'):
         out_i_complie = pt.mkdir_system(out_path_complie, d[ky_i]['name'])
         out_i_junit = pt.mkdir_system(out_path_junit, d[ky_i]['name'])
         indep_bulilder.compile_java_class(d[ky_i]['path2'], out_i_complie, path_jarz)
-        report_d = indep_bulilder.test_junit_commandLine("{}/{}".format(out_i_complie,'test_classes'), path_jarz, out_i_junit, prefix_package=prefix)
+        report_d = indep_bulilder.test_junit_commandLine("{}/{}".format(out_i_complie,'test_classes'), path_jarz, out_i_junit, prefix_package=prefix,d_add=d_adder)
     print "end"
 
 
