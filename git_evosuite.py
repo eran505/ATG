@@ -10,7 +10,7 @@ import shlex
 import budget_generation as bg
 import pandas as pd
 import xml.etree.ElementTree as ET
-
+import independent_builder as indep_bulilder
 '''
 -pl, --projects
         Build specified reactor projects instead of all projects
@@ -122,14 +122,14 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
             print "No killable.csv file as been found !!!! --> path = {}".format(p_csv)
             return None
     df = df.reindex(index=df.index[::-1])
-    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref ,axis=1)
+    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref,axis=1)
 
 
 def start_where_stop_res(res_dir):
     dirs_res = pt.walk_rec(res_dir,[],'',False,lv=-1,full=False)
     return dirs_res
 
-def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_str='org'):
+def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_str='org',self_complie=True):
     fix=False
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
@@ -153,12 +153,21 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_st
     target = row['target']
     if os.path.isdir("{}/{}_{}".format(out_dir,bug_name,index_bug)):
         fix=True
-    out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),not_fix)
-    out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE',not_fix)
+    else:
+        if self_complie:
+            return
+
+    out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),False)
+    out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE',False)
     path_to_pom = "{}/pom.xml".format(repo)
 
     print "module={} \t tag_p = {} \t commit_p ={}".format(module, tag_parent, commit_fix)
     checkout_version(commit_fix, repo, out_dir_new)
+
+    if self_complie:
+        self_complie_bulider_func(repo,"{}/{}_{}".format(out_dir,bug_name,index_bug),prefix_str)
+        return
+
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
     if os.path.isfile('{}/pom.xml'.format(repo)) is False:
         return
@@ -173,11 +182,17 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_st
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'install -DskipTests=true', out_log)
 
+
+
+
     # Get all jars dependency
     str_dependency=''
     if jarz:
-        mvn_command(repo, module, 'package', out_log)
-        str_dependency = dependency_getter(repo,dir_jars='lib')
+        res,path_dep = package_mvn_cycle(repo)
+        if path_dep is None:
+            print "[Error] cant make jarzz"
+            return
+        str_dependency=':'.join(res)
 
     discover_dir_repo('{}/target'.format(repo_look), p_name, is_test=False)
 
@@ -191,11 +206,10 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_st
     # Run Evosuite generation mode
 
     # add Evosuite to pom xml
-    #add_evosuite_text(path_to_pom, None)
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '70', '2', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '2', '1', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
@@ -223,6 +237,34 @@ def get_all_poms_and_add_evo(repo):
     res = pt.walk_rec(repo,[],'pom.xml')
     for item in res:
         add_evosuite_text(item,None)
+
+def self_complie_bulider_func(repo,dir_cur,prefix):
+    if os.path.isdir("{}/EVOSUITE".format(dir_cur)):
+        d={}
+        java_dirz = pt.walk_rec("{}/EVOSUITE".format(dir_cur),[],'',False,lv=-1)
+        for item in java_dirz:
+            if os.path.isdir("{}/{}".format(item,prefix)):
+                name_folder = str(item).split('/')[-1]
+                tmp = pt.walk_rec("{}/{}".format(item,prefix),[],'.java')
+                path2= '/'.join(str(tmp[0]).split('/')[:-1])
+                tmp= str(name_folder).split('_')
+                name_folder = 'test_suite_t_{}_it_{}'.format(tmp[-2].split('=')[1],tmp[-1].split('=')[1])
+                d[name_folder]={'name':name_folder,'path':"{}/{}/*".format(item,prefix),'path2':'{}/*'.format(path2)}
+    else:
+        print "[error] no dir {}/EVOSUITE".format(dir_cur)
+        return None
+    res,path_jarz=package_mvn_cycle(repo)
+    if path_jarz is None:
+        return
+    out_path_complie = pt.mkdir_system(dir_cur,'complie_out')
+    out_path_junit = pt.mkdir_system(dir_cur, 'junit_out')
+    for ky_i in d.keys():
+        out_i_complie = pt.mkdir_system(out_path_complie, d[ky_i]['name'])
+        out_i_junit = pt.mkdir_system(out_path_junit, d[ky_i]['name'])
+        indep_bulilder.compile_java_class(d[ky_i]['path2'], out_i_complie, path_jarz)
+        report_d = indep_bulilder.test_junit_commandLine("{}/{}".format(out_i_complie,'test_classes'), path_jarz, out_i_junit, prefix_package=prefix)
+    print "end"
+
 
 def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix'):
     p_name = str(mvn_repo).split('/')[-1]
@@ -352,12 +394,25 @@ def checkout_version(commit, repo, log_dir, clean=False):
     print "[OS] {}".format(command_git)
 
 
-def mvn_command(repo, module, command_mvn='clean', log_dir=None):
+def package_mvn_cycle(repo,folder_name='libb'):
+    # mvn dependency:copy-dependencies -DskipTests=true -DoutputDirectory=${project.build.directory}/lib
+    # make a dir lib with all projects dep
+    mvn_command_str='dependency:copy-dependencies -DskipTests=true -DoutputDirectory={0}/{1}'.format(repo,folder_name)
+    print "[mvn] {}".format(mvn_command_str)
+    mvn_command(repo,None,mvn_command_str,str_command='')
+
+    if os.path.isdir("{}/{}".format(repo,folder_name)) is False:
+        print '[Error] maven did not crate the dependencies folder'
+        return None,None
+    res = pt.walk_rec("{}/{}".format(repo,folder_name),[],'.jar')
+    return res,"{}/{}".format(repo,folder_name)
+
+def mvn_command(repo, module, command_mvn='clean', log_dir=None,str_command='fn'):
     os.chdir(repo)
     if module is not None and str(module).__contains__('-'):
         command_mvn_str = 'mvn {} -pl {} -am -fn'.format(command_mvn, module)
     else:
-        command_mvn_str = 'mvn {} -fn'.format(command_mvn)
+        command_mvn_str = 'mvn {} {}'.format(command_mvn,str_command)
     process = Popen(shlex.split(command_mvn_str), stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
     if log_dir is None:
@@ -861,7 +916,7 @@ def parser():
         elif project == 'tika':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p)
+            csv_bug_process(project, repo_path, out_p,jarz=True,killable=False)
         elif project == 'evosuite':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project,killable=False)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -882,10 +937,10 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp')
-        elif project == 'accumulo':
+        elif project == 'jenkins-artifactory-plugin':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,jarz=True)
+            csv_bug_process(project, repo_path, out_p,jarz=True,killable=False)
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
             #out_p = '{}/{}/res'.format(dir_bug_miner, project)

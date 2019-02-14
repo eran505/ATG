@@ -67,7 +67,7 @@ def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org'):
             msg = 'no prefix package {} in the path: {}'.format(prefix_package, item)
             raise Exception(msg)
     command_Junit = "java -cp {} org.junit.runner.JUnitCore".format(jars_string)
-    d_res={}
+    d_res=[]
     for ky in d:
         os.chdir(d[ky]['chdir'])
         print ky
@@ -79,13 +79,23 @@ def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org'):
         print stdout
         print "----stderr----"
         print stderr
-        d_res[ky]={'out':stdout,'err':stderr,'status':parser_std_out_junit(stdout)}
+        d_res.append({'out':stdout,'err':stderr,'status':parser_std_out_junit(stdout),'class':ky})
         with open('{}/{}_out_test.txt'.format(out,ky),'w') as f:
             f.write("stdout:\n{}stderr:\n{}".format(stdout,stderr))
-    for k in d_res.keys():
-        print "{} : {}".format(k,d_res[k])
+    for k in d_res:
+        print "{}".format(k)
+    reporting_csv(out_dir,d_res)
     return d_res
 
+
+def reporting_csv(path_p,d_res,name_file='report'):
+    df=pd.DataFrame(d_res)
+    if os.path.isfile('{}/{}.csv'.format(path_p,name_file)) is False:
+        df.to_csv('{}/{}.csv'.format(path_p,name_file))
+    else:
+        df_all = pd.read_csv('{}/{}.csv'.format(path_p,name_file))
+        df_merg = pd.concat(df_all,df)
+        df_merg.to_csv('{}/{}.csv'.format(path_p, name_file))
 
 def parser_std_out_junit(string_sdout):
     ok_index = str(string_sdout).find('OK')
@@ -215,6 +225,7 @@ def get_static_dir(root):
 
 
 
+
 def parser():
     args=sys.argv
     print args
@@ -225,11 +236,14 @@ def parser():
     if comnd  == 'stat':
         get_static_dir(args[2])
     exit()
+
+
 if __name__ == "__main__":
     #parser()
     class_dir='/home/ise/bug_miner/opennlp/res/1212_170/EVOSUITE/U_exp_tTue_Feb_12_20:10:16_2019_t=3_it=0/opennlp/tools/util/featuregen/DictionaryFeatureGenerator_ESTest.java'
     class_dir='/home/ise/bug_miner/opennlp/res/1212_170/EVOSUITE/U_exp_tTue_Feb_12_20:10:16_2019_t=3_it=0/opennlp/tools/util/featuregen/'
     jar_dir='/home/ise/bug_miner/opennlp/res/1212_170/dep'
+    jar_dir='/home/ise/bug_miner/opennlp/opennlp/libb'
     out_dir='/home/ise/bug_miner/opennlp/res/1212_170/out'
     #compile_java_class(class_dir,out_dir,jar_dir)
     test_class='/home/ise/bug_miner/opennlp/res/1212_170/out/test_classes'
