@@ -955,9 +955,15 @@ def parser():
             add_loc(sys.argv[2])
         elif sys.argv[1] == 'make_fp_raw':
             FP_dir_clean()
+        elif sys.argv[1] == 'clean':
+            res = pt.walk_rec('/home/ise/bug_miner/{}'.format(sys.argv[2]),[],'complie_out',False)
+            for item in res:
+                os.system('rm -r {}'.format(item))
+            res = pt.walk_rec('/home/ise/bug_miner/{}'.format(sys.argv[2]), [], 'junit_out',False)
+            for item in res:
+                os.system('rm -r {}'.format(item))
 
 if __name__ == "__main__":
-    sys.argv=["",'opennlp']
     parser()
     exit()
     #FP_dir_clean()
