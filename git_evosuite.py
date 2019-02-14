@@ -165,7 +165,11 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_st
     checkout_version(commit_fix, repo, out_dir_new)
 
     if self_complie:
-        self_complie_bulider_func(repo,"{}/{}_{}".format(out_dir,bug_name,index_bug),prefix_str)
+        self_complie_bulider_func(repo,"{}/{}_{}".format(out_dir,bug_name,index_bug),prefix_str,suffix='fixed')
+        checkout_version(commit_fix, repo, out_dir_new, clean=True)
+        checkout_version(commit_buggy, repo, out_dir_new)
+        self_complie_bulider_func(repo, "{}/{}_{}".format(out_dir, bug_name, index_bug), prefix_str,suffix='buggy')
+        checkout_version(commit_buggy, repo, out_dir_new, clean=True)
         return
 
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
@@ -238,7 +242,7 @@ def get_all_poms_and_add_evo(repo):
     for item in res:
         add_evosuite_text(item,None)
 
-def self_complie_bulider_func(repo,dir_cur,prefix):
+def self_complie_bulider_func(repo,dir_cur,prefix,suffix='fix'):
     if os.path.isdir("{}/EVOSUITE".format(dir_cur)):
         d={}
         java_dirz = pt.walk_rec("{}/EVOSUITE".format(dir_cur),[],'',False,lv=-1)
@@ -256,8 +260,8 @@ def self_complie_bulider_func(repo,dir_cur,prefix):
     res,path_jarz=package_mvn_cycle(repo)
     if path_jarz is None:
         return
-    out_path_complie = pt.mkdir_system(dir_cur,'complie_out')
-    out_path_junit = pt.mkdir_system(dir_cur, 'junit_out')
+    out_path_complie = pt.mkdir_system(dir_cur,'complie_out_{}'.format(suffix))
+    out_path_junit = pt.mkdir_system(dir_cur, 'junit_out_{}'.format(suffix))
     for ky_i in d.keys():
         out_i_complie = pt.mkdir_system(out_path_complie, d[ky_i]['name'])
         out_i_junit = pt.mkdir_system(out_path_junit, d[ky_i]['name'])
