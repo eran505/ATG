@@ -258,6 +258,7 @@ def self_complie_bulider_func(repo,dir_cur,prefix,suffix='fix'):
         print "[error] no dir {}/EVOSUITE".format(dir_cur)
         return None
     res,path_jarz=package_mvn_cycle(repo)
+    remove_junit(path_jarz)
     if path_jarz is None:
         return
     out_path_complie = pt.mkdir_system(dir_cur,'complie_out_{}'.format(suffix))
@@ -268,6 +269,14 @@ def self_complie_bulider_func(repo,dir_cur,prefix,suffix='fix'):
         indep_bulilder.compile_java_class(d[ky_i]['path2'], out_i_complie, path_jarz)
         report_d = indep_bulilder.test_junit_commandLine("{}/{}".format(out_i_complie,'test_classes'), path_jarz, out_i_junit, prefix_package=prefix)
     print "end"
+
+
+def remove_junit(path,path_to_junit='/home/ise/eran/evosuite/junit-4.12.jar'):
+    res = pt.walk_rec(path,[],'junit')
+    res = [x for x in res if str(x).endswith('.jar')]
+    for item in res:
+        os.system('rm {}'.format(item))
+    os.system('cp {} {}'.format(path_to_junit,path))
 
 
 def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix'):
@@ -964,6 +973,7 @@ def parser():
                 os.system('rm -r {}'.format(item))
 
 if __name__ == "__main__":
+    #sys.argv=['','opennlp']
     parser()
     exit()
     #FP_dir_clean()
