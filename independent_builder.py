@@ -1,6 +1,7 @@
 from os import path, system
 from subprocess import Popen, PIPE, check_call, check_output
 import pit_render_test as pt
+from csv_D4J_headler import diff_function,get_regex_res
 import subprocess
 import shlex
 import sys
@@ -228,6 +229,47 @@ def get_static_dir(root):
     df.to_csv('{}/static.csv'.format(root))
 
 
+def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
+    d_start={}
+    d={'bug':{},'fix':{}}
+    res_fix = pt.walk_rec(root_dir_fix,[],'.txt')
+    res_bug = pt.walk_rec(root_dir_bug, [], '.txt')
+    for item_fix in res_fix:
+        name=str(item_fix).split('/')[-1][:-4]
+        d_start[name]={'fix':item_fix}
+    for item_bug in res_bug:
+        name_bug = str(item_bug).split('/')[-1][:-4]
+        if name_bug in d_start:
+            d_start[name_bug]['bug']=item_bug
+        else:
+            d_start[name_bug]={'bug':item_bug}
+    d_both = {}
+    for ky in d_start:
+        if 'bug' in d_start[ky]  and 'fix' in d_start[ky]:
+            d_both[ky]={'bug':d_start[ky]['bug'],'fix':d_start[ky]['fix']}
+   # print "missing --> {}".format(len(d_start)-len(d_both))
+
+    for key_i in d_both.keys():
+        diff_bug, diff_fix = diff_function(d_both[key_i]['bug'],d_both[key_i]['fix'])
+        if len('Time: 0.226x')<len(diff_bug):
+            print 'yy'
+            print diff_bug
+        if len('Time: 0.226x') <len( diff_fix):
+            print 'xx'
+            print diff_fix
+        d_both[key_i]['bug']={}
+        d_both[key_i]['fix'] = {}
+        d_both[key_i]['bug']['diff'] = diff_bug
+        d_both[key_i]['fix']['diff'] = diff_fix
+        d_both[key_i]['fix']['tests'] = ':'.join(get_regex_res(diff_fix, 'test\d+'))
+        d_both[key_i]['bug']['tests'] = ':'.join(get_regex_res(diff_bug, 'test\d+'))
+        d_both[key_i]['bug']['class'] = ':'.join(get_regex_res(diff_bug,'---.+ESTest',4))
+        d_both[key_i]['fix']['class'] = ':'.join(get_regex_res(diff_fix,'^---.+ESTest',4))
+        if len(d_both[key_i]['fix']['tests']) == 0:
+            d_both[key_i]['fix']['tests']='-'
+        if len(d_both[key_i]['bug']['tests']) == 0:
+            d_both[key_i]['bug']['tests'] = '-'
+
 
 
 def parser():
@@ -243,6 +285,14 @@ def parser():
 
 
 if __name__ == "__main__":
+
+    res = pt.walk_rec('/home/ise/bug_miner/opennlp/res',[],'',False,lv=-1)
+    for item in res:
+        p_bug='{}/junit_out_buggy/test_suite_t_70_it_0/junit_output'.format(item)
+        p_fix='{}/junit_out_fixed/test_suite_t_70_it_0/junit_output'.format(item)
+        if os.path.isdir(p_bug) and os.path.isdir(p_fix):
+            get_diff_fix_buggy(p_bug,p_fix)
+    exit()
     #parser()
     class_dir='/home/ise/bug_miner/opennlp/res/1212_170/EVOSUITE/U_exp_tTue_Feb_12_20:10:16_2019_t=3_it=0/opennlp/tools/util/featuregen/DictionaryFeatureGenerator_ESTest.java'
     class_dir='/home/ise/bug_miner/opennlp/res/1212_170/EVOSUITE/U_exp_tTue_Feb_12_20:10:16_2019_t=3_it=0/opennlp/tools/util/featuregen/'

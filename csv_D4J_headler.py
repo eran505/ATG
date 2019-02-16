@@ -67,6 +67,7 @@ def get_deff(dir_path):
 
 
 
+
 def get_regex_res(string_search, pattern,cut=0):
     tmp = re.compile(r'{}'.format(pattern)).search(string_search)
     arr = []

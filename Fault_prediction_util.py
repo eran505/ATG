@@ -42,7 +42,7 @@ def csv_commit_db(csv_db,repo,out_dir_path,is_max=True,is_test=True,only_java=Tr
     df['date_commit'] = pd.to_datetime(df['date_commit'])
     df["module"] = np.nan
     # make path to package name
-    df['fail_component'] = df['component_path'].apply(lambda x: '.'.join(str(pt.path_to_package('opennlp', x, -5)).split('\\')))
+    df['fail_component'] = df['component_path'].apply(lambda x: '.'.join(str(pt.path_to_package('org', x, -5)).split('\\')))
     df['package'] = df['fail_component'].apply(lambda x: '.'.join(str(x).split('.')[:-1]))
 
     # sorted DF
@@ -453,9 +453,9 @@ if __name__ == "__main__":
     db_Csv='/home/ise/bug_miner/db_bugs/artifactory_db.csv'
     out='/home/ise/bug_miner/jenkins-artifactory-plugin'
 
-    repo='/home/ise/bug_miner/opennlp/opennlp'
-    db_Csv='/home/ise/bug_miner/db_bugs/opennlp_db.csv'
-    out='/home/ise/bug_miner/opennlp'
+    repo='/home/ise/bug_miner/commons-net/commons-net'
+    db_Csv='/home/ise/bug_miner/db_bugs/net_db.csv'
+    out='/home/ise/bug_miner/commons-net'
 
     csv_commit_db(repo=repo,out_dir_path=out,csv_db=db_Csv)
 

@@ -86,7 +86,7 @@ def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
     return str_jarz
 
 
-def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=False,remove_dup=False,jarz=False,killable=False,pref='org',self_complie=True):
+def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=False,remove_dup=False,jarz=True,killable=False,pref='org',self_complie=False):
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
@@ -122,7 +122,7 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
             print "No killable.csv file as been found !!!! --> path = {}".format(p_csv)
             return None
     df = df.reindex(index=df.index[::-1])
-    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref,axis=1)
+    df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref,self_complie=self_complie,axis=1)
 
     if self_complie:
         res = pt.walk_rec(out,[],'report.csv')
@@ -137,7 +137,7 @@ def start_where_stop_res(res_dir):
     dirs_res = pt.walk_rec(res_dir,[],'',False,lv=-1,full=False)
     return dirs_res
 
-def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_str='org',self_complie=True):
+def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_complie=True):
     fix=False
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
@@ -157,6 +157,7 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_st
         if index_bug not in list_index:
             return
     ##########
+
 
     target = row['target']
     if os.path.isdir("{}/{}_{}".format(out_dir,bug_name,index_bug)):
@@ -191,8 +192,11 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_st
     rm_exsiting_test(repo_look , p_name)
 
     out_log = pt.mkdir_system(out_dir_new, 'LOG', False)
-    mvn_command(repo, module, 'clean', out_log)
-    mvn_command(repo, module, 'install -DskipTests=true', out_log)
+    # reset the commit
+    checkout_version(commit_fix, repo, out_dir_new)
+
+    mvn_command(repo, module, 'clean', out_log,'')
+    mvn_command(repo, module, 'install -DskipTests=true', out_log,'')
 
 
 
@@ -204,6 +208,7 @@ def applyer_bug(row, out_dir, repo,list_index,not_fix=False, jarz=True,prefix_st
         if path_dep is None:
             print "[Error] cant make jarzz"
             return
+        res = clean_jar_path(res)
         str_dependency=':'.join(res)
 
     discover_dir_repo('{}/target'.format(repo_look), p_name, is_test=False)
@@ -408,7 +413,7 @@ def checkout_version(commit, repo, log_dir, clean=False):
     mange the checkout process
     '''
     if clean:
-        command_git = 'git reset --hard {}'.format(commit)
+        command_git = 'git reset --hard'.format(commit)
         run_GIT_command_and_log(repo, command_git, log_dir, 'checkout_clean')
     else:
         command_git = 'git checkout {}'.format(commit)
@@ -429,7 +434,7 @@ def package_mvn_cycle(repo,folder_name='libb'):
     res = pt.walk_rec("{}/{}".format(repo,folder_name),[],'.jar')
     return res,"{}/{}".format(repo,folder_name)
 
-def mvn_command(repo, module, command_mvn='clean', log_dir=None,str_command='fn'):
+def mvn_command(repo, module, command_mvn='clean', log_dir=None,str_command=''):
     os.chdir(repo)
     if module is not None and str(module).__contains__('-'):
         command_mvn_str = 'mvn {} -pl {} -am -fn'.format(command_mvn, module)
@@ -505,6 +510,21 @@ def replacer(str_input, str_look_for, str_append_after, d):
         str_input = str_input[:index] + str_ap + str_input[index:]
     return str_input, True
 
+
+def clean_jar_path(res):
+    fin_res = []
+    add_to = True
+    to_del_remove = ['evosuite-standalone-runtime', 'hamcrest-core', 'junit']
+    for item in res:
+        add_to=True
+        jar_name = str(item).split('/')[-1]
+        for x in to_del_remove:
+            if str(jar_name).__contains__(x):
+                add_to = False
+                break
+        if add_to:
+            fin_res.append(item)
+    return fin_res
 
 def clean_version_tag(str_input, start_index):
     '''
@@ -959,6 +979,10 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp')
+        elif project == 'commons-net':
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_bug_process(project, repo_path, out_p,killable=False)
         elif project == 'jenkins-artifactory-plugin':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -982,7 +1006,7 @@ def parser():
                 os.system('rm -r {}'.format(item))
 
 if __name__ == "__main__":
-    #sys.argv=['','opennlp']
+    sys.argv=['','commons-net']
     parser()
     exit()
     #FP_dir_clean()
