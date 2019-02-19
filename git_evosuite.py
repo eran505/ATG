@@ -703,7 +703,9 @@ def pars_xml_test_file(path_file, dico=None):
     """
     parsing the xml tree and return the results
     """
-
+    print "path_file:= {}".format(path_file)
+    if path_file == '/home/ise/bug_miner/commons-net/res/148_12/Result/U_exp_tTue_Feb_19_14:50:26_2019_t=70_it=1_fixed/TEST-org.apache.commons.net.ftp.FTPSSocketFactory_ESTest.xml':
+        print ""
     name_test = str(path_file).split('/')[-1][:-11]  # remove xml + _ESTest
     d = {"err": float(0), "fail": float(0), "bug": 'no', 'class_err': [], 'class_fail': []}
     d['name'] = name_test
@@ -728,14 +730,22 @@ def pars_xml_test_file(path_file, dico=None):
                 if len(elt._children) > 0:
                     for msg in elt:
                         if msg.tag == 'error':
-                            class_name = elt.attrib['classname']
-                            test_case_number = elt.attrib['name']
-                            d['class_err'].append("{}_{}".format(class_name, test_case_number))
+                            if 'classname' not in elt.attrib:
+                                name_tmp = elt.attrib['name']
+                                d['class_fail'] = "{}_{}".format('.'.join(str(name_tmp).split('.')[:-1]),str(name_tmp).split('.')[-1])
+                            else:
+                                class_name = elt.attrib['classname']
+                                test_case_number = elt.attrib['name']
+                                d['class_err'].append("{}_{}".format(class_name, test_case_number))
                             d['err'] = d['err'] + 1
                         elif msg.tag == 'failure':
-                            class_name = elt.attrib['classname']
-                            test_case_number = elt.attrib['name']
-                            d['class_fail'].append("{}_{}".format(class_name, test_case_number))
+                            if 'classname' not in elt.attrib:
+                                name_tmp = elt.attrib['name']
+                                d['class_fail'] = "{}_{}".format('.'.join(str(name_tmp).split('.')[:-1]),str(name_tmp).split('.')[-1])
+                            else:
+                                class_name = elt.attrib['classname']
+                                test_case_number = elt.attrib['name']
+                                d['class_fail'].append("{}_{}".format(class_name, test_case_number))
                             d['fail'] = d['fail'] + 1
     d['class_fail'] = '--'.join(d['class_fail'])
     d['class_err'] = '--'.join(d['class_err'])
@@ -1006,7 +1016,7 @@ def parser():
                 os.system('rm -r {}'.format(item))
 
 if __name__ == "__main__":
-    #sys.argv=['','res','commons-net']
+    #sys.argv=['','add_loc','commons-net']
     parser()
     exit()
     #FP_dir_clean()
