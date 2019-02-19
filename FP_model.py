@@ -351,12 +351,10 @@ def manger(d_tags):
     global name_fig
     l_d=[]
     for ky in d_tags:
-        d_param = get_dict_pram('/home/ise/bug_miner/XGB/conf/conf_30.csv')
+        d_param = get_dict_pram('/home/ise/bug_miner/XGB/conf/conf.csv')
         continue_falg=0
         print "**" * 100
         print "TAG:\t{}".format(ky)
-        if ky != 'MATH_3_0':
-            continue
         if d_tags[ky]['model'] is None or d_tags[ky]['test'] is None:
             continue
         for ky_p in d_param.keys():
