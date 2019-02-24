@@ -144,6 +144,8 @@ def add_FP_val(project,xgb=True):
                 tag_name ='_'.join(str(item).split('/')[-1].split('_CONF_')[0].split('_')[1:])
             elif project == 'commons-lang':
                 tag_name = '_'.join(str(item).split('/')[-1].split('_CONF_')[0].split('_')[2:])
+            elif project == 'commons-net':
+                tag_name = '_'.join(str(item).split('/')[-1].split('_CONF_')[0].split('_')[2:])
         df_i['tag'] = tag_name
         print tag_name
         all_df_fps.append(df_i)
@@ -164,6 +166,7 @@ def add_FP_val(project,xgb=True):
     std_out,std_err = ge.run_GIT_command_and_log('{}/{}'.format(father_dir,project),git_command,None,None,False)
     arry_tag_sorted = str(std_out).split()
     arry_tag_sorted = [ str(x).replace('-','_') for x in arry_tag_sorted]
+    arry_tag_sorted.append('master')
 
     # make a Genric class path
     print list(res_exp)
@@ -422,19 +425,15 @@ def rearrange_folder_conf_xgb(p_path_dir='/home/ise/bug_miner/XGB/Lang_DATA/csv_
         os.system('mv {} {}'.format(i,path_conf_dir))
     exit()
 if __name__ == "__main__":
-    #rearrange_folder_conf_xgb('/home/ise/bug_miner/XGB/csv_res/TEST')
-    results_csvz = '/home/ise/bug_miner/XGB/Lang_DATA/csv_res/TEST'
-    weka_info = '/home/ise/bug_miner/commons-lang/FP/all_lang'
-    out_dir = '/home/ise/bug_miner/commons-lang/FP/xgb'
+    #rearrange_folder_conf_xgb('/home/ise/bug_miner/commons-net/FP/xgb')
 
-
-    results_csvz = '/home/ise/bug_miner/XGB/csv_res/TEST'
-    weka_info ='/home/ise/bug_miner/commons-math/FP/all_math'
-    out_dir = None
+    results_csvz = '/home/ise/bug_miner/XGB/NET/TEST'
+    weka_info = '/home/ise/bug_miner/commons-net/FP/all_net'
+    out_dir = '/home/ise/bug_miner/commons-net/FP/xgb'
 
     #xgb_FP_wrapper(weka_info,results_csvz,out_dir=out_dir)
-    #exit()
-    #add_FP_val('commons-math')
+    add_FP_val('commons-net')
+    exit()
 
 
     repo='/home/ise/bug_miner/commons-math/commons-math'

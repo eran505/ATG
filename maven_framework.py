@@ -1,5 +1,5 @@
 import os.path
-
+import pandas as pd
 
 class tester_gen:
 
@@ -37,4 +37,9 @@ class tester_gen:
 
 
 if __name__ == "__main__":
+    df =pd.read_csv('/home/ise/bug_miner/db_bugs/commons-net_db.csv',names=['path','commit','id','loc'])
+    print len(df)
+    print list(df)
+    print df['id'].nunique()
+
     pass

@@ -226,7 +226,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '3', '1', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '75', '1', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
@@ -999,9 +999,9 @@ def parser():
             csv_bug_process(project, repo_path, out_p,jarz=True,killable=False)
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
-            out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_path_res = get_test_xml_csv(out_p)
-            df_path = make_csv_diff(csv_path_res)
+            #out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            #csv_path_res = get_test_xml_csv(out_p)
+            #df_path = make_csv_diff(csv_path_res)
             add_fulty_bug('{}/{}/tmp_df.csv'.format(dir_bug_miner, project),project)
         elif sys.argv[1]=='add_loc':
             add_loc(sys.argv[2])
@@ -1016,7 +1016,7 @@ def parser():
                 os.system('rm -r {}'.format(item))
 
 if __name__ == "__main__":
-    #sys.argv=['','add_loc','commons-net']
+    #sys.argv=['','commons-lang']
     parser()
     exit()
     #FP_dir_clean()

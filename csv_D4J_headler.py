@@ -962,7 +962,7 @@ def frange(x, y, jump):
 def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True,out=None):
     gamma_arr=[]
     list_d_ranking = []
-    intreval = 0.05
+    intreval = 0.01
     for num_val in frange(0,1+intreval,intreval):
         gamma_arr.append(num_val)
     #gamma_arr=[1,0]
@@ -1472,9 +1472,9 @@ if __name__ == "__main__":
     #helper()
 
     ###merger()
-   # get_bug_d4j_major(p_name='Math')
+    # get_bug_d4j_major(p_name='Math')
     #exit()
-    p_name_suffix='math'
+    p_name_suffix='lang'
     out='/home/ise/bug_miner/commons-{}'.format(p_name_suffix)
     project_arr=['/home/ise/bug_miner/commons-{}/exp_new_new.csv'.format(p_name_suffix)]
     for x in project_arr:
