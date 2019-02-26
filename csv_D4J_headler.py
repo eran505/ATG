@@ -1254,6 +1254,10 @@ def make_rep(row,val,count='count',sum='sum'):
         val=count_i
     if val <= count_i:
         Pr = float(sum_i)/float(count_i)
+        if Pr > 0 :
+            return 1
+        if Pr == 0 :
+            return 0
         res = pow((float(1)-Pr),float(val))
         res = 1 - res
         if res > 1:
@@ -1470,11 +1474,14 @@ if __name__ == "__main__":
     #exit()
     #rep_exp_new('Mockito')
     #helper()
-
+    p='lang'
+    res = pt.walk_rec('/home/ise/bug_miner/commons-{0}/commons-{0}/src/main/java/org'.format(p),[],'.java')
+    print len(res)
+    exit()
     ###merger()
     # get_bug_d4j_major(p_name='Math')
     #exit()
-    p_name_suffix='lang'
+    p_name_suffix='math'
     out='/home/ise/bug_miner/commons-{}'.format(p_name_suffix)
     project_arr=['/home/ise/bug_miner/commons-{}/exp_new_new.csv'.format(p_name_suffix)]
     for x in project_arr:

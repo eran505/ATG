@@ -11,7 +11,8 @@ import pandas as pd
 from scipy.io.arff import loadarff
 import xgboost as xgb
 from sklearn.metrics import auc, accuracy_score, confusion_matrix, roc_curve,mean_squared_error, precision_recall_curve, \
-    average_precision_score, mean_absolute_error, f1_score,roc_auc_score
+    average_precision_score, mean_absolute_error, f1_score,roc_auc_score,precision_score,recall_score
+
 import matplotlib.pyplot as plt
 from sklearn.utils.fixes import signature
 from sklearn import cross_validation
@@ -35,7 +36,8 @@ def main_func(test_arff, train_arff, valid_set, target_col='hasBug', under_sampl
     raw_tets = loadarff(test_arff)
     test_df = pd.DataFrame(raw_tets[0])
 
-
+    print (train_df[target].value_counts())
+    return None, None, None, None
     # cross_project_adding bugs:
     df_fault = None
     if cross_proj:
@@ -300,7 +302,7 @@ def converting_target(df):
     return df
 
 
-def helper_get_arrf_fiels(p_path='/home/ise/bug_miner/commons-math/FP/all_math', mode='most', validtion=True):
+def helper_get_arrf_fiels(p_path='/home/ise/bug_miner/commons-lang1432698/FP/all_lang', mode='most', validtion=True):
     d_tags = {}
     res = pt.walk_rec(p_path, [], '_{}'.format(mode), False)
     arff_path, pred_1_path = None, None
@@ -379,7 +381,7 @@ def manger(d_tags):
             d_res['top_ten']=" | ".join(top_ten)
             l_d.append(d_res)
     df=pd.DataFrame(l_d)
-    df.to_csv('/home/ise/bug_miner/XGB/res/res_3_0.csv')
+    #df.to_csv('/home/ise/bug_miner/XGB/res/res_3_0.csv')
 
 
 def get_dict_pram(path_p_conf='/home/ise/bug_miner/XGB/conf/conf.csv'):
@@ -602,7 +604,7 @@ def eval_random_forest(dir_p,name_file='testing_Tree'):
     df_res.to_csv('{}/RF_eval.csv'.format(dir_p))
 
 
-def eval_xgb_test_dir(dir_p,name_file='P_'):
+def eval_xgb_test_dir(dir_p,name_file='FP_'):
     res = pt.walk_rec(dir_p, [], name_file, True)
     res = [x for x in res if str(x).endswith('.csv')]
     df_l = []
@@ -628,18 +630,29 @@ def eval_xgb_test_dir(dir_p,name_file='P_'):
             continue
         mse_valid_test = mean_squared_error(df_valid['hasBug'], df_valid['test_predictions'])
         mse_buggy_test = mean_squared_error(df_bug['hasBug'], df_bug['test_predictions'])
+
+
+        #precsion_buggy = precision_score(df_bug['hasBug'], df_bug['test_predictions'])
+        #recall_buggy = recall_score(df_bug['hasBug'], df_bug['test_predictions'])
+#        F1_buggy = f1_score(df_bug['hasBug'], df_bug['test_predictions'])
         d_k={}
         for k in [10,20,30,100]:
             k_recall,k_precsion = metric_precsion_at_k(y_test,y_pred,k=k)
             d_k['k_{}_recall'.format(k)]=k_recall
             d_k['k_{}_precsion'.format(k)] = k_precsion
 
-        d_out = {'tag': tag_name, 'ROC': roc, 'conf': conf_num, 'MSE_Test_Bug': mse_buggy_test,
-         'MSE_Test_Valid': mse_valid_test,
+        print 'size buggy', len(df_bug)
+        print 'size vaild', len(df_valid)
+        print 'precntage vaild', float(len(df_valid))/float(len(df_bug)+len(df_valid)) *100.0
+        print 'precntage buggy', float(len(df_bug))/float(len(df_bug)+len(df_valid))*100.0
+
+        d_out = {'tag': tag_name, 'ROC': roc, 'conf': conf_num, 'MSE_Test_Bug': mse_buggy_test,'num_buggy':len(df_bug),'num_vaild':len(df_valid),'num_all':len(df_valid)+len(df_bug),
+         'MSE_Test_Valid': mse_valid_test, #'F1_score':F1_buggy,'precsion_buggy':precsion_buggy,'recall_buggy':recall_buggy,
          'area-PRC (buggy)': area, 'Average precision-recall score': Avg_PR}
 
         for d_k_key in d_k.keys():
             d_out[d_k_key]=d_k[d_k_key]
+
 
         print "TEST:\t bug   MSE = {}".format(((mse_buggy_test)))
         print "TEST:\t valid MSE = {}".format(((mse_valid_test)))
@@ -662,5 +675,8 @@ def metric_precsion_at_k(y_true,y_pred,k=20):
 if __name__ == "__main__":
     #eval_random_forest('/home/ise/bug_miner/commons-math/FP/Random_forest')
     #eval_xgb_test_dir('/home/ise/bug_miner/commons-lang/FP/best_FP/best')
+    #eval_xgb_test_dir('/home/ise/bug_miner/commons-math/FP/best_FP/best')
+    #eval_xgb_test_dir('/home/ise/bug_miner/commons-net/FP/best_FP/best')
+    #exit()
     helper_get_arrf_fiels()
     print "Done !!"

@@ -86,8 +86,11 @@ def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
     return str_jarz
 
 
-def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',oracle=False,remove_dup=False,jarz=True,killable=False,pref='org',self_complie=False):
+def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',
+                    oracle=True,remove_dup=False,jarz=True,killable=True,pref='org',self_complie=False):
+
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
+
     if os.path.isdir(repo_path) is False:
         repo_path_father = '/'.join(str(repo_path).split('/')[:-1])
         checkout_repo(repo_path_father, p_name)
@@ -114,7 +117,7 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
         print len(df)
     list_index = None
     if killable:
-        p_csv = '{}/{}/killable_index.csv'.format('/home/ise/bug_miner',p_name)
+        p_csv = '{}/killable_{}.csv'.format('/home/ise/eran/repo/ATG/tmp_files',p_name)
         if os.path.isfile(p_csv):
             df_index = pd.read_csv(p_csv)
             list_index = df_index['bug_id'].tolist()
@@ -226,7 +229,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '75', '1', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '5', '1', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
@@ -1016,7 +1019,7 @@ def parser():
                 os.system('rm -r {}'.format(item))
 
 if __name__ == "__main__":
-    #sys.argv=['','commons-lang']
+    sys.argv=['','commons-lang']
     parser()
     exit()
     #FP_dir_clean()
