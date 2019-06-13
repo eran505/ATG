@@ -267,23 +267,26 @@ def get_all_command(budget_time, seed, mem=1000):
     commands.append("-Dshow_progress=false")
     commands.append("-Dtest_comments=false")
     commands.append("-Dconfiguration_id=%s" % seed)
+
+    #new add
+    commands.append("-Dassertion_strategy=ALL")
+
     # commands.append("-Dsandbox=false") #TODO:???? (Execute tests in a sandbox environment)
 
     return " ".join(str(i) for i in commands)
 
-    commands.append("-Dreuse_leftover_time=true")
+#    commands.append("-Dreuse_leftover_time=true")
     # commands.append("-Dglobal_timeout=%s" % search)
-    commands.append("-Dinitialization_timeout=%s" % initialization)
-    commands.append("-Dminimization_timeout=%s" % minimization)
-    commands.append("-Dassertion_timeout=%s" % assertions)
-    commands.append("-Dextra_timeout=%s" % extra)
-    commands.append("-Djunit_check_timeout=%s" % junit)
-    commands.append("-Dwrite_junit_timeout=%s" % write_t)
+    #commands.append("-Dinitialization_timeout=%s" % initialization)
+    #commands.append("-Dminimization_timeout=%s" % minimization)
+    #commands.append("-Dassertion_timeout=%s" % assertions)
+    #commands.append("-Dextra_timeout=%s" % extra)
+    #commands.append("-Djunit_check_timeout=%s" % junit)
+    #commands.append("-Dwrite_junit_timeout=%s" % write_t)
 
     # commands.append("-Xmx%sm" %mem)
     # commands.append(("-mem %s" %mem))
 
-    return " ".join(str(i) for i in commands)
 
 
 def get_instance_bug_and_fix(bug_lis, fix_lis, delimiter):
