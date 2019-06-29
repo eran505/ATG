@@ -13,7 +13,7 @@ ATG="/home/ise/eran/repo/ATG/"
 
 
 
-sudo env "PATH=$PATH" python ${ATG}defects_lib.py d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 180 -r 90 -o /home/ise/eran/D4j/out/ -t package_only -p Math -k U
+sudo env "PATH=$PATH" python ${ATG}defects_lib.py d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 180 -r 90 -o /home/ise/eran/D4j/out/ -t target -p Math -k U
 
 
 
@@ -23,7 +23,7 @@ sudo env "PATH=$PATH" python ${ATG}defects_lib.py d4j -i /home/ise/eran/D4J/info
 #          '-b time budget\n' \
 #          '-l Lower bound time budget\n' \
 #          '-u Upper bound time budget\n' \
-#         '-t target class/package/all\n' \
+#         '-t target/package_only/package_rec\target\project\n' \
 #          '-c clean flaky test [T/F]\n' \
 #          '-d use defect4j framework\n' \
 #          '-k the csv fp file or U for uniform' \

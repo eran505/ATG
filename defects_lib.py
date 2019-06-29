@@ -2577,10 +2577,10 @@ if __name__ == "__main__":
     '''
     before_op()
 
-    #args ='py. d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 5 -r 90 -o /home/ise/eran/D4j/out/ -t package_only -p Math -k U'
+    #args ='py. d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 5 -r 90 -o /home/ise/eran/D4j/out/ -t test_trace -p Math -k U'
     #args = 'pp re_test /home/ise/eran/D4j/out/Math'
     #args = 'py map_test /home/ise/eran/D4j/out'
-    #args = 'py change_evo 6'
+    #args = 'py map_test'
     #sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)

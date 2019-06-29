@@ -239,7 +239,9 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
         d_diff_results = get_deff(dir_i)
 
         d = {'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget}
+        d['error_gen']=1
         if len(d_diff_results)>0:
+            d['error_gen'] = 0
             try:
                 buggy_test_case = str(d_diff_results['bug']['class']).split(':')
                 fixed_test_case = d_diff_results['fix']['class'].split(':')
@@ -254,6 +256,7 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
             for klass in fixed_test_case :
                 list_d.append({'project': project_id, 'father_dir':father_dir, 'bug_ID': bug_id, 'time_budget': time_budget, 'iteration_id':it_id,'dir':'fixed', 'class':klass[:-7]})
         else:
+
             list_d.append(d)
     df_faulty = get_all_faulty_comp_by_project(set_project)
     df_faulty['faulty_class'] = 1
