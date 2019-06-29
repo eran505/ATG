@@ -237,6 +237,7 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
             continue
         set_project.add(project_id)
         d_diff_results = get_deff(dir_i)
+
         d = {'project': project_id, 'bug_ID': bug_id, 'time_budget': time_budget}
         if len(d_diff_results)>0:
             try:
@@ -257,7 +258,7 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
     df_faulty = get_all_faulty_comp_by_project(set_project)
     df_faulty['faulty_class'] = 1
     df = pd.DataFrame(list_d)
-    #df.to_csv('{}/ALL_class_fail.csv'.format(out))
+    df.to_csv('{}/classes_fail.csv'.format(out))
     print list(df)
     print list(df_faulty)
     df = pd.merge(df,df_faulty,on=['bug_ID','project','class'],how="left")
@@ -1474,9 +1475,9 @@ if __name__ == "__main__":
     #exit()
     #rep_exp_new('Mockito')
     #helper()
-    p='lang'
-    res = pt.walk_rec('/home/ise/bug_miner/commons-{0}/commons-{0}/src/main/java/org'.format(p),[],'.java')
-    print len(res)
+   # p='lang'
+   # res = pt.walk_rec('/home/ise/bug_miner/commons-{0}/commons-{0}/src/main/java/org'.format(p),[],'.java')
+   # print len(res)
     exit()
     ###merger()
     # get_bug_d4j_major(p_name='Math')

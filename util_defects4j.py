@@ -13,6 +13,9 @@ def change_runtime_and_gen_jars(version='0'):
     elif version == '5':
         evo='evosuite-1.0.5'
         evo_rt='evosuite-standalone-runtime-1.0.5'
+    elif version == '6':
+        evo='evosuite-1.0.6'
+        evo_rt='evosuite-standalone-runtime-1.0.6'
     else:
         evo='evo_d4j'
         evo_rt = 'evo_d4j_rt'
@@ -224,6 +227,6 @@ def make_repo_of_test(root_dir='/home/ise/eran/JARS/JARS_D4J'):
 
 
 if __name__ == "__main__":
-    make_repo_of_test()
-    check_missing_fp_class()
+   # make_repo_of_test()
+   # check_missing_fp_class()
     print '--- util file py -----'

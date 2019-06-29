@@ -2409,7 +2409,7 @@ def re_test_OUT_dirs(root_father_out):
                            csv_fp_path=dico_parm['k'], scope_p=dico_parm['t'], info_d=dico_parm)
         obj_d4j.test_process(out_dir)
 
-def map_TEST(root_path):
+def map_TEST(root_path,debug=True):
     '''
     This function map all the tests in the root_dir and make CSV
     :param root_path:
@@ -2421,6 +2421,8 @@ def map_TEST(root_path):
         out_root = root_path[:-1]
     all_bug_dirs = pt.walk_rec(root_path,[],'P_',False,lv=-4)
     for bug_dir in all_bug_dirs:
+        if debug:
+            print ("analysing --> {}".format(bug_dir))
         father_dir = str(bug_dir).split('/')[-2]
         bug_id = str(bug_dir).split('/')[-1].split('_')[3]
         proj_id = str(bug_dir).split('/')[-1].split('_')[1]
@@ -2575,9 +2577,10 @@ if __name__ == "__main__":
     '''
     before_op()
 
-    #args ='py. d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 3 -r 1-2 -o /home/ise/eran/D4j/out/ -t package_only -p Time -k U'
+    #args ='py. d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 5 -r 90 -o /home/ise/eran/D4j/out/ -t package_only -p Math -k U'
     #args = 'pp re_test /home/ise/eran/D4j/out/Math'
-    #args = 'py map_test'
+    #args = 'py map_test /home/ise/eran/D4j/out'
+    #args = 'py change_evo 6'
     #sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)
