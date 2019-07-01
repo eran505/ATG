@@ -13,7 +13,7 @@ ATG="/home/ise/eran/repo/ATG/"
 
 
 
-sudo env "PATH=$PATH" python ${ATG}defects_lib.py d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 180 -r 1-27 -o /home/ise/eran/D4j/out/ -t test_trace -p Time -k U
+sudo env "PATH=$PATH" python ${ATG}defects_lib.py d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -q 4 -b 180 -r 1-106 -o /home/ise/eran/D4j/out/ -t target -p Math -k U
 
 
 

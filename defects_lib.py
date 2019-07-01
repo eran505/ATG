@@ -1949,6 +1949,7 @@ def parser_args(arg):
             '-M mode of the allocation [FP/U]\n' \
             '-T Test again all the dir\n ' \
             '-F Fix\n' \
+            '-q replication number\n' \
             '-P pass for sudo\n'
     dico_args = {}
     array = arg
@@ -1968,26 +1969,28 @@ def parser_args(arg):
     return dico_args
 
 
-def replace_script(d4j_path):
+def replace_script(d4j_path,file_name):
     '''
     retplcae the scrip pl TODO: change the harcoded path repo ATG
     '''
     if d4j_path[-1] != '/':
         d4j_path = d4j_path + '/'
-    comaand_rm = 'rm {}run_evosuite.pl'.format(d4j_path)
+    comaand_rm = 'rm {}{}'.format(d4j_path,file_name)
     print "[OS] {}".format(comaand_rm)
     cwd = '/home/ise/eran/repo/ATG'
-    comaand_cp = 'cp {}/D4J/script/run_evosuite.pl {}'.format(cwd, d4j_path)
+    comaand_cp = 'cp {0}/D4J/script/{2} {1}'.format(cwd, d4j_path,file_name)
     print "[OS] {}".format(comaand_cp)
     os.system(comaand_rm)
     os.system(comaand_cp)
+
 
 
 def init_main():
     # string_std_in='file.py -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 2 -r 1-1 -o /home/ise/eran/D4j/out/ -t target -p Chart -k U'
     # sys.argv = str(string_std_in).split()
     dico_args = parser_args(sys.argv)
-    replace_script(dico_args['d'])
+    replace_script(dico_args['d'],'run_evosuite.pl')
+    replace_script('/home/ise/programs/defects4j/framework/core','Project.pm')
     if 'T' in dico_args:
         init_testing_pahse(dico_args['T'])
     elif 'R' in dico_args:
@@ -1997,7 +2000,7 @@ def init_main():
     else:
         obj_d4j = D4J_tool(out_dir=dico_args['o'], project=dico_args['p'], bug_range=dico_args['r'],
                            time_b=dico_args['b'],
-                           csv_fp_path=dico_args['k'], scope_p=dico_args['t'], info_d=dico_args)
+                           csv_fp_path=dico_args['k'], scope_p=dico_args['t'], info_d=dico_args,rep=int(dico_args['q']))
         obj_d4j.main_process()
     exit()
 
@@ -2577,12 +2580,12 @@ if __name__ == "__main__":
     '''
     before_op()
 
-    args ='py. d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -b 5 -r 90 -o /home/ise/eran/D4j/out/ -t test_trace -p Math -k U'
+    #args ='py d4j -i /home/ise/eran/D4J/info/ -M U -C 0 -d /home/ise/programs/defects4j/framework/bin -q 4 -b 5 -r 1 -o /home/ise/eran/D4j/out/ -t target -p Time -k U'
     #args = 'pp re_test /home/ise/eran/D4j/out/Math'
     #args = 'py map_test /home/ise/eran/D4j/out'
-    #args = 'py map_test'
     #args = 'py re_test'
-    sys.argv=args.split()
+    #args = 'py map_test'
+    #sys.argv=args.split()
     main_parser()
     # fixer_maven(p_path)
     # main_wrapper(args)
