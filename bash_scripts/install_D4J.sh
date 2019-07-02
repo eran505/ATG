@@ -7,7 +7,6 @@ DIRECTORY='/home/ise/programs'
 if [ ! -d "$DIRECTORY" ]; then
 	# Control will enter here if $DIRECTORY doesn't exist.
 	mkdir ${DIRECTORY} 	
-fi
 
 cd ${DIRECTORY}
 git clone https://github.com/rjust/defects4j

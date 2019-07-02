@@ -881,6 +881,8 @@ sub run_evosuite {
 		"-criterion BRANCH:EXCEPTION:METHOD " .
 		"-Dassertion_strategy=ALL " .
                 "-Dsearch_budget=$time " .
+                "-Dp_functional_mocking=0.8" .
+                "-Dp_reflection_on_private=0.5 " .
                 "-Dassertion_timeout=$timeout " .
                 "-Dshow_progress=false " .
                 "$config 2>&1";

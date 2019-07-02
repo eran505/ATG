@@ -267,6 +267,7 @@ def get_Test_name_fail_Junit(path_dir_root,debug=False, retrun_df= False):
     df = pd.merge(df,df_faulty,on=['bug_ID','project','class'],how="left")
     df.to_csv('{}/ALL_class_fail.csv'.format(out))
     df = df.loc[df['class'].str.len() > 1]
+    df['error_gen'].fillna(0, inplace=True)
     if retrun_df:
         return df
     df = df.loc[df['dir'] == 'buggy']

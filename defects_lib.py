@@ -2447,7 +2447,8 @@ def map_TEST(root_path,debug=True):
 
     df = pd.DataFrame(d_list)
     df_fails = csv_d4j.get_Test_name_fail_Junit(root_path,retrun_df=True)
-    df_fails.to_csv("{}/df_tmp.csv".format(out_root))
+    if debug:
+        df_fails.to_csv("{}/df_tmp.csv".format(out_root))
     df_fails.rename(columns={'class': 'TEST'}, inplace=True)
     df_fails.rename(columns={'faulty_class': 'fail_test'}, inplace=True)
     df_fails.dropna(axis=0,how='any',inplace=True)
@@ -2460,6 +2461,11 @@ def map_TEST(root_path,debug=True):
         df[col] = df[col].astype(str)
 
     df_fails['faulty_class'] = 1.0
+
+    if debug:
+        df.to_csv("{}/df_debug.csv".format(out_root))
+        df_fails.to_csv("{}/df_fails_debug.csv".format(out_root))
+
     df['detected_bug'] = df.apply(merge_by_row,df=df_fails,cols=['bug_ID','project','iteration_id','father_dir','time_budget'],axis=1)
     set_project = df['project'].unique()
     all_faulty_classes = get_all_faulty_comp_by_project(set_project)
@@ -2469,11 +2475,13 @@ def map_TEST(root_path,debug=True):
     for col in ['bug_ID']:
         all_faulty_classes[col] = all_faulty_classes[col].astype(int)
 
+    all_faulty_classes.to_csv("{}/all_faulty_classes.csv".format(out_root))
+
     df = pd.merge(df,all_faulty_classes,on=['bug_ID','project','TEST'],how="left")
 
     # print 'all_faulty_classes: ', list(all_faulty_classes)
     # print 'df: ', list(df)
-    #df_new = pd.merge(df,df_fails,on=['bug_ID','project','TEST','iteration_id','time_budget'],how="left")
+    df_new = pd.merge(df,df_fails,on=['bug_ID','project','TEST','iteration_id','time_budget'],how="left")
     df['faulty_class'].fillna(value=0, inplace=True)
     df.to_csv("{}/rep_raw_data.csv".format(out_root))
 
