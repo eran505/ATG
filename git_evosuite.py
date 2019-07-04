@@ -87,7 +87,7 @@ def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
 
 
 def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',
-                    oracle=True,remove_dup=False,jarz=True,killable=True,pref='org',self_complie=False):
+                    oracle=True,remove_dup=False,jarz=True,killable=False,pref='org',self_complie=False):
 
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
 
@@ -228,8 +228,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     # add Evosuite to pom xml
     get_all_poms_and_add_evo(repo)
 
-    sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.5.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '5', '4', 'U',str_dependency]
+    sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.6.jar',
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '100', '1', '180', '4', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
@@ -1020,6 +1020,7 @@ def parser():
 
 if __name__ == "__main__":
     sys.argv=['','res','commons-lang']
+    sys.argv = ['', 'commons-lang']
     parser()
     exit()
     #FP_dir_clean()

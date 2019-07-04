@@ -1,7 +1,7 @@
 <plugin>
       <groupId>org.evosuite.plugins</groupId>
       <artifactId>evosuite-maven-plugin</artifactId>
-      <version>1.0.5</version>
+      <version>1.0.6</version>
       <executions><execution>
          <goals> <goal> prepare </goal> </goals>
          <phase> process-test-classes </phase>
