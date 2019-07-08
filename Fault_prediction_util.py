@@ -50,10 +50,12 @@ def csv_commit_db(csv_db,repo,out_dir_path,is_max=True,is_test=True,only_java=Tr
     df = df.reset_index(drop=True)
     df['index_bug'] = df.index
 
+    repo_name = str(repo).split('/')[-1]
+
     # Split to train and test
     cut_df(df,out_dir_path)
     # write the whole df to disk
-    df.to_csv('{}/commit_file_modify.csv'.format(out_dir_path))
+    df.to_csv('{}/{}_bug.csv'.format(out_dir_path,repo_name))
 
 def cut_df(df,out_dir_path,split=0.2):
     from sklearn.model_selection import train_test_split
@@ -432,29 +434,23 @@ if __name__ == "__main__":
     out_dir = '/home/ise/bug_miner/commons-net/FP/xgb'
 
     #xgb_FP_wrapper(weka_info,results_csvz,out_dir=out_dir)
-    add_FP_val('commons-net')
-    exit()
+    #add_FP_val('commons-net')
+    #exit()
 
 
     repo='/home/ise/bug_miner/commons-math/commons-math'
     db_Csv = '/home/ise/bug_miner/db_bugs/commons-math_db.csv'
     out = '/home/ise/bug_miner/commons-math/out'
 
-    repo = '/home/ise/bug_miner/commons-beanutils/commons-beanutils'
-    db_Csv = '/home/ise/bug_miner/db_bugs/commons-beanutils_db.csv'
-    out = '/home/ise/bug_miner/commons-beanutils/out'
+    repo = '/home/ise/bug_miner/commons-validator/commons-validator'
+    db_Csv = '/home/ise/bug_miner/db_bugs/commons_validator_db.csv'
+    out = '/home/ise/bug_miner/commons-validator'
 
-    repo = '/home/ise/bug_miner/commons-dbutils/commons-dbutils'
-    db_Csv = '/home/ise/bug_miner/db_bugs/DBUTILS_1_1_RC2.csv'
-    out = '/home/ise/bug_miner/commons-dbutils'
+    repo='/home/ise/bug_miner/commons-imaging/commons-imaging'
+    db_Csv='/home/ise/bug_miner/db_bugs/commons_imaging_db.csv'
+    out='/home/ise/bug_miner/commons-imaging'
 
-    repo='/home/ise/bug_miner/jenkins-artifactory-plugin/jenkins-artifactory-plugin'
-    db_Csv='/home/ise/bug_miner/db_bugs/artifactory_db.csv'
-    out='/home/ise/bug_miner/jenkins-artifactory-plugin'
 
-    repo='/home/ise/bug_miner/commons-net/commons-net'
-    db_Csv='/home/ise/bug_miner/db_bugs/net_db.csv'
-    out='/home/ise/bug_miner/commons-net'
 
     csv_commit_db(repo=repo,out_dir_path=out,csv_db=db_Csv)
 
