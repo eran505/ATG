@@ -984,7 +984,7 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p, killable=False)
-        elif project == 'commons-beanutils':
+        elif project == 'commons-validator':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p)
@@ -1020,7 +1020,7 @@ def parser():
 
 if __name__ == "__main__":
     #sys.argv=['','res','commons-lang']
-    #sys.argv = ['', 'commons-lang']
+    #sys.argv = ['', 'commons-validator']
     parser()
     exit()
     #FP_dir_clean()
