@@ -980,7 +980,7 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False)
-        elif project == 'commons-codec':
+        elif project == 'commons-imaging':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p, killable=False)
@@ -1017,6 +1017,8 @@ def parser():
             res = pt.walk_rec('/home/ise/bug_miner/{}'.format(sys.argv[2]), [], 'junit_out',False)
             for item in res:
                 os.system('rm -r {}'.format(item))
+
+
 
 if __name__ == "__main__":
     #sys.argv=['','res','commons-lang']

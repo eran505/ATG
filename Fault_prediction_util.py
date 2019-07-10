@@ -427,6 +427,7 @@ def rearrange_folder_conf_xgb(p_path_dir='/home/ise/bug_miner/XGB/Lang_DATA/csv_
         os.system('mv {} {}'.format(i,path_conf_dir))
     exit()
 if __name__ == "__main__":
+
     #rearrange_folder_conf_xgb('/home/ise/bug_miner/commons-net/FP/xgb')
 
     results_csvz = '/home/ise/bug_miner/XGB/NET/TEST'

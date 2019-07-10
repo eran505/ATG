@@ -672,8 +672,51 @@ def add_tika_tags_csv(csv_p = '/home/ise/Downloads/tika/data/valid_bugs.csv',p_n
     exit()
 
 
+def map_res_directory_generation_status(res_path='/home/ise/bug_miner/commons-lang/res'):
+    dirz_name = ['Result','EVOSUITE','LOG']
+    d_l=[]
+    res_folders = pt.walk_rec(res_path,[],'_',False,lv=-1)
+    print res_folders
+    for folder_bug in res_folders:
+        d_sub_dir={}
+        bug_jira_id = str(folder_bug).split('/')[-1].split('_')[0]
+        bug_index_id = str(folder_bug).split('/')[-1].split('_')[1]
+        d_sub_dir['bug_jira_id ']=bug_jira_id
+        d_sub_dir['bug_index_id']=bug_index_id
+        sub_folder = pt.walk_rec(folder_bug,[],'',False,lv=-1,full=False)
+        for name in dirz_name:
+            if name  in sub_folder:
+                d_sub_dir[name]=1
+            else:
+                d_sub_dir[name]=0
+        size_org=0
+        if os.path.isdir('{}/EVOSUITE'.format(folder_bug)):
+            count_org_dir = pt.walk_rec('{}/EVOSUITE'.format(folder_bug),[],'org',False,lv=-3)
+            size_org = len(count_org_dir)
+        d_sub_dir['org']=size_org
+        d_sub_dir['xml_buggy']=0
+        d_sub_dir['xml_fixed']=0
+        if os.path.isdir('{}/Result'.format(folder_bug)):
+            xml_filres= pt.walk_rec('{}/Result'.format(folder_bug),[],'xml')
+            for item in xml_filres:
+                f_folder_name = str(item).split('/')[-2].split('_')[-1]
+                if f_folder_name == 'buggy':
+                    d_sub_dir['xml_buggy'] +=1
+                if f_folder_name == 'fixed':
+                    d_sub_dir['xml_fixed'] += 1
+        d_l.append(d_sub_dir)
+    df = pd.DataFrame(d_l)
+    res_path_father_dir = '/'.join(str(res_path).split('/')[:-1])
+    df.to_csv('{}/map_res.csv'.format(res_path_father_dir))
+
+
 if __name__ == "__main__":
     befor_op()
+    map_res_directory_generation_status()
+    exit()
+
+
+
     #add_tika_tags_csv()
     #add_tika_tags_csv(csv_p='/home/ise/bug_miner/math/valid_bugs.csv',p_name='commons-math')
     add_tika_tags_csv(csv_p='/home/ise/bug_miner/lang/commons-lang.csv', p_name='commons-lang')
