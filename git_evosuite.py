@@ -976,7 +976,7 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project,killable=False)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p)
-        elif project == 'commons-bcel':
+        elif project == 'commons-scxml':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False)
@@ -1021,8 +1021,10 @@ def parser():
 
 
 if __name__ == "__main__":
-    #sys.argv=['','res','commons-lang']
-    #sys.argv = ['', 'commons-validator']
+    #TODO: Max 2 fault component the next one it the big test change
+
+    #sys.argv=['','res','commons-imaging']
+    #sys.argv = ['', 'commons-scxml']
     parser()
     exit()
     #FP_dir_clean()
