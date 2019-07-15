@@ -672,7 +672,7 @@ def add_tika_tags_csv(csv_p = '/home/ise/Downloads/tika/data/valid_bugs.csv',p_n
     exit()
 
 
-def map_res_directory_generation_status(res_path='/home/ise/bug_miner/commons-lang/res'):
+def map_res_directory_generation_status(res_path='/home/ise/bug_miner/commons-scxml/res'):
     dirz_name = ['Result','EVOSUITE','LOG']
     d_l=[]
     res_folders = pt.walk_rec(res_path,[],'_',False,lv=-1)

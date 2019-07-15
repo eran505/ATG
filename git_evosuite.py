@@ -7,6 +7,7 @@ import numpy as np
 # sys.path.append("/home/ise/eran/git_repos/mvnpy")
 from subprocess import Popen, PIPE
 import shlex
+import pandas as pd
 import budget_generation as bg
 import pandas as pd
 import xml.etree.ElementTree as ET
@@ -136,6 +137,10 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
         all_df.to_csv("{}/all_report.csv".format(out))
 
 
+
+
+
+
 def start_where_stop_res(res_dir):
     dirs_res = pt.walk_rec(res_dir,[],'',False,lv=-1,full=False)
     return dirs_res
@@ -151,6 +156,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     index_bug = row['index_bug']
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
+
+
     print "{}".format(component_path)
 
 
@@ -177,11 +184,17 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     checkout_version(commit_fix, repo, out_dir_new)
 
     if self_complie:
+        if is_evo_dir_full(out_evo) is False:
+            # no tests were generated bt Evosuite
+            return
         self_complie_bulider_func(repo,"{}/{}_{}".format(out_dir,bug_name,index_bug),prefix_str,suffix='fixed')
         checkout_version(commit_fix, repo, out_dir_new, clean=True)
+        mvn_command(repo, module, 'clean', None)
         checkout_version(commit_buggy, repo, out_dir_new)
         self_complie_bulider_func(repo, "{}/{}_{}".format(out_dir, bug_name, index_bug), prefix_str,suffix='buggy')
         checkout_version(commit_buggy, repo, out_dir_new, clean=True)
+        mvn_command(repo, module, 'clean', None)
+
         return
 
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
@@ -229,7 +242,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.6.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '4', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '3', '4', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
@@ -252,6 +265,12 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     # rm pom.xml for the next checkout
     mvn_command(repo, module, 'clean', out_log)
 
+
+def is_evo_dir_full(path_evo):
+    res = pt.walk_rec(path_evo,[],'.java')
+    if res is None or len(res)==0:
+        return False
+    return True
 
 def get_all_poms_and_add_evo(repo):
     res = pt.walk_rec(repo,[],'pom.xml')
@@ -417,7 +436,12 @@ def checkout_version(commit, repo, log_dir, clean=False):
     '''
     if clean:
         command_git = 'git reset --hard'.format(commit)
-        run_GIT_command_and_log(repo, command_git, log_dir, 'checkout_clean')
+        run_GIT_command_and_log(repo, command_git, log_dir, 'git_reset_hard')
+        command_git = 'git clean -f'.format(commit)
+        run_GIT_command_and_log(repo, command_git, log_dir, 'git_clean_f')
+        if os.path.isdir("{}/libb".format(repo)):
+            os.system('rm -r {}'.format("{}/libb".format(repo)))
+
     else:
         command_git = 'git checkout {}'.format(commit)
         run_GIT_command_and_log(repo, command_git, log_dir, 'checkout')
@@ -431,11 +455,26 @@ def package_mvn_cycle(repo,folder_name='libb'):
     print "[mvn] {}".format(mvn_command_str)
     mvn_command(repo,None,mvn_command_str,str_command='')
 
+    # make snapshot jar
+    mvn_command_str = '-Dmaven.test.skip=true package'
+    print "[mvn] {}".format(mvn_command_str)
+    mvn_command(repo, None, mvn_command_str, str_command='')
+    get_snapshot_to_jar_dir(repo,"{}/{}/".format(repo,folder_name))
+
     if os.path.isdir("{}/{}".format(repo,folder_name)) is False:
         print '[Error] maven did not crate the dependencies folder'
         return None,None
     res = pt.walk_rec("{}/{}".format(repo,folder_name),[],'.jar')
     return res,"{}/{}".format(repo,folder_name)
+
+def get_snapshot_to_jar_dir(repo,path_to_target_folder):
+    res = pt.walk_rec("{}/target".format(repo),[],'SNAPSHOT.jar',lv=-1)
+    for item in res:
+        command_cp='cp {} {}'.format(item,path_to_target_folder)
+        print "[OS] {}".format(command_cp)
+        os.system(command_cp)
+
+
 
 def mvn_command(repo, module, command_mvn='clean', log_dir=None,str_command=''):
     os.chdir(repo)
@@ -449,6 +488,8 @@ def mvn_command(repo, module, command_mvn='clean', log_dir=None,str_command=''):
         return
     log_to_file(log_dir, '{}_stdout'.format(command_mvn_str), stdout)
     log_to_file(log_dir, '{}_stderr'.format(command_mvn_str), stderr)
+
+
 
 
 def add_evosuite_pom(path_xml='/home/ise/eran/git_repos/tika/tika-core/pom.xml', out='/home/ise/test/pom'):
@@ -629,6 +670,8 @@ def get_test_xml_csv(dir_res='/home/ise/test/res'):
         bug_name = str(item_dir).split('/')[-2].split('_')[0]
         xml_files = pt.walk_rec(item_dir, [], '.xml')
         for xml_item in xml_files:
+            if str(xml_item).endswith('xml') is False:
+                continue
             d = None
             name_dir = str(xml_item).split('/')[-2]
             name_file_xml = str(xml_item).split('/')[-1]
@@ -707,8 +750,6 @@ def pars_xml_test_file(path_file, dico=None):
     parsing the xml tree and return the results
     """
     print "path_file:= {}".format(path_file)
-    if path_file == '/home/ise/bug_miner/commons-net/res/148_12/Result/U_exp_tTue_Feb_19_14:50:26_2019_t=70_it=1_fixed/TEST-org.apache.commons.net.ftp.FTPSSocketFactory_ESTest.xml':
-        print ""
     name_test = str(path_file).split('/')[-1][:-11]  # remove xml + _ESTest
     d = {"err": float(0), "fail": float(0), "bug": 'no', 'class_err': [], 'class_fail': []}
     d['name'] = name_test
@@ -954,7 +995,9 @@ def FP_dir_clean(dir_p='/home/ise/bug_miner/commons-lang/FP/raw'):
         print name_tag
         df_path = make_FP_pred(item)
 
-
+def get_all_commons_dir(p):
+    res = pt.walk_rec(p,[],'commons-',False,-1)
+    return res
 
 def parser():
     if len(sys.argv) > 1:
@@ -996,10 +1039,19 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False)
-        elif project == 'jenkins-artifactory-plugin':
+        elif project == 'commons-collections':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,jarz=True,killable=False)
+            csv_bug_process(project, repo_path, out_p,killable=False)
+        elif sys.argv[1] == 'fix':
+            path_hard_bug_miner = dir_bug_miner
+            res = get_all_commons_dir(path_hard_bug_miner)
+            for item in res:
+                project_name = str(item).split('/')[-1]
+                repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project_name)
+                out_p = '{}/{}/res'.format(dir_bug_miner, project_name)
+                csv_bug_process(project_name, repo_path, out_p, killable=False,self_complie=True)
+
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -1023,8 +1075,9 @@ def parser():
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
 
-    #sys.argv=['','res','commons-imaging']
-    #sys.argv = ['', 'commons-scxml']
+    #sys.argv=['','res','commons-scxml']
+    #sys.argv = ['', 'commons-lang']
+    #sys.argv = ['', 'fix_ind']
     parser()
     exit()
     #FP_dir_clean()

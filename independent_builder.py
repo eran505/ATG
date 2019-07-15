@@ -1,7 +1,7 @@
 from os import path, system
 from subprocess import Popen, PIPE, check_call, check_output
 import pit_render_test as pt
-from csv_D4J_headler import diff_function,get_regex_res
+from csv_D4J_headler import diff_function,get_regex_res,get_regex_all
 import subprocess
 import shlex
 import sys
@@ -21,7 +21,7 @@ def compile_java_class(dir_to_compile, output_dir, dependent_dir):
     #    raise Exception(msg)
     out_dir = pt.mkdir_system(output_dir, 'test_classes')
     files = pt.walk_rec(dependent_dir, [], '.jar', lv=-2)
-    files.append('/home/ise/eran/evosuite/jar/evosuite-standalone-runtime-1.0.5.jar')
+    files.append('/home/ise/eran/evosuite/jar/evosuite-standalone-runtime-1.0.6.jar')
     jars_string = ':'.join(files)
     dir_to_compile = '{}*'.format(dir_to_compile)
     string_command = "javac {0} -verbose -Xlint -cp {1} -d {2} -s {2} -h {2}".format(dir_to_compile, jars_string,
@@ -48,7 +48,7 @@ def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org',d_a
     out = pt.mkdir_system(out_dir,'junit_output')
     running_dir=None
     files_jars = pt.walk_rec(dir_jars, [], '.jar')
-    files_jars.append('/home/ise/eran/evosuite/jar/evosuite-standalone-runtime-1.0.5.jar')
+    files_jars.append('/home/ise/eran/evosuite/jar/evosuite-standalone-runtime-1.0.6.jar')
     files_jars.append(dir_class)
     jars_string = ':'.join(files_jars)
     tests_files = pt.walk_rec(dir_class, [], '.class')
@@ -91,6 +91,8 @@ def test_junit_commandLine(dir_class, dir_jars, out_dir,prefix_package='org',d_a
         print "{}".format(k)
     reporting_csv(out_dir,d_res)
     return d_res
+
+
 
 
 def reporting_csv(path_p,d_res,name_file='report'):
@@ -229,6 +231,48 @@ def get_static_dir(root):
     df.to_csv('{}/static.csv'.format(root))
 
 
+
+def scan_results_project(folder_res):
+    res = pt.walk_rec(folder_res,[],'',False,lv=-1)
+    list_df_path=[]
+    for item in res:
+        df_path = get_pair_fix_bug_folder(item)
+        if df_path  is None:
+            continue
+        list_df_path.append(df_path)
+    df_l=[]
+    for csv_i in list_df_path:
+        df_l.append(pd.read_csv(csv_i,index_col=0))
+    df_all= pd.concat(df_l)
+    father = '/'.join(str(folder_res).split('/')[:-1])
+    df_all.to_csv("{}/all_self_junit.csv".format(father))
+
+def get_pair_fix_bug_folder(folder_path):
+    folder_bug = pt.walk_rec(folder_path,[],'test_suite_t',lv=-2,file_t=False)
+    d_pair={}
+    for item in folder_bug:
+        folder_mode = str(item).split('/')[-2].split('_')[0]
+        if folder_mode == 'complie':
+            continue
+        mode =  str(item).split('/')[-2].split('_')[-1]
+        iter = str(item).split('/')[-1].split('_it_')[-1]
+        if iter not in d_pair:
+            d_pair[iter]={}
+        if mode == 'fixed':
+            d_pair[iter]['fixed']=item
+        elif mode =='buggy':
+            d_pair[iter]['buggy']=item
+    d_l = []
+    for key_i in d_pair.keys():
+        if 'buggy' in  d_pair[key_i] and 'fixed' in d_pair[key_i] :
+            info=get_diff_fix_buggy(d_pair[key_i]['buggy'],d_pair[key_i]['fixed'])
+            d_l.extend(info)
+    if len(d_l) == 0:
+        return None
+    df = pd.DataFrame(d_l)
+    df.to_csv("{}/indep_report.csv".format(folder_path))
+    return "{}/indep_report.csv".format(folder_path)
+
 def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
     d_start={}
     d={'bug':{},'fix':{}}
@@ -248,27 +292,68 @@ def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
         if 'bug' in d_start[ky]  and 'fix' in d_start[ky]:
             d_both[ky]={'bug':d_start[ky]['bug'],'fix':d_start[ky]['fix']}
    # print "missing --> {}".format(len(d_start)-len(d_both))
-
+    d_l = []
     for key_i in d_both.keys():
         diff_bug, diff_fix = diff_function(d_both[key_i]['bug'],d_both[key_i]['fix'])
-        if len('Time: 0.226x')<len(diff_bug):
-            print 'yy'
-            print diff_bug
-        if len('Time: 0.226x') <len( diff_fix):
-            print 'xx'
-            print diff_fix
-        d_both[key_i]['bug']={}
-        d_both[key_i]['fix'] = {}
-        d_both[key_i]['bug']['diff'] = diff_bug
-        d_both[key_i]['fix']['diff'] = diff_fix
-        d_both[key_i]['fix']['tests'] = ':'.join(get_regex_res(diff_fix, 'test\d+'))
-        d_both[key_i]['bug']['tests'] = ':'.join(get_regex_res(diff_bug, 'test\d+'))
-        d_both[key_i]['bug']['class'] = ':'.join(get_regex_res(diff_bug,'---.+ESTest',4))
-        d_both[key_i]['fix']['class'] = ':'.join(get_regex_res(diff_fix,'^---.+ESTest',4))
-        if len(d_both[key_i]['fix']['tests']) == 0:
-            d_both[key_i]['fix']['tests']='-'
-        if len(d_both[key_i]['bug']['tests']) == 0:
-            d_both[key_i]['bug']['tests'] = '-'
+        #if len('Time: 0.226x')<len(diff_bug):
+        #    print 'yy'
+            #print diff_bug
+        #if len('Time: 0.226x') <len( diff_fix):
+        #    print 'xx'
+            #print diff_fix
+
+        # pars the bug_id and itr number from the path dir
+
+        d_buggy = pars_bug_id_iter_id(d_both[key_i]['bug'])
+        d_buggy['mode']='buggy'
+        d_fixed = pars_bug_id_iter_id(d_both[key_i]['fix'])
+        d_fixed['mode'] = 'fixed'
+
+
+        list_junit_res = get_regex_all(diff_bug,r'(test\d+.+\n\njava.lang.+)',0,False)
+        info_list = pars_junit_regex(list_junit_res,d_extand=d_buggy)
+        if info_list is not None:
+            d_l.extend(info_list)
+
+
+        list_junit_res = get_regex_all(diff_fix,r'(test\d+.+\n\njava.lang.+)',0,False)
+        info_list = pars_junit_regex(list_junit_res,d_extand=d_fixed)
+        if info_list is not None:
+            d_l.extend(info_list)
+
+
+    return d_l
+
+
+def pars_bug_id_iter_id(path_file):
+    arr = str(path_file).split('/')
+    iter_id = arr[-3].split('_it_')[-1]
+    time_budget = arr[-3].split('_t_')[-1].split('_')[0]
+    jira_id = arr[-5].split('_')[0]
+    bug_id = arr[-5].split('_')[1]
+    return {'bug_id':bug_id,'jira_id':jira_id,'time':time_budget,'iter':iter_id}
+
+def pars_junit_regex(list_junit_results,d_extand):
+    d_l=[]
+    if list_junit_results is None or len(list_junit_results)==0:
+        d_extand['trigger']=0
+        return [d_extand]
+    for item in list_junit_results:
+        test_case_number = ''
+        for i in str(item):
+            if i == '(':
+                break
+            test_case_number+=i
+        removed_test_number_string = item[len(test_case_number):]
+        class_name = str(removed_test_number_string ).split('\n\n')[0][1:-1]
+        error_name = str(removed_test_number_string).split('\n\n')[1].split()[0].split('.')[-1]
+        if error_name[-1]==':':
+            error_name=error_name[:-1]
+        error_full = str(removed_test_number_string).split('\n\n')[1]
+        d = {'test_case':test_case_number,'test_class':class_name,'trigger':1,'error':error_name,'full_error':error_full}
+        d.update(d_extand)
+        d_l.append(d)
+    return d_l
 
 
 
@@ -284,7 +369,24 @@ def parser():
     exit()
 
 
+
+def get_all_self_report(res_folder):
+    csv_files = pt.walk_rec(res_folder,[],'report.csv')
+    df_list = []
+    for item_csv in csv_files:
+        df_list.append(pd.read_csv(item_csv))
+    df_all = pd.concat(df_list)
+    father_dir = '/'.join(str(res_folder).split('/')[:-1])
+    print list(df_all)
+    df_list = df_all[['bug_id','status']].to_csv('{}/all_report.csv'.format(father_dir))
+
 if __name__ == "__main__":
+
+    proj_folder = '/home/ise/bug_miner/commons-lang/res'
+    scan_results_project(proj_folder )
+
+    exit()
+    get_all_self_report('/home/ise/bug_miner/commons-scxml/res')
 
     res = pt.walk_rec('/home/ise/bug_miner/opennlp/res',[],'',False,lv=-1)
     for item in res:

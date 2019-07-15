@@ -66,6 +66,19 @@ def get_deff(dir_path):
     return d
 
 
+def get_regex_all(string_search,pattern,cut=0,dup_remove=True):
+    ans_res = re.findall(r'{}'.format(pattern),string_search)
+    if dup_remove:
+        arr = list(set(ans_res))
+    else:
+        arr = ans_res
+    if len(arr) == 0 :
+        return None
+    if cut==0:
+        return arr
+    else:
+        arr = [x[cut:] for x in arr]
+    return arr
 
 
 def get_regex_res(string_search, pattern,cut=0):

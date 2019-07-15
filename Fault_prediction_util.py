@@ -447,9 +447,9 @@ if __name__ == "__main__":
     db_Csv = '/home/ise/bug_miner/db_bugs/commons_validator_db.csv'
     out = '/home/ise/bug_miner/commons-validator'
 
-    repo='/home/ise/bug_miner/commons-scxml/commons-scxml'
-    db_Csv='/home/ise/bug_miner/db_bugs/scxml_db.csv'
-    out='/home/ise/bug_miner/commons-scxml'
+    repo='/home/ise/bug_miner/commons-collections/commons-collections'
+    db_Csv='/home/ise/bug_miner/db_bugs/collections_db.csv'
+    out='/home/ise/bug_miner/commons-collections'
 
 
 
