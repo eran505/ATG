@@ -420,10 +420,10 @@ def get_all_self_report(res_folder):
 
 if __name__ == "__main__":
 
-    #proj_folder = '/home/ise/bug_miner/commons-math/res'
-    #scan_results_project(proj_folder)
-    map_dir_after_run('/home/ise/bug_miner/commons-scxml/res')
-    map_dir_after_run('/home/ise/bug_miner/commons-validator/res')
+    proj_folder = '/home/ise/bug_miner/opennlp/res'
+    scan_results_project(proj_folder)
+    map_dir_after_run('/home/ise/bug_miner/opennlp/res')
+#   map_dir_after_run('/home/ise/bug_miner/commons-validator/res')
 
     exit()
     get_all_self_report('/home/ise/bug_miner/commons-scxml/res')

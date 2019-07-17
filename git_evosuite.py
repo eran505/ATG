@@ -157,8 +157,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-  #  if index_bug != 300:
-  #      return
+    if index_bug != 171:
+        return
     print "{}".format(component_path)
 
 
@@ -171,11 +171,11 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
 
 
     target = row['target']
-    if os.path.isdir("{}/{}_{}".format(out_dir,bug_name,index_bug)):
-        fix=True
-    else:
-        if self_complie:
-            return
+   # if os.path.isdir("{}/{}_{}".format(out_dir,bug_name,index_bug)):
+   #     fix=True
+   # else:
+   #     if self_complie:
+   #         return
 
     out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),False)
     out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE',False)
@@ -198,6 +198,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
 
         return
 
+
+
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
     if os.path.isfile('{}/pom.xml'.format(repo)) is False:
         return
@@ -206,17 +208,13 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
         return
     repo_look = "{}{}".format(repo,prefix)
 
-    rm_exsiting_test(repo_look , p_name)
+    rm_exsiting_test(repo_look , p_name,prefix_str=prefix_str)
 
     out_log = pt.mkdir_system(out_dir_new, 'LOG', False)
     # reset the commit
-    checkout_version(commit_fix, repo, out_dir_new)
 
-    mvn_command(repo, module, 'clean', out_log,'')
-    mvn_command(repo, module, 'install -DskipTests=true', out_log,'')
-
-
-
+    mvn_command(repo, module, 'clean', None)
+    mvn_command(repo, module, 'install -DskipTests=true', out_log, '')
 
     # Get all jars dependency
     str_dependency=''
@@ -233,9 +231,9 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     if str(module).__contains__('-'):
         path_to_pom = '{}/{}/pom.xml'.format(repo, module)
         dir_to_gen = '{}/{}/target/classes/{}'.format(repo, module, target)
-        dir_to_gen = discover_dir_repo('{}/{}'.format(repo, module), p_name, is_test=False)
+        dir_to_gen = discover_dir_repo('{}/{}'.format(repo, module), p_name, is_test=False,prefix_str=prefix_str)
     else:
-        dir_to_gen = discover_dir_repo('{}'.format(repo_look), p_name, is_test=False,target=prefix_str)
+        dir_to_gen = discover_dir_repo('{}'.format(repo_look), p_name, is_test=False,prefix_str=prefix_str)
     dir_to_gen = '{}/{}'.format(dir_to_gen, target)
     # Run Evosuite generation mode
 
@@ -243,16 +241,16 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.6.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '8', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '3', '2', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
-    evo_test_run(out_evo, repo, module, proj_dir, mode='fixed')
+    evo_test_run(out_evo, repo, module, proj_dir, mode='fixed',prefix_str=prefix_str)
     checkout_version(commit_fix, repo, out_dir_new, clean=True)
 
     # Run test-suite on the buugy version
     checkout_version(commit_buggy, repo, out_dir_new)
-    rm_exsiting_test(repo_look, p_name)
+    rm_exsiting_test(repo_look, p_name,prefix_str=prefix_str)
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'compile', out_log)
 
@@ -260,7 +258,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     #add_evosuite_text(path_to_pom, None)
     get_all_poms_and_add_evo(repo)
 
-    evo_test_run(out_evo, repo, module, proj_dir, mode='buggy')
+    evo_test_run(out_evo, repo, module, proj_dir, mode='buggy',prefix_str=prefix_str)
     checkout_version(commit_buggy, repo, out_dir_new, clean=True)
 
     # rm pom.xml for the next checkout
@@ -316,14 +314,14 @@ def remove_junit(path,path_to_junit='/home/ise/eran/evosuite/junit-4.12.jar'):
     os.system('cp {} {}'.format(path_to_junit,path))
 
 
-def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix'):
+def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix',prefix_str='org'):
     p_name = str(mvn_repo).split('/')[-1]
     out_evo = '/'.join(str(out_evo).split('/')[:-1])
     res = pt.walk_rec(out_evo, [], 'org', False)
     if len(res) == 0:
         return
     test_dir = get_test_dir(project_dir)
-    rm_exsiting_test(project_dir, p_name)
+    rm_exsiting_test(project_dir, p_name,prefix_str=prefix_str)
     for path_res in res:
         command_cp_test = "cp -r {} {}".format(path_res, test_dir)
         dir_name_evo = str(path_res).split('/')[-2]
@@ -345,12 +343,12 @@ def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix'):
             command_mv = "mv {} {}".format(test_item, out_results_evo)
             print "[OS] {}".format(command_mv)
             os.system(command_mv)
-        rm_exsiting_test(project_dir, p_name)
+        rm_exsiting_test(project_dir, p_name,prefix_str=prefix_str)
 
 
-def rm_exsiting_test(path_p, p_name):
+def rm_exsiting_test(path_p, p_name,prefix_str):
     #dir_to_del = '{}/src/test/java/org'.format(path_p)
-    dir_to_del = discover_dir_repo(path_p, p_name)
+    dir_to_del = discover_dir_repo(path_p, p_name,prefix_str)
     if dir_to_del is None:
         print('[Warning] cant find the test dir of the project -> {}'.format(path_p))
         return
@@ -391,13 +389,13 @@ def src_to_target(comp_path,s='src',end='org',prefix=True):
     test_arr = comp_path[:index_src+1]
     return '/'.join(target_arr )
 
-def discover_dir_repo(path, p_name, target='org', is_test=True):
+def discover_dir_repo(path, p_name, prefix_str='org', is_test=True):
     if p_name == 'tika':
         if is_test is False:
             return "{}/target/classes".format(path)
         else:
             return "{}/src/test/java/org".format(path)
-    res = pt.walk_rec(path, [], target, False, lv=-4)
+    res = pt.walk_rec(path, [], prefix_str, False, lv=-4)
     for item in res:
         if is_test:
             if str(item).__contains__('/src/test') or str(item).__contains__('src/test/java'):
@@ -1017,7 +1015,8 @@ def parser():
         elif project == 'opennlp':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp')
+            csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp',jarz=True)
+            csv_bug_process(project, repo_path, out_p, killable=False,pref='opennlp', self_complie=True)
         elif project == 'commons-net':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -1059,7 +1058,7 @@ if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
 
     #sys.argv=['','res','commons-scxml']
-    #sys.argv = ['', 'commons-lang']
+    #sys.argv = ['', 'opennlp']
     #sys.argv = ['','p', 'commons-collections']
     parser()
     exit()
