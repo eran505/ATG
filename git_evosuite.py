@@ -157,7 +157,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-
+  #  if index_bug != 300:
+  #      return
     print "{}".format(component_path)
 
 
@@ -242,7 +243,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.6.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '3', '4', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '8', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
@@ -1003,34 +1004,16 @@ def parser():
     if len(sys.argv) > 1:
         dir_bug_miner = '/home/ise/bug_miner'
         project = sys.argv[1]
-        if project == 'commons-math':
-            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
-            out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p)
-        elif project == 'commons-lang':
-            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
-            out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p)
-        elif project == 'tika':
-            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
-            out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,jarz=True,killable=False)
-        elif project == 'evosuite':
-            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project,killable=False)
-            out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p)
-        elif project == 'commons-scxml':
+        if sys.argv[1] == 'p':
+            project = sys.argv[2]
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False)
-        elif project == 'commons-imaging':
+            csv_bug_process(project, repo_path, out_p, killable=False,self_complie=True)
+        elif project == 'tika':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p, killable=False)
-        elif project == 'commons-validator':
-            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
-            out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p)
+            csv_bug_process(project, repo_path, out_p,jarz=True)
         elif project == 'opennlp':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -1043,7 +1026,8 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False)
-        elif sys.argv[1] == 'fix':
+            csv_bug_process(project, repo_path, out_p, killable=False,self_complie=True)
+        elif sys.argv[1] == 'fix_all':
             path_hard_bug_miner = dir_bug_miner
             res = get_all_commons_dir(path_hard_bug_miner)
             for item in res:
@@ -1051,7 +1035,6 @@ def parser():
                 repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project_name)
                 out_p = '{}/{}/res'.format(dir_bug_miner, project_name)
                 csv_bug_process(project_name, repo_path, out_p, killable=False,self_complie=True)
-
         elif sys.argv[1] == 'res':
             project = sys.argv[2]
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -1077,7 +1060,7 @@ if __name__ == "__main__":
 
     #sys.argv=['','res','commons-scxml']
     #sys.argv = ['', 'commons-lang']
-    #sys.argv = ['', 'fix_ind']
+    #sys.argv = ['','p', 'commons-collections']
     parser()
     exit()
     #FP_dir_clean()

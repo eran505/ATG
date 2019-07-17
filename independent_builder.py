@@ -370,6 +370,44 @@ def parser():
 
 
 
+def map_dir_after_run(path_res_folder):
+    '''
+    # this function map all the bug dir whether the process went well or not
+    '''
+    res = pt.walk_rec(path_res_folder,[],'_',False,lv=-1)
+    d_l=[]
+    for item in res:
+        print item
+        d={}
+        d["jira_bug"]= str(item).split('/')[-1].split('_')[0]
+        d["bug_id"]= str(item).split('/')[-1].split('_')[1]
+        d["EVOSUITE_dir"] = 0
+        d['rep'] = 0
+        if os.path.isdir('{}/EVOSUITE'.format(item)):
+            res_test_java = pt.walk_rec('{}/EVOSUITE'.format(item),[],'_ESTest.java')
+            d["EVOSUITE_dir"] = len(res_test_java)
+            d['rep']=len(pt.walk_rec('{}/EVOSUITE'.format(item),[],'',False,lv=-1))
+        d["complie_dir_buggy"] = 0
+        d["complie_dir_fixed"] = 0
+        d["junit_dir_buggy"] = 0
+        d["junit_dir_fixed"] = 0
+        dir_class_dico={}
+        junit_dico = {}
+        for mode in ['buggy','fixed']:
+            if os.path.isdir('{}/complie_out_{}'.format(item,mode)):
+                res_test_class = pt.walk_rec('{}/complie_out_{}'.format(item,mode),[],'_ESTest.class')
+                d["complie_dir_{}".format(mode)] = len(res_test_class )
+                dir_class_dico[mode]=res_test_class
+            if os.path.isdir('{}/junit_out_{}'.format(item,mode)):
+                res_junit_file = pt.walk_rec('{}/junit_out_{}'.format(item,mode),[],'.txt')
+                junit_dico[mode]=res_junit_file
+                d["junit_dir_{}".format(mode)] = len(res_junit_file)
+        d_l.append(d)
+    df = pd.DataFrame(d_l)
+    father_dir = '/'.join(str(path_res_folder).split('/')[:-1])
+    df.to_csv('{}/info_indp.csv'.format(father_dir))
+
+
 def get_all_self_report(res_folder):
     csv_files = pt.walk_rec(res_folder,[],'report.csv')
     df_list = []
@@ -378,12 +416,14 @@ def get_all_self_report(res_folder):
     df_all = pd.concat(df_list)
     father_dir = '/'.join(str(res_folder).split('/')[:-1])
     print list(df_all)
-    df_list = df_all[['bug_id','status']].to_csv('{}/all_report.csv'.format(father_dir))
+    #df_list = df_all[['bug_id','status']].to_csv('{}/all_report.csv'.format(father_dir))
 
 if __name__ == "__main__":
 
-    proj_folder = '/home/ise/bug_miner/commons-lang/res'
-    scan_results_project(proj_folder )
+    #proj_folder = '/home/ise/bug_miner/commons-math/res'
+    #scan_results_project(proj_folder)
+    map_dir_after_run('/home/ise/bug_miner/commons-scxml/res')
+    map_dir_after_run('/home/ise/bug_miner/commons-validator/res')
 
     exit()
     get_all_self_report('/home/ise/bug_miner/commons-scxml/res')
