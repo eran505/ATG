@@ -127,14 +127,14 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
             return None
     df = df.reindex(index=df.index[::-1])
     df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref,self_complie=self_complie,axis=1)
-
-    if self_complie:
-        res = pt.walk_rec(out,[],'report.csv')
-        l_df = []
-        for item in res:
-            l_df.append(pd.read_csv(item))
-        all_df = pd.concat(l_df)
-        all_df.to_csv("{}/all_report.csv".format(out))
+    return
+    #if self_complie:
+    #    res = pt.walk_rec(out,[],'report.csv')
+    #    l_df = []
+    #    for item in res:
+    #        l_df.append(pd.read_csv(item))
+    #    all_df = pd.concat(l_df)
+    #    all_df.to_csv("{}/all_report.csv".format(out))
 
 
 
@@ -157,8 +157,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-   # if index_bug != 171:
-   #     return
+    #if index_bug != 8552:
+    #    return
     print "{}".format(component_path)
 
 
@@ -312,6 +312,16 @@ def remove_junit(path,path_to_junit='/home/ise/eran/evosuite/junit-4.12.jar'):
     for item in res:
         os.system('rm {}'.format(item))
     os.system('cp {} {}'.format(path_to_junit,path))
+    # add hamcrest
+    add_hamcrest(path)
+
+
+def add_hamcrest(path,jar_path='/home/ise/eran/evosuite/dep/hamcrest-all-1.3.jar'):
+    res = pt.walk_rec(path,[],'hamcrest')
+    res = [x for x in res if str(x).endswith('.jar')]
+    for item in res:
+        os.system('rm {}'.format(item))
+    os.system('cp {} {}'.format(jar_path,path))
 
 
 def evo_test_run(out_evo, mvn_repo, moudle, project_dir, mode='fix',prefix_str='org'):
@@ -1059,7 +1069,7 @@ if __name__ == "__main__":
 
     #sys.argv=['','res','commons-scxml']
     #sys.argv = ['', 'opennlp']
-    #sys.argv = ['','p', 'commons-collections']
+    #sys.argv = ['', 'fix_all']
     parser()
     exit()
     #FP_dir_clean()
