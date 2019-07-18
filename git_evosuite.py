@@ -157,7 +157,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-    if index_bug > 105:
+    if index_bug != 30:
         return
     print "{}".format(component_path)
 
@@ -1016,7 +1016,7 @@ def parser():
             project = sys.argv[2]
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,killable=False)
+            csv_bug_process(project, repo_path, out_p,killable=False,jarz=True)
             csv_bug_process(project, repo_path, out_p, killable=False,self_complie=True)
         if sys.argv[1] == 'fix':
             project = sys.argv[2]
@@ -1072,7 +1072,7 @@ def parser():
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
 
-    #sys.argv=['','res','commons-scxml']
+    #sys.argv=['','p','commons-collections']
     #sys.argv = ['', 'opennlp']
     #sys.argv = ['', 'fix','commons-lang']
     parser()
