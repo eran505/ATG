@@ -157,8 +157,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-    #if index_bug != 8552:
-    #    return
+    if index_bug > 105:
+        return
     print "{}".format(component_path)
 
 
@@ -1018,6 +1018,11 @@ def parser():
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False)
             csv_bug_process(project, repo_path, out_p, killable=False,self_complie=True)
+        if sys.argv[1] == 'fix':
+            project = sys.argv[2]
+            repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
+            out_p = '{}/{}/res'.format(dir_bug_miner, project)
+            csv_bug_process(project, repo_path, out_p, killable=False, self_complie=True)
         elif project == 'tika':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -1069,7 +1074,7 @@ if __name__ == "__main__":
 
     #sys.argv=['','res','commons-scxml']
     #sys.argv = ['', 'opennlp']
-    #sys.argv = ['', 'fix_all']
+    #sys.argv = ['', 'fix','commons-lang']
     parser()
     exit()
     #FP_dir_clean()
