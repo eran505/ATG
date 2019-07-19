@@ -157,8 +157,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-    if index_bug != 114:
-        return
+    #if index_bug != 114:
+    #    return
     print "{}".format(component_path)
 
 
