@@ -157,8 +157,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-#    if index_bug != 30:
-#        return
+    if index_bug != 114:
+        return
     print "{}".format(component_path)
 
 
@@ -477,7 +477,8 @@ def package_mvn_cycle(repo,folder_name='libb'):
     return res,"{}/{}".format(repo,folder_name)
 
 def get_snapshot_to_jar_dir(repo,path_to_target_folder):
-    res = pt.walk_rec("{}/target".format(repo),[],'SNAPSHOT.jar',lv=-1)
+    res = pt.walk_rec("{}".format(repo),[],'SNAPSHOT.jar',lv=-6)
+    res = [x for x in res if str(x).__contains__('/libb/') is False]
     for item in res:
         command_cp='cp {} {}'.format(item,path_to_target_folder)
         print "[OS] {}".format(command_cp)
@@ -1030,7 +1031,7 @@ def parser():
         elif project == 'opennlp':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp',jarz=True)
+            #csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp',jarz=True)
             csv_bug_process(project, repo_path, out_p, killable=False,pref='opennlp', self_complie=True)
         elif project == 'commons-net':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
@@ -1074,7 +1075,7 @@ if __name__ == "__main__":
 
     #sys.argv=['','p','commons-collections']
     #sys.argv = ['', 'opennlp']
-    #sys.argv = ['', 'fix','commons-lang']
+    sys.argv = ['','opennlp']
     parser()
     exit()
     #FP_dir_clean()

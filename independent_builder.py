@@ -420,7 +420,7 @@ def get_all_self_report(res_folder):
 
 if __name__ == "__main__":
 
-    proj_folder = '/home/ise/bug_miner/commons-collections/res'
+    proj_folder = '/home/ise/bug_miner/opennlp/res'
     scan_results_project(proj_folder)
     map_dir_after_run(proj_folder )
 #   map_dir_after_run('/home/ise/bug_miner/commons-validator/res')
