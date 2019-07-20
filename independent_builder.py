@@ -243,6 +243,9 @@ def scan_results_project(folder_res):
     df_l=[]
     for csv_i in list_df_path:
         df_l.append(pd.read_csv(csv_i,index_col=0))
+    if len(df_l)==0:
+        print('cant find any results ')
+        return
     df_all= pd.concat(df_l)
     father = '/'.join(str(folder_res).split('/')[:-1])
     df_all.to_csv("{}/all_self_junit.csv".format(father))

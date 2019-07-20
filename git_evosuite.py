@@ -147,6 +147,7 @@ def start_where_stop_res(res_dir):
 
 def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_complie=True):
     fix=False
+    git_repo = repo
     p_name = str(repo).split('/')[-1]
     tag_parent = row['tag_parent']
     module = row['module']
@@ -157,10 +158,9 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-    #if index_bug != 114:
+    #if index_bug > 10:
     #    return
     print "{}".format(component_path)
-
 
     ######
     #list_done = start_where_stop_res(out_dir)
@@ -177,23 +177,31 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
    #     if self_complie:
    #         return
 
+    # open-nlp
+    name = str(repo).split('/')[-1]
+    if os.path.isfile('{}/pom.xml'.format(repo)) is False:
+        if os.path.isdir('{}/{}'.format(repo,name)):
+            repo = '{}/{}'.format(repo,name)
+        else:
+            return
+
     out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),False)
     out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE',False)
     path_to_pom = "{}/pom.xml".format(repo)
 
     print "module={} \t tag_p = {} \t commit_p ={}".format(module, tag_parent, commit_fix)
-    checkout_version(commit_fix, repo, out_dir_new)
+    checkout_version(commit_fix, git_repo, out_dir_new)
 
     if self_complie:
         if is_evo_dir_full(out_evo) is False:
             # no tests were generated bt Evosuite
             return
         self_complie_bulider_func(repo,"{}/{}_{}".format(out_dir,bug_name,index_bug),prefix_str,suffix='fixed')
-        checkout_version(commit_fix, repo, out_dir_new, clean=True)
+        checkout_version(commit_fix, git_repo, out_dir_new, clean=True)
         mvn_command(repo, module, 'clean', None)
-        checkout_version(commit_buggy, repo, out_dir_new)
+        checkout_version(commit_buggy, git_repo, out_dir_new)
         self_complie_bulider_func(repo, "{}/{}_{}".format(out_dir, bug_name, index_bug), prefix_str,suffix='buggy')
-        checkout_version(commit_buggy, repo, out_dir_new, clean=True)
+        checkout_version(commit_buggy, git_repo, out_dir_new, clean=True)
         mvn_command(repo, module, 'clean', None)
 
         return
@@ -201,12 +209,13 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
 
 
     proj_dir = '/'.join(str(path_to_pom).split('/')[:-1])
-    if os.path.isfile('{}/pom.xml'.format(repo)) is False:
-        return
+
+
+
     prefix = src_to_target(component_path,end=prefix_str)
     if prefix is None:
         return
-    repo_look = "{}{}".format(repo,prefix)
+    repo_look = "{}{}".format(git_repo,prefix)
 
     rm_exsiting_test(repo_look , p_name,prefix_str=prefix_str)
 
@@ -241,15 +250,15 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.6.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '7', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '4', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
     evo_test_run(out_evo, repo, module, proj_dir, mode='fixed',prefix_str=prefix_str)
-    checkout_version(commit_fix, repo, out_dir_new, clean=True)
+    checkout_version(commit_fix, git_repo, out_dir_new, clean=True)
 
     # Run test-suite on the buugy version
-    checkout_version(commit_buggy, repo, out_dir_new)
+    checkout_version(commit_buggy, git_repo, out_dir_new)
     rm_exsiting_test(repo_look, p_name,prefix_str=prefix_str)
     mvn_command(repo, module, 'clean', out_log)
     mvn_command(repo, module, 'compile', out_log)
@@ -259,7 +268,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     evo_test_run(out_evo, repo, module, proj_dir, mode='buggy',prefix_str=prefix_str)
-    checkout_version(commit_buggy, repo, out_dir_new, clean=True)
+    checkout_version(commit_buggy, git_repo, out_dir_new, clean=True)
 
     # rm pom.xml for the next checkout
     mvn_command(repo, module, 'clean', out_log)
@@ -293,9 +302,9 @@ def self_complie_bulider_func(repo,dir_cur,prefix,suffix='fix',bug_id=''):
         return None
     d_adder = {'bug_id':str(dir_cur).split('/')[-1],'mode':suffix}
     res,path_jarz=package_mvn_cycle(repo)
-    remove_junit(path_jarz)
     if path_jarz is None:
         return
+    remove_junit(path_jarz)
     out_path_complie = pt.mkdir_system(dir_cur,'complie_out_{}'.format(suffix))
     out_path_junit = pt.mkdir_system(dir_cur, 'junit_out_{}'.format(suffix))
     for ky_i in d.keys():
@@ -448,13 +457,25 @@ def checkout_version(commit, repo, log_dir, clean=False):
         run_GIT_command_and_log(repo, command_git, log_dir, 'git_reset_hard')
         command_git = 'git clean -f'.format(commit)
         run_GIT_command_and_log(repo, command_git, log_dir, 'git_clean_f')
-        if os.path.isdir("{}/libb".format(repo)):
-            os.system('rm -r {}'.format("{}/libb".format(repo)))
+        del_dependency_dir(repo)
 
     else:
         command_git = 'git checkout {}'.format(commit)
         run_GIT_command_and_log(repo, command_git, log_dir, 'checkout')
     print "[OS] {}".format(command_git)
+
+
+def del_dependency_dir(repo):
+    '''
+    del the libb dir
+    '''
+    if os.path.isdir("{}/libb".format(repo)):
+        os.system('rm -r {}'.format("{}/libb".format(repo)))
+    else:
+        res = pt.walk_rec(repo, [], 'libb', False, lv=-3)
+        if len(res) > 0:
+            for x in res:
+                os.system('rm -r {}'.format(x))
 
 
 def package_mvn_cycle(repo,folder_name='libb'):
@@ -1031,7 +1052,7 @@ def parser():
         elif project == 'opennlp':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            #csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp',jarz=True)
+            csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp',jarz=True)
             csv_bug_process(project, repo_path, out_p, killable=False,pref='opennlp', self_complie=True)
         elif project == 'commons-net':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
