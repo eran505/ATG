@@ -176,7 +176,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     # else:
     #     if self_complie:
     #         return
-    # out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),False)
+    out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),False)
     out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE',False)
     path_to_pom = "{}/pom.xml".format(repo)
 
@@ -255,7 +255,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.6.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '4', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '5', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
