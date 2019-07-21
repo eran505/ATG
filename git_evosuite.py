@@ -88,7 +88,7 @@ def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
 
 
 def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',
-                    oracle=True,remove_dup=False,jarz=True,killable=False,pref='org',self_complie=False):
+                    oracle=False,remove_dup=False,jarz=True,killable=False,pref='org',self_complie=False):
 
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
 
@@ -158,8 +158,8 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     component_path = row['component_path']
     print 'index_bug = {}'.format(index_bug)
 
-    #if index_bug > 10:
-    #    return
+    # if index_bug > 150:
+    #     return
     print "{}".format(component_path)
 
     ######
@@ -171,11 +171,18 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
 
 
     target = row['target']
-   # if os.path.isdir("{}/{}_{}".format(out_dir,bug_name,index_bug)):
-   #     fix=True
-   # else:
-   #     if self_complie:
-   #         return
+    # if os.path.isdir("{}/{}_{}".format(out_dir,bug_name,index_bug)):
+    #     fix=True
+    # else:
+    #     if self_complie:
+    #         return
+    # out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),False)
+    out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE',False)
+    path_to_pom = "{}/pom.xml".format(repo)
+
+    print "module={} \t tag_p = {} \t commit_p ={}".format(module, tag_parent, commit_fix)
+    checkout_version(commit_fix, git_repo, out_dir_new)
+
 
     # open-nlp
     name = str(repo).split('/')[-1]
@@ -183,14 +190,12 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
         if os.path.isdir('{}/{}'.format(repo,name)):
             repo = '{}/{}'.format(repo,name)
         else:
-            return
+             if os.path.isdir('{}/{}'.format(repo,'build.xml')):
+                 ant_command(repo,'ant compile')
+                 jarz=False
+             else:
+                 return
 
-    out_dir_new = pt.mkdir_system(out_dir, "{}_{}".format(bug_name, index_bug),False)
-    out_evo = pt.mkdir_system(out_dir_new, 'EVOSUITE',False)
-    path_to_pom = "{}/pom.xml".format(repo)
-
-    print "module={} \t tag_p = {} \t commit_p ={}".format(module, tag_parent, commit_fix)
-    checkout_version(commit_fix, git_repo, out_dir_new)
 
     if self_complie:
         if is_evo_dir_full(out_evo) is False:
@@ -448,6 +453,9 @@ def run_GIT_command_and_log(repo_path, cmd, log_dir, name, log=True):
     return stdout, stderr
 
 
+def ant_command(repo_path, cmd):
+    run_GIT_command_and_log(repo_path, cmd)
+
 def checkout_version(commit, repo, log_dir, clean=False):
     '''
     mange the checkout process
@@ -519,7 +527,6 @@ def mvn_command(repo, module, command_mvn='clean', log_dir=None,str_command=''):
         return
     log_to_file(log_dir, '{}_stdout'.format(command_mvn_str), stdout)
     log_to_file(log_dir, '{}_stderr'.format(command_mvn_str), stderr)
-
 
 
 
@@ -1052,7 +1059,7 @@ def parser():
         elif project == 'opennlp':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp',jarz=True)
+            #csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp',jarz=True)
             csv_bug_process(project, repo_path, out_p, killable=False,pref='opennlp', self_complie=True)
         elif project == 'commons-net':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
@@ -1094,9 +1101,9 @@ def parser():
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
 
-    #sys.argv=['','p','commons-collections']
+    #sys.argv=['','p','commons-math']
     #sys.argv = ['', 'opennlp']
-    sys.argv = ['','opennlp']
+    #sys.argv = ['','opennlp']
     parser()
     exit()
     #FP_dir_clean()
