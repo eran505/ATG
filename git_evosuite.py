@@ -88,7 +88,7 @@ def dependency_getter(repo, dir_jars, m2='/home/ise/.m2/repository'):
 
 
 def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home/ise/eran/tika_exp/res',
-                    oracle=False,remove_dup=False,jarz=True,killable=False,pref='org',self_complie=False):
+                    oracle=False,remove_dup=False,jarz=True,killable=True,pref='org',self_complie=False):
 
     csv_bug = '/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(p_name)
 
@@ -118,7 +118,7 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
         print len(df)
     list_index = None
     if killable:
-        p_csv = '{}/killable_{}.csv'.format('/home/ise/eran/repo/ATG/tmp_files',p_name)
+        p_csv = '{}/killable/kill_{}.csv'.format('/home/ise/eran/repo/ATG/tmp_files',p_name)
         if os.path.isfile(p_csv):
             df_index = pd.read_csv(p_csv)
             list_index = df_index['bug_id'].tolist()
@@ -1045,17 +1045,19 @@ def parser():
             project = sys.argv[2]
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,killable=False,jarz=True)
-            csv_bug_process(project, repo_path, out_p, killable=False,self_complie=True)
+            csv_bug_process(project, repo_path, out_p,killable=False,jarz=True,oracle=True)
+            csv_bug_process(project, repo_path, out_p, killable=False,self_complie=True,oracle=True)
         if sys.argv[1] == 'fix':
             project = sys.argv[2]
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p, killable=False, self_complie=True)
-        elif project == 'tika':
+        if sys.argv[1] == 'k':
+            project = sys.argv[2]
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,jarz=True)
+            csv_bug_process(project, repo_path, out_p, killable=True, jarz=True)
+            csv_bug_process(project, repo_path, out_p, killable=True, self_complie=True)
         elif project == 'opennlp':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -1101,8 +1103,7 @@ def parser():
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
 
-    #sys.argv=['','p','commons-math']
-    #sys.argv = ['', 'opennlp']
+    #sys.argv=['','k','commons-lang']
     #sys.argv = ['','opennlp']
     parser()
     exit()

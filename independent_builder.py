@@ -248,7 +248,49 @@ def scan_results_project(folder_res):
         return
     df_all= pd.concat(df_l)
     father = '/'.join(str(folder_res).split('/')[:-1])
+    get_killable_bug_id(df=df_all,dist_path=father)
     df_all.to_csv("{}/all_self_junit.csv".format(father))
+
+
+def get_killable_bug_id(df_path=None,df=None,dist_path=None):
+    if df_path is not None:
+        df_info = pd.read_csv(df_path,index_col=0)
+    elif df is not None:
+        df_info = df
+    else:
+        print ("no Args given -- [get_killable_bug_id]")
+
+
+
+    df_info_filter = df_info[df_info['trigger'] > 0 ]
+    if len(df_info_filter )==0:
+        print 'cant find bugs that have been killed'
+    df_info_filter = df_info_filter[['bug_id','jira_id']]
+
+    df_info_filter.drop_duplicates(subset=None, keep='first', inplace=True)
+    print len(df_info_filter)
+    if dist_path is not None:
+        df_info_filter.to_csv('{}/killalbe_{}.csv'.format(dist_path,find_project_name(dist_path)))
+        os_command = 'cp {1} {0}'.format('{}/tmp_files/killable/'.format(os.getcwd()),'{}/kill_{}.csv'.format(df_info_filter,find_project_name(df_info_filter)))
+        os.system(os_command)
+    if df_path is not None:
+        father = '/'.join(str(df_path).split('/')[:-1])
+        df_info_filter.to_csv('{}/kill_{}.csv'.format(father,find_project_name(father)))
+        os_command = 'cp {1} {0}'.format('{}/tmp_files/killable/'.format(os.getcwd()),'{}/kill_{}.csv'.format(father,find_project_name(father)))
+        os.system(os_command)
+
+    return df_info_filter
+
+def find_project_name(path):
+    path_name = str(path).split('/')
+    try:
+        index = path_name.index('bug_miner')
+    except:
+        return 'unknown'
+    if len(path_name) <= index+1:
+        return 'unknown'
+    else:
+        return path_name[index+1]
 
 def get_pair_fix_bug_folder(folder_path):
     folder_bug = pt.walk_rec(folder_path,[],'test_suite_t',lv=-2,file_t=False)
@@ -422,6 +464,12 @@ def get_all_self_report(res_folder):
     #df_list = df_all[['bug_id','status']].to_csv('{}/all_report.csv'.format(father_dir))
 
 if __name__ == "__main__":
+
+    get_killable_bug_id('/home/ise/bug_miner/commons-imaging/all_self_junit.csv')
+    get_killable_bug_id('/home/ise/bug_miner/opennlp/all_self_junit.csv')
+    get_killable_bug_id('/home/ise/bug_miner/commons-lang/all_self_junit.csv')
+    get_killable_bug_id('/home/ise/bug_miner/commons-math/all_self_junit.csv')
+    exit()
 
     proj_folder = '/home/ise/bug_miner/opennlp/res'
     scan_results_project(proj_folder)
