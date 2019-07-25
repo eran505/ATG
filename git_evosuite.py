@@ -1061,8 +1061,8 @@ def parser():
         elif project == 'opennlp':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            #csv_bug_process(project, repo_path, out_p,killable=False,pref='opennlp',jarz=True)
-            csv_bug_process(project, repo_path, out_p, killable=False,pref='opennlp', self_complie=True)
+            csv_bug_process(project, repo_path, out_p,killable=True,pref='opennlp',jarz=True)
+            csv_bug_process(project, repo_path, out_p, killable=True,pref='opennlp', self_complie=True)
         elif project == 'commons-net':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
@@ -1103,7 +1103,7 @@ def parser():
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
 
-    #sys.argv=['','k','commons-lang']
+    sys.argv=['','k','commons-lang']
     #sys.argv = ['','opennlp']
     parser()
     exit()
