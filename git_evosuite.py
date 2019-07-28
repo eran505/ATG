@@ -126,6 +126,10 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
             print "No killable.csv file as been found !!!! --> path = {}".format(p_csv)
             return None
     df = df.reindex(index=df.index[::-1])
+
+
+    df = df.sort_values(by=['index_bug'])
+
     df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref,self_complie=self_complie,axis=1)
     return
     #if self_complie:
@@ -161,7 +165,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     # if index_bug > 150:
     #     return
     print "{}".format(component_path)
-
+    return
     ######
     #list_done = start_where_stop_res(out_dir)
     if list_index is not None :
@@ -1103,9 +1107,9 @@ def parser():
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
 
-    sys.argv=['','k','commons-lang']
+    #sys.argv=['','p','commons-lang']
     #sys.argv = ['','opennlp']
-    parser()
+    parser()  
     exit()
     #FP_dir_clean()
     #add_loc()
