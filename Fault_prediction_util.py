@@ -148,6 +148,8 @@ def add_FP_val(project,xgb=True):
                 tag_name = '_'.join(str(item).split('/')[-1].split('_CONF_')[0].split('_')[2:])
             elif project == 'commons-net':
                 tag_name = '_'.join(str(item).split('/')[-1].split('_CONF_')[0].split('_')[2:])
+            else:
+                tag_name = '_'.join(str(item).split('/')[-1].split('_CONF_')[0].split('_')[2:])
         df_i['tag'] = tag_name
         print tag_name
         all_df_fps.append(df_i)
@@ -165,9 +167,11 @@ def add_FP_val(project,xgb=True):
 
     # get sorted version repo
     git_command = r"git for-each-ref --sort=taggerdate --format '%(tag)' "
+    #git_command = r"git tag"
+
     std_out,std_err = ge.run_GIT_command_and_log('{}/{}'.format(father_dir,project),git_command,None,None,False)
     arry_tag_sorted = str(std_out).split()
-    arry_tag_sorted = [ str(x).replace('-','_') for x in arry_tag_sorted]
+    arry_tag_sorted = [ str(x).replace('-','_').replace('.','_') for x in arry_tag_sorted]
     arry_tag_sorted.append('master')
 
     # make a Genric class path
@@ -202,7 +206,7 @@ def prep_df_for_exp(df):
 
 def add_FP_val_helper(row,sorted_tag,fp_df_all,col_name_class='name'):
     tag_cur = row['tag_parent']
-    tag_cur = str(tag_cur).replace('-','_')
+    tag_cur = str(tag_cur).replace('-','_').replace('.','_')
     klass = row[col_name_class]
     print "tag_cur={}".format(tag_cur)
     try:
@@ -371,7 +375,10 @@ def merge_xgboost_name_pred(name_file,pred_csv,out=None,debug=False):
     name_file_i=str(pred_csv).split('/')[-1][:-4]
     df_name = pd.read_csv(name_file,names=['path'])
     df_pred = pd.read_csv(pred_csv,index_col=0)
-    assert len(df_name) == len(df_pred)
+
+    if len(df_name) != len(df_pred):
+        print "ERRRORRRR !!!!!"
+        return
     df = pd.concat([df_name, df_pred], axis=1)
     assert len(df_name) == len(df)
     df.drop(['name'], inplace=True, axis=1, errors='ignore')
@@ -428,15 +435,16 @@ def rearrange_folder_conf_xgb(p_path_dir='/home/ise/bug_miner/XGB/Lang_DATA/csv_
     exit()
 if __name__ == "__main__":
 
-    #rearrange_folder_conf_xgb('/home/ise/bug_miner/commons-net/FP/xgb')
+    #rearrange_folder_conf_xgb('/home/ise/bug_miner/commons-lang/FP/xgb')
 
-    results_csvz = '/home/ise/bug_miner/XGB/NET/TEST'
-    weka_info = '/home/ise/bug_miner/commons-net/FP/all_net'
-    out_dir = '/home/ise/bug_miner/commons-net/FP/xgb'
+    results_csvz = '/home/ise/bug_miner/XGB/LANG/csv_res/TEST'
+    weka_info = '/home/ise/bug_miner/commons-lang/FP/all_lang'
+    out_dir = '/home/ise/bug_miner/commons-lang/FP/xgb'
 
     #xgb_FP_wrapper(weka_info,results_csvz,out_dir=out_dir)
-    #add_FP_val('commons-net')
-    #exit()
+    #add_FP_val('commons-imaging')
+    add_FP_val('commons-lang')
+    exit()
 
 
     repo='/home/ise/bug_miner/commons-math/commons-math'

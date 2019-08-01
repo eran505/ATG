@@ -165,7 +165,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     # if index_bug > 150:
     #     return
     print "{}".format(component_path)
-    
+
     ######
     #list_done = start_where_stop_res(out_dir)
     if list_index is not None :
@@ -194,7 +194,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
         if os.path.isdir('{}/{}'.format(repo,name)):
             repo = '{}/{}'.format(repo,name)
         else:
-             if os.path.isdir('{}/{}'.format(repo,'build.xml')):
+             if os.path.isfile('{}/{}'.format(repo,'build.xml')):
                  ant_command(repo,'ant compile')
                  jarz=False
              else:
@@ -1071,11 +1071,10 @@ def parser():
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
             csv_bug_process(project, repo_path, out_p,killable=False)
-        elif project == 'commons-collections':
+        elif project == 'commons-lang':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,killable=False)
-            csv_bug_process(project, repo_path, out_p, killable=False,self_complie=True)
+            csv_bug_process(project, repo_path, out_p, killable=True,self_complie=True)
         elif sys.argv[1] == 'fix_all':
             path_hard_bug_miner = dir_bug_miner
             res = get_all_commons_dir(path_hard_bug_miner)
@@ -1106,9 +1105,9 @@ def parser():
 
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
+    sys.argv=['','opennlp']
 
-    #sys.argv=['','p','commons-lang']
-    #sys.argv = ['','opennlp']
+    #sys.argv = ['','add_loc','commons-lang']
     parser()  
     exit()
     #FP_dir_clean()

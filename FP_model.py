@@ -37,7 +37,7 @@ def main_func(test_arff, train_arff, valid_set, target_col='hasBug', under_sampl
     test_df = pd.DataFrame(raw_tets[0])
 
     print (train_df[target].value_counts())
-    return None, None, None, None
+    #return None, None, None, None
     # cross_project_adding bugs:
     df_fault = None
     if cross_proj:
@@ -381,7 +381,7 @@ def manger(d_tags):
             d_res['top_ten']=" | ".join(top_ten)
             l_d.append(d_res)
     df=pd.DataFrame(l_d)
-    #df.to_csv('/home/ise/bug_miner/XGB/res/res_3_0.csv')
+    df.to_csv('/home/ise/bug_miner/XGB/res/tmp.csv')
 
 
 def get_dict_pram(path_p_conf='/home/ise/bug_miner/XGB/conf/conf.csv'):
@@ -676,7 +676,7 @@ if __name__ == "__main__":
     #eval_random_forest('/home/ise/bug_miner/commons-math/FP/Random_forest')
     #eval_xgb_test_dir('/home/ise/bug_miner/commons-lang/FP/best_FP/best')
     #eval_xgb_test_dir('/home/ise/bug_miner/commons-math/FP/best_FP/best')
-    #eval_xgb_test_dir('/home/ise/bug_miner/commons-net/FP/best_FP/best')
-    #exit()
-    helper_get_arrf_fiels()
+    eval_xgb_test_dir('/home/ise/bug_miner/commons-net/FP/best_FP/best')
+    exit()
+    helper_get_arrf_fiels(p_path='/home/ise/bug_miner/commons-imaging/FP/all_imaging')
     print "Done !!"

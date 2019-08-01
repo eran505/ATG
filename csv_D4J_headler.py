@@ -980,7 +980,7 @@ def frange(x, y, jump):
 def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True,out=None):
     gamma_arr=[]
     list_d_ranking = []
-    intreval = 0.01
+    intreval = 0.1
     for num_val in frange(0,1+intreval,intreval):
         gamma_arr.append(num_val)
     #gamma_arr=[1,0]
@@ -993,6 +993,21 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True,ou
     else:
         csv_path = '/home/ise/tmp_d4j/out/raw_data/{}.csv'.format(p_name)
     df = pd.read_csv(csv_path, index_col=0)
+
+    # clean non fp rows
+    print list(df)
+    print len(df)
+    df = df[~df['FP'].isnull()]
+    print len(df)
+
+    to_del = ['test_case_fail_num']
+    print len(df)
+    df.drop(to_del, axis=1, inplace=True)
+    df.drop_duplicates(subset=['LOC', 'bug_ID', 'TEST', 'bug_id', 'mode', 'time', 'faulty_class', 'kill', 'sum_detected', 'count_detected', 'issue', 'tag_parent', 'G_package', 'FP', 'tag_FP_val', 'LOC_P'],inplace=True)
+    print len(df)
+
+    #
+
     max_all_rep = df['count_detected'].max()
     print 'max_rep', df['count_detected'].max()
     print 'min_rep', df['count_detected'].min()
@@ -1495,11 +1510,10 @@ if __name__ == "__main__":
    # p='lang'
    # res = pt.walk_rec('/home/ise/bug_miner/commons-{0}/commons-{0}/src/main/java/org'.format(p),[],'.java')
    # print len(res)
-    exit()
     ###merger()
     # get_bug_d4j_major(p_name='Math')
     #exit()
-    p_name_suffix='math'
+    p_name_suffix='lang'
     out='/home/ise/bug_miner/commons-{}'.format(p_name_suffix)
     project_arr=['/home/ise/bug_miner/commons-{}/exp_new_new.csv'.format(p_name_suffix)]
     for x in project_arr:

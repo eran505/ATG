@@ -236,6 +236,7 @@ def scan_results_project(folder_res):
     res = pt.walk_rec(folder_res,[],'',False,lv=-1)
     list_df_path=[]
     for item in res:
+        print "bug_ID = {}".format(str(item).split('/')[-1].split('_')[-1])
         df_path = get_pair_fix_bug_folder(item)
         if df_path  is None:
             continue
@@ -252,7 +253,12 @@ def scan_results_project(folder_res):
     df_all.to_csv("{}/all_self_junit.csv".format(father))
 
 
-def get_killable_bug_id(df_path=None,df=None,dist_path=None):
+def rearrange_reults(df):
+    pass
+
+
+
+def get_killable_bug_id(df_path=None,df=None,dist_path=None,update_repo=False):
     if df_path is not None:
         df_info = pd.read_csv(df_path,index_col=0)
     elif df is not None:
@@ -260,24 +266,24 @@ def get_killable_bug_id(df_path=None,df=None,dist_path=None):
     else:
         print ("no Args given -- [get_killable_bug_id]")
 
-
-
     df_info_filter = df_info[df_info['trigger'] > 0 ]
     if len(df_info_filter )==0:
         print 'cant find bugs that have been killed'
     df_info_filter = df_info_filter[['bug_id','jira_id']]
 
     df_info_filter.drop_duplicates(subset=None, keep='first', inplace=True)
-    print len(df_info_filter)
+    print "number of killed: {}".format(len(df_info_filter))
     if dist_path is not None:
         df_info_filter.to_csv('{}/killalbe_{}.csv'.format(dist_path,find_project_name(dist_path)))
-        os_command = 'cp {1} {0}'.format('{}/tmp_files/killable/'.format(os.getcwd()),'{}/kill_{}.csv'.format(df_info_filter,find_project_name(df_info_filter)))
-        os.system(os_command)
+        if update_repo is True:
+            os_command = 'cp {1} {0}'.format('{}/tmp_files/killable/'.format(os.getcwd()),'{}/kill_{}.csv'.format(df_info_filter,find_project_name(df_info_filter)))
+            os.system(os_command)
     if df_path is not None:
         father = '/'.join(str(df_path).split('/')[:-1])
         df_info_filter.to_csv('{}/kill_{}.csv'.format(father,find_project_name(father)))
-        os_command = 'cp {1} {0}'.format('{}/tmp_files/killable/'.format(os.getcwd()),'{}/kill_{}.csv'.format(father,find_project_name(father)))
-        os.system(os_command)
+        if update_repo is True:
+            os_command = 'cp {1} {0}'.format('{}/tmp_files/killable/'.format(os.getcwd()),'{}/kill_{}.csv'.format(father,find_project_name(father)))
+            os.system(os_command)
 
     return df_info_filter
 
@@ -347,6 +353,8 @@ def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
         #    print 'xx'
             #print diff_fix
 
+
+
         # pars the bug_id and itr number from the path dir
 
         d_buggy = pars_bug_id_iter_id(d_both[key_i]['bug'])
@@ -354,6 +362,11 @@ def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
         d_fixed = pars_bug_id_iter_id(d_both[key_i]['fix'])
         d_fixed['mode'] = 'fixed'
 
+        # Test add name
+        d_buggy['name']=str(key_i).split('_')[0]
+        d_fixed['name'] = str(key_i).split('_')[0]
+
+        # pars the itration number and time budget
 
         list_junit_res = get_regex_all(diff_bug,r'(test\d+.+\n\njava.lang.+)',0,False)
         info_list = pars_junit_regex(list_junit_res,d_extand=d_buggy)
@@ -368,6 +381,81 @@ def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
 
 
     return d_l
+
+def filter_error(df):
+    list_error =  df['error'].unique()
+    print "all error: ",df['trigger'].sum()
+    map_d = {}
+    for item in list_error:
+        if item == 'AssertionError':
+            map_d[item] = 1
+        else:
+            map_d[item] = 0
+    df['trigger'] = df['error'].map(map_d)
+    print 'only AssertionError error: ',df['trigger'].sum()
+    return df
+
+def group_test_by_test_name(path_df,all_error=False):
+    df_bugs = pd.read_csv(path_df,index_col=0)
+    p_name = str(path_df).split('/')[-2]
+    print list(df_bugs)
+    if all_error is False:
+        df_bugs = filter_error(df_bugs)
+    # remove error info
+    df_bugs.drop(['full_error','error'], axis=1, inplace=True)
+
+    csv_p_info = "{}/tmp_files/{}_bug.csv".format(os.getcwd(),p_name)
+    df_info = pd.read_csv(csv_p_info, index_col=0)
+    df_info['is_faulty'] = 1
+    df_faulty = df_info[['index_bug','issue','fail_component','is_faulty']]
+    df_faulty.rename(columns={'index_bug': 'bug_id',
+                       'issue': 'jira_id',
+                       'fail_component': 'name'}, inplace=True)
+    print list(df_faulty )
+    print 'df_faulty: ',len(df_faulty)
+    print 'df_bugs: ',len(df_bugs)
+    print "df_bugs:\t",list(df_bugs)
+    print "df_faulty:\t",list(df_faulty)
+    df_merge = pd.merge(df_bugs,df_faulty, how='left', on=['bug_id','jira_id','name'] )
+    df_merge['is_faulty'].fillna(0, inplace=True)
+
+    # group by all test cases and del
+    df_merge['test_case_fail_num'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time','iter','is_faulty'])['trigger'].transform('sum')
+
+    to_del = ['test_case', 'test_class']
+    df_merge.drop(to_del, axis=1, inplace=True)
+    print len(df_merge)
+    df_merge.drop_duplicates(inplace=True)
+    print len(df_merge)
+
+    df_merge['kill'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time','iter','is_faulty'])['trigger'].transform('max')
+    df_merge.drop_duplicates(subset=['bug_id', 'jira_id', 'name', 'mode', 'time','iter','is_faulty','kill'],inplace=True)
+
+    # sum up results
+    df_merge['sum_rep'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])['trigger'].transform('sum')
+    df_merge['count_rep'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])['name'].transform('count')
+
+    df_merge.drop(['iter'], axis=1, inplace=True)
+    print list(df_merge)
+
+
+
+    # remove duplication
+    print len(df_merge)
+    df_merge.drop_duplicates(subset=['bug_id', 'jira_id', 'mode', 'name', 'time', 'trigger', 'is_faulty', 'test_case_fail_num', 'sum_rep', 'count_rep'],inplace=True)
+    print len(df_merge)
+    print list(df_merge)
+    #split
+    df_merge_buggy = df_merge[df_merge['mode'] == 'buggy']
+    df_merge_fix = df_merge[df_merge['mode'] == 'fixed']
+
+    df_merge_buggy.rename(columns={'jira_id': 'bug_name'}, inplace=True)
+    #df_merge.to_csv('/home/ise/bug_miner/{}/tmp.csv'.format(p_name))
+    df_merge_buggy.to_csv('/home/ise/bug_miner/{}/fin_df_buggy.csv'.format(p_name))
+    #df_merge_fix.to_csv('/home/ise/bug_miner/{}/tmp_fixed.csv'.format(p_name))
+
+
+
 
 
 def pars_bug_id_iter_id(path_file):
@@ -465,15 +553,13 @@ def get_all_self_report(res_folder):
 
 if __name__ == "__main__":
 
-    get_killable_bug_id('/home/ise/bug_miner/commons-imaging/all_self_junit.csv')
-    get_killable_bug_id('/home/ise/bug_miner/opennlp/all_self_junit.csv')
-    get_killable_bug_id('/home/ise/bug_miner/commons-lang/all_self_junit.csv')
-    get_killable_bug_id('/home/ise/bug_miner/commons-math/all_self_junit.csv')
-    exit()
+    #get_killable_bug_id('/home/ise/bug_miner/commons-imaging/all_self_junit.csv')
+    #exit()
 
-    proj_folder = '/home/ise/bug_miner/opennlp/res'
+    proj_folder = '/home/ise/bug_miner/commons-lang/res'
     scan_results_project(proj_folder)
-    map_dir_after_run(proj_folder )
+    map_dir_after_run(proj_folder)
+    group_test_by_test_name('/home/ise/bug_miner/commons-lang/all_self_junit.csv')
 #   map_dir_after_run('/home/ise/bug_miner/commons-validator/res')
 
     exit()
