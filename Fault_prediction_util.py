@@ -451,9 +451,9 @@ if __name__ == "__main__":
     #rearrange_folder_conf_xgb(out_dir )
 
     #xgb_FP_wrapper(weka_info,results_csvz,out_dir=out_dir)
-    add_FP_val('commons-imaging')
+    #add_FP_val('commons-imaging')
     #add_FP_val('opennlp')
-    exit()
+    #exit()
 
 
     repo='/home/ise/bug_miner/commons-math/commons-math'
@@ -464,9 +464,9 @@ if __name__ == "__main__":
     db_Csv = '/home/ise/bug_miner/db_bugs/commons_validator_db.csv'
     out = '/home/ise/bug_miner/commons-validator'
 
-    repo='/home/ise/bug_miner/commons-collections/commons-collections'
-    db_Csv='/home/ise/bug_miner/db_bugs/collections_db.csv'
-    out='/home/ise/bug_miner/commons-collections'
+    repo='/home/ise/bug_miner/commons-compress/commons-compress'
+    db_Csv='/home/ise/bug_miner/db_bugs/commons-compress_db.csv'
+    out='/home/ise/bug_miner/commons-compress'
 
 
 
