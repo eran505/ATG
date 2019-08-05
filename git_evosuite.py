@@ -998,7 +998,7 @@ def add_loc(project_name):
     result_df.to_csv('{}/{}.csv'.format(father_dir,'exp'))
     print len(result_df)
 
-def add_loc_helper(row,repo,out):
+def add_loc_helper(row,repo,out,prefix_name='opennlp'):
     '''
     getting the loc info to LOC dir
     :param repo: path to repo
@@ -1014,7 +1014,7 @@ def add_loc_helper(row,repo,out):
     klasses = pt.walk_rec('{}/{}'.format(repo,pack),[],'.java')
     d_l=[]
     for class_i in klasses:
-        name = pt.path_to_package('org',class_i,-5)
+        name = pt.path_to_package(prefix_name,class_i,-5)
         size = get_LOC(class_i)
         d_l.append({'name':name,'LOC':size,'bug_name':bug_id})
     df=pd.DataFrame(d_l)
@@ -1055,7 +1055,7 @@ def parser():
             project = sys.argv[2]
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p, killable=False, self_complie=True)
+            csv_bug_process(project, repo_path, out_p, killable=True, self_complie=True)
         if sys.argv[1] == 'k':
             project = sys.argv[2]
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
@@ -1065,7 +1065,7 @@ def parser():
         elif project == 'opennlp':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
             out_p = '{}/{}/res'.format(dir_bug_miner, project)
-            csv_bug_process(project, repo_path, out_p,killable=True,pref='opennlp',jarz=True)
+            #csv_bug_process(project, repo_path, out_p,killable=True,pref='opennlp',jarz=True)
             csv_bug_process(project, repo_path, out_p, killable=True,pref='opennlp', self_complie=True)
         elif project == 'commons-net':
             repo_path = '{0}/{1}/{1}'.format(dir_bug_miner, project)
@@ -1105,7 +1105,9 @@ def parser():
 
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
-    sys.argv=['','opennlp']
+    
+    
+    #sys.argv=['','add_loc','opennlp']
 
     #sys.argv = ['','add_loc','commons-lang']
     parser()  

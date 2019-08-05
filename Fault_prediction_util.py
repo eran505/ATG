@@ -234,8 +234,8 @@ def add_FP_val_helper(row,sorted_tag,fp_df_all,col_name_class='name'):
 def path_to_package_name(p_name,path_input):
     item = str(path_input).replace('\\','/')
     start_package = 'org'
-    if p_name == 'Closure':
-        start_package = 'com'
+    if p_name == 'opennlp':
+        start_package = 'opennlp'
     if item[-5:] != '.java':
         return None
     try:
@@ -366,21 +366,30 @@ def xgb_FP_wrapper(info_weka_dir,results_csv,mode='most',out_dir=None):
         else:
             print '[Error] MISSING --> {}'.format(proj_minor_name)
 
+    # tmp section
+    # name_d = {}
+    # for k_i in dico_info.keys():
+    #     csv_path_name_file_i = dico_info[k_i]['name']
+    #     df_tmp = pd.read_csv(csv_path_name_file_i)
+    #     size_len = len(df_tmp)
+    #     if size_len not in name_d:
+    #         name_d[size_len]=[]
+    #     name_d[size_len].append(csv_path_name_file_i)
+
     # the merge process
     for ky in d_results.keys():
-        merge_xgboost_name_pred(d_results[ky]['name'],d_results[ky]['file_pred'],out_dir)
+        merge_xgboost_name_pred(d_results[ky]['name'],d_results[ky]['file_pred'],out_dir,d_name=name_d)
 
 
-def merge_xgboost_name_pred(name_file,pred_csv,out=None,debug=False):
+def merge_xgboost_name_pred(name_file,pred_csv,out=None,debug=False,d_name=None):
     name_file_i=str(pred_csv).split('/')[-1][:-4]
     df_name = pd.read_csv(name_file,names=['path'])
     df_pred = pd.read_csv(pred_csv,index_col=0)
-
     if len(df_name) != len(df_pred):
-        print "ERRRORRRR !!!!!"
+        print 'df_name={} \n df_pred={}'.format(len(df_name),len(df_pred))
+        print "ERRRORRRR"
         return
     df = pd.concat([df_name, df_pred], axis=1)
-    assert len(df_name) == len(df)
     df.drop(['name'], inplace=True, axis=1, errors='ignore')
     df['FP'] = df['test_predictions'].apply(lambda x: x if x < 0 else x)
     df['name'] = df['path'].apply(lambda x: path_to_package_name('', x))
@@ -435,15 +444,15 @@ def rearrange_folder_conf_xgb(p_path_dir='/home/ise/bug_miner/XGB/Lang_DATA/csv_
     exit()
 if __name__ == "__main__":
 
-    #rearrange_folder_conf_xgb('/home/ise/bug_miner/commons-lang/FP/xgb')
 
-    results_csvz = '/home/ise/bug_miner/XGB/LANG/csv_res/TEST'
-    weka_info = '/home/ise/bug_miner/commons-lang/FP/all_lang'
-    out_dir = '/home/ise/bug_miner/commons-lang/FP/xgb'
+    results_csvz = '/home/ise/bug_miner/XGB/csv_res/TEST'
+    weka_info = '/home/ise/bug_miner/commons-imaging/FP/all_imaging'
+    out_dir = '/home/ise/bug_miner/commons-imaging/FP/xgb'
+    #rearrange_folder_conf_xgb(out_dir )
 
     #xgb_FP_wrapper(weka_info,results_csvz,out_dir=out_dir)
-    #add_FP_val('commons-imaging')
-    add_FP_val('commons-lang')
+    add_FP_val('commons-imaging')
+    #add_FP_val('opennlp')
     exit()
 
 

@@ -1003,9 +1003,9 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True,ou
     to_del = ['test_case_fail_num']
     print len(df)
     df.drop(to_del, axis=1, inplace=True)
-    df.drop_duplicates(subset=['LOC', 'bug_ID', 'TEST', 'bug_id', 'mode', 'time', 'faulty_class', 'kill', 'sum_detected', 'count_detected', 'issue', 'tag_parent', 'G_package', 'FP', 'tag_FP_val', 'LOC_P'],inplace=True)
+    df.drop_duplicates(subset=['LOC', 'bug_ID', 'TEST', 'bug_id', 'mode', 'time', 'faulty_class', 'sum_detected', 'count_detected', 'issue', 'tag_parent', 'G_package', 'FP', 'tag_FP_val', 'LOC_P'],inplace=True)
     print len(df)
-
+    df.to_csv('/home/ise/bug_miner/commons-imaging/no_dup.csv')
     #
 
     max_all_rep = df['count_detected'].max()
@@ -1513,9 +1513,9 @@ if __name__ == "__main__":
     ###merger()
     # get_bug_d4j_major(p_name='Math')
     #exit()
-    p_name_suffix='lang'
-    out='/home/ise/bug_miner/commons-{}'.format(p_name_suffix)
-    project_arr=['/home/ise/bug_miner/commons-{}/exp_new_new.csv'.format(p_name_suffix)]
+    p_name_suffix='commons-imaging'
+    out='/home/ise/bug_miner/{}'.format(p_name_suffix)
+    project_arr=['/home/ise/bug_miner/{}/exp_new_new.csv'.format(p_name_suffix)]
     for x in project_arr:
         rep_exp_new(p_name=x,heuristic_method=False,out=out)
         #get_bug_ID_contains_FP(p_name=x)

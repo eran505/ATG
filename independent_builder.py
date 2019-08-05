@@ -555,11 +555,11 @@ if __name__ == "__main__":
 
     #get_killable_bug_id('/home/ise/bug_miner/commons-imaging/all_self_junit.csv')
     #exit()
-
-    proj_folder = '/home/ise/bug_miner/commons-lang/res'
+    proj_name = 'commons-math'
+    proj_folder = '/home/ise/bug_miner/{}/res'.format(proj_name)
     scan_results_project(proj_folder)
     map_dir_after_run(proj_folder)
-    group_test_by_test_name('/home/ise/bug_miner/commons-lang/all_self_junit.csv')
+    group_test_by_test_name('/home/ise/bug_miner/{}/all_self_junit.csv'.format(proj_name))
 #   map_dir_after_run('/home/ise/bug_miner/commons-validator/res')
 
     exit()

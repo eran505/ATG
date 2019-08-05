@@ -676,7 +676,9 @@ if __name__ == "__main__":
     #eval_random_forest('/home/ise/bug_miner/commons-math/FP/Random_forest')
     #eval_xgb_test_dir('/home/ise/bug_miner/commons-lang/FP/best_FP/best')
     #eval_xgb_test_dir('/home/ise/bug_miner/commons-math/FP/best_FP/best')
-    eval_xgb_test_dir('/home/ise/bug_miner/commons-net/FP/best_FP/best')
-    exit()
-    helper_get_arrf_fiels(p_path='/home/ise/bug_miner/commons-imaging/FP/all_imaging')
+    #eval_xgb_test_dir('/home/ise/bug_miner/commons-net/FP/best_FP/best')
+    #exit()
+    p_name = 'imaging'
+    full_name='commons-imaging'
+    helper_get_arrf_fiels(p_path='/home/ise/bug_miner/commons-{0}/FP/all_{0}'.format(p_name))
     print "Done !!"

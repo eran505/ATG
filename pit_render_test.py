@@ -134,6 +134,7 @@ def path_to_package(first, path, cut):
                 arr_newer.append(candidt)
                 continue
         arr = arr_newer
+        ###arr = arr[-1:]
         if len(arr) == 0:
             return None
         if len(arr) != 1:
