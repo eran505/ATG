@@ -128,7 +128,7 @@ def csv_bug_process(p_name, repo_path='/home/ise/eran/tika_exp/tika', out='/home
 
 
     df = df.reindex(index=df.index[::-1])
-    df = df.sort_values(by=['index_bug'])
+    df = df.sort_values(by=['index_bug'],ascending=True)
 
     df.apply(applyer_bug, repo=repo_path, out_dir=out,jarz=jarz,list_index=list_index,prefix_str=pref,self_complie=self_complie,axis=1)
     return
@@ -165,7 +165,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     # if index_bug > 150:
     #     return
     print "{}".format(component_path)
-
+    return
     ######
 
     #list_done = start_where_stop_res(out_dir)
@@ -260,7 +260,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     get_all_poms_and_add_evo(repo)
 
     sys.argv = ['.py', dir_to_gen, 'evosuite-1.0.6.jar',
-                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '2', 'U',str_dependency]
+                '/home/ise/eran/evosuite/jar/', out_evo + '/', 'exp', '200', '1', '180', '5', 'U',str_dependency]
 
     if fix is False:
         bg.init_main()
@@ -282,6 +282,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
 
     # rm pom.xml for the next checkout
     mvn_command(repo, module, 'clean', out_log)
+
 
 
 def is_evo_dir_full(path_evo):
@@ -1122,8 +1123,8 @@ if __name__ == "__main__":
     
     #sys.argv=['','add_loc','opennlp']
 
-    sys.argv = ['','add_loc','commons-math']
-    parser()  
+    sys.argv = ['','k','commons-compress']
+    parser()
     exit()
     #FP_dir_clean()
     #add_loc()

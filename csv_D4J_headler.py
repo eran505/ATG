@@ -1505,6 +1505,46 @@ def helper(df1 = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_Lang.csv',
     print "res len: ",len(res_df)
     exit()
 
+
+def pivoting(p_name='commons-math'):
+    df = pd.read_csv('/home/ise/bug_miner/{}/results_rep_exp.csv'.format(p_name),index_col=0)
+    father = '/home/ise/bug_miner/{}'.format(p_name)
+    print list(df)
+    print len(df)
+    d={}
+    d_l=[]
+    methods = df['method'].unique()
+    items_values = df['item'].unique()
+    print methods
+    for method in methods:
+        d[method]={}
+        for item in items_values:
+            filter_df = df.query('method=="{}" & item=="{}" '.format(method,item))
+            filter_df['binary'] = filter_df['kill_val'].apply(lambda x: 1 if x > 1 else x)
+            all_kill = filter_df['kill_val'].sum()
+            unique_kill = filter_df['binary'].sum()
+            d[method][item] = "{}     ({})".format(int(all_kill),int(unique_kill))
+    for ky in d:
+        d[ky]['method']=ky
+        d_l.append(d[ky])
+    df_fin = pd.DataFrame(d_l)
+    print list(df_fin)
+    arr=['method']
+    for i in range(len(items_values)):
+        arr.append(i+1)
+    print arr
+    df_fin = df_fin[arr]
+    df_fin.sort_values('method', inplace=True)
+    #df_fin.data.set_index('method', inplace=True)
+
+    df_fin.to_csv("{}/pivot.csv".format(father))
+
+
+
+
+def filtering(method,item,df):
+    pass
+
 if __name__ == "__main__":
     #make_FP_pred('/home/ise/tmp_d4j/out_pred/out/Math/Math_3')
     #exit()
@@ -1516,8 +1556,13 @@ if __name__ == "__main__":
     ###merger()
     # get_bug_d4j_major(p_name='Math')
     #exit()
+    pivoting('commons-lang')
 
-    p_name_suffix = 'commons-imaging'
+    pivoting('commons-imaging')
+    pivoting('commons-math')
+    pivoting('commons-net')
+    pivoting('opennlp')
+    exit()
 
     out='/home/ise/bug_miner/{}'.format(p_name_suffix)
     project_arr=['/home/ise/bug_miner/{}/exp_new_new.csv'.format(p_name_suffix)]
