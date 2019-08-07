@@ -165,7 +165,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     # if index_bug > 150:
     #     return
     print "{}".format(component_path)
-    return
+    
     ######
 
     #list_done = start_where_stop_res(out_dir)
