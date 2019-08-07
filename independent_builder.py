@@ -555,7 +555,7 @@ if __name__ == "__main__":
 
     #get_killable_bug_id('/home/ise/bug_miner/commons-imaging/all_self_junit.csv')
     #exit()
-    proj_name = 'commons-math'
+    proj_name = 'commons-compress'
     proj_folder = '/home/ise/bug_miner/{}/res'.format(proj_name)
     scan_results_project(proj_folder)
     map_dir_after_run(proj_folder)

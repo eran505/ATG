@@ -979,9 +979,10 @@ def frange(x, y, jump):
 
 def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True,out=None):
     gamma_arr=[]
+    project_name = str(p_name).split('/')[-2]
     list_d_ranking = []
     intreval = 0.1
-    for num_val in frange(0,1+intreval,intreval):
+    for num_val in frange(0,1,intreval):
         gamma_arr.append(num_val)
     #gamma_arr=[1,0]
     d_list_res = []
@@ -1000,12 +1001,12 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True,ou
     df = df[~df['FP'].isnull()]
     print len(df)
 
-    to_del = ['test_case_fail_num']
-    print len(df)
-    df.drop(to_del, axis=1, inplace=True)
-    df.drop_duplicates(subset=['LOC', 'bug_ID', 'TEST', 'bug_id', 'mode', 'time', 'faulty_class', 'sum_detected', 'count_detected', 'issue', 'tag_parent', 'G_package', 'FP', 'tag_FP_val', 'LOC_P'],inplace=True)
-    print len(df)
-    df.to_csv('/home/ise/bug_miner/commons-imaging/no_dup.csv')
+    #to_del = ['test_case_fail_num']
+    #print len(df)
+    #df.drop(to_del, axis=1, inplace=True)
+    #df.drop_duplicates(subset=['LOC', 'bug_ID', 'TEST', 'bug_id', 'mode', 'time', 'faulty_class', 'sum_detected', 'count_detected', 'issue', 'tag_parent', 'G_package', 'FP', 'tag_FP_val', 'LOC_P'],inplace=True)
+    #print len(df)
+    #df.to_csv('/home/ise/bug_miner/{}/no_dup.csv'.format(project_name ))
     #
 
     max_all_rep = df['count_detected'].max()
@@ -1099,6 +1100,8 @@ def rep_exp_new(p_name='Lang',rep=4,item=5,heuristic_method=True,pre_gen=True,ou
         df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
     else:
         df_res.to_csv('{}/results_rep_exp.csv'.format(out))
+
+
     # flushing out the ranking csv
 #    df_rank = pd.DataFrame(list_d_ranking)
 #    df_rank.to_csv('{}/{}_RANK.csv'.format('/home/ise/tmp', p_name))
@@ -1513,7 +1516,9 @@ if __name__ == "__main__":
     ###merger()
     # get_bug_d4j_major(p_name='Math')
     #exit()
-    p_name_suffix='commons-imaging'
+
+    p_name_suffix = 'commons-imaging'
+
     out='/home/ise/bug_miner/{}'.format(p_name_suffix)
     project_arr=['/home/ise/bug_miner/{}/exp_new_new.csv'.format(p_name_suffix)]
     for x in project_arr:

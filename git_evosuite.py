@@ -167,6 +167,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     print "{}".format(component_path)
 
     ######
+
     #list_done = start_where_stop_res(out_dir)
     if list_index is not None :
         if index_bug not in list_index:
@@ -970,7 +971,7 @@ def tmp_function(df_path='/home/ise/bug_miner/commons-math/fin_df_buggy.csv'):
     exit()
 
 
-def add_loc(project_name):
+def add_loc(project_name,pass_loc=False):
     csv_p = '/home/ise/bug_miner/{}/fin_df_buggy.csv'.format(project_name)
     df_fin = pd.read_csv(csv_p, index_col=0)
     p_name = str(csv_p).split('/')[-2]
@@ -983,34 +984,45 @@ def add_loc(project_name):
     print list(df_info)
     print len(df_info)
     df_info = df_info[df_info['issue'].isin(list_bug_generated)]
-    df_info.apply(add_loc_helper,repo=repo_path,out=out_loc,axis=1)
-    # get all df loc from LOC folder
-    res_df_loc_path = pt.walk_rec(out_loc,[],'.csv')
-    all_loc_list = []
-    for item_loc_path in res_df_loc_path:
-        all_loc_list.append(pd.read_csv(item_loc_path,index_col=0))
-    df_all_loc = pd.concat(all_loc_list)
-    print list(df_all_loc)
-    print list(df_fin)
-    print len(df_fin)
-    df_all_loc.to_csv('{}/{}.csv'.format(father_dir,'loc'))
+    if pass_loc is False:
+        df_info.apply(add_loc_helper,repo=repo_path,out=out_loc,axis=1)
+        # get all df loc from LOC folder
+        res_df_loc_path = pt.walk_rec(out_loc,[],'.csv')
+        all_loc_list = []
+        for item_loc_path in res_df_loc_path:
+            all_loc_list.append(pd.read_csv(item_loc_path,index_col=0))
+        df_all_loc = pd.concat(all_loc_list)
+        print list(df_all_loc)
+        print list(df_fin)
+        print len(df_fin)
+        df_all_loc.to_csv('{}/{}.csv'.format(father_dir,'loc'))
+    else:
+        df_all_loc = pd.read_csv('{}/{}.csv'.format(father_dir,'loc'),index_col=0)
     result_df = pd.merge(df_all_loc,df_fin,'right',on=['bug_name', 'name'])
     result_df.to_csv('{}/{}.csv'.format(father_dir,'exp'))
     print len(result_df)
 
-def add_loc_helper(row,repo,out,prefix_name='opennlp'):
+def add_loc_helper(row,repo,out,prefix_name='org'):
     '''
     getting the loc info to LOC dir
     :param repo: path to repo
     :param out: path where to write the csv
     '''
     commit_buggy = row['parent']
+    commit_buggy = row['commit']
     bug_id = row['issue']
     path_to_faulty = row['component_path']
     package_name = row['package']
+    # if str(bug_id ) == '1261':
+    #     print ""
     print path_to_faulty
     checkout_version(commit_buggy,repo,None)
     pack = '/'.join(str(path_to_faulty).split('\\')[:-1])
+    # #TODO: remove it
+    # pack = str(pack).split('/')
+    # indx =pack.index(prefix_name)
+    # pack = '/'.join(pack[:indx+1])
+    # #####
     klasses = pt.walk_rec('{}/{}'.format(repo,pack),[],'.java')
     d_l=[]
     for class_i in klasses:
@@ -1019,6 +1031,7 @@ def add_loc_helper(row,repo,out,prefix_name='opennlp'):
         d_l.append({'name':name,'LOC':size,'bug_name':bug_id})
     df=pd.DataFrame(d_l)
     df.to_csv('{}/{}_LOC.csv'.format(out,bug_id))
+
 
 
 def FP_dir_clean(dir_p='/home/ise/bug_miner/commons-lang/FP/raw'):
@@ -1109,7 +1122,7 @@ if __name__ == "__main__":
     
     #sys.argv=['','add_loc','opennlp']
 
-    sys.argv = ['','p','commons-compress']
+    sys.argv = ['','add_loc','commons-math']
     parser()  
     exit()
     #FP_dir_clean()

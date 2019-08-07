@@ -154,7 +154,7 @@ def add_FP_val(project,xgb=True):
         print tag_name
         all_df_fps.append(df_i)
     df_all_fp = pd.concat(all_df_fps)
-    df_info=pd.read_csv('{}/tmp_files/{}_bug.csv'.format(os.getcwd(),project),index_col=0)
+    df_info=pd.read_csv('/home/ise/eran/repo/ATG/tmp_files/{}_bug.csv'.format(project),index_col=0)
     print list(df_info)
     print list(df_exp)
     print list(df_all_fp)
@@ -191,6 +191,13 @@ def add_FP_val(project,xgb=True):
 
     res_exp = prep_df_for_exp(res_exp)
 
+    if 'test_case_fail_num' in res_exp:
+        to_del = ['test_case_fail_num']
+        print len(res_exp)
+        res_exp.drop(to_del, axis=1, inplace=True)
+        res_exp.drop_duplicates(subset=['LOC', 'bug_ID', 'TEST', 'bug_id', 'mode', 'time', 'faulty_class', 'sum_detected', 'count_detected', 'issue', 'tag_parent', 'G_package', 'FP', 'tag_FP_val', 'LOC_P'],inplace=True)
+        print len(res_exp)
+
     res_exp.to_csv('{}/exp_new_new.csv'.format(father_dir))
 
 
@@ -226,9 +233,28 @@ def add_FP_val_helper(row,sorted_tag,fp_df_all,col_name_class='name'):
                     print "max"
                     fp_val = filter_klass['FP'].max()
                 else:
-                    fp_val = filter_klass['FP'].min()
-                #fp_val = filter_klass['FP'].iloc[0]
+                    #fp_val = filter_klass['FP'].min()
+                    fp_val = filter_klass['FP'].iloc[0]
+                    fp_val = filter_klass['FP'].mean()
+                    #fp_val = filter_klass['FP'].median()
                 return '{}_{}'.format(fp_val,tag)
+
+
+    ########
+    cut_list = sorted_tag
+    for tag in cut_list:
+        print tag
+        filter_tag_df = fp_df_all[fp_df_all['tag'] == tag]
+        if len(filter_tag_df) > 0:
+            filter_klass = filter_tag_df[filter_tag_df[col_name_class] == klass]
+            if len(filter_klass) > 0:
+                if row['is_faulty'] > 0:
+                    print "max"
+                    fp_val = filter_klass['FP'].max()
+                else:
+                    # fp_val = filter_klass['FP'].min()
+                    fp_val = filter_klass['FP'].iloc[0]
+                return '{}_{}'.format(fp_val, tag)
     return None
 
 def path_to_package_name(p_name,path_input):
@@ -365,7 +391,7 @@ def xgb_FP_wrapper(info_weka_dir,results_csv,mode='most',out_dir=None):
             d_results[file_name]['name']=name_path
         else:
             print '[Error] MISSING --> {}'.format(proj_minor_name)
-
+    name_d = None
     # tmp section
     # name_d = {}
     # for k_i in dico_info.keys():
@@ -451,9 +477,12 @@ if __name__ == "__main__":
     #rearrange_folder_conf_xgb(out_dir )
 
     #xgb_FP_wrapper(weka_info,results_csvz,out_dir=out_dir)
-    #add_FP_val('commons-imaging')
-    #add_FP_val('opennlp')
-    #exit()
+    add_FP_val('commons-imaging')
+    add_FP_val('commons-lang')
+    ##add_FP_val('commons-math')
+    add_FP_val('opennlp')
+
+    exit()
 
 
     repo='/home/ise/bug_miner/commons-math/commons-math'
