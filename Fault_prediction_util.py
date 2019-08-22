@@ -171,7 +171,7 @@ def add_FP_val(project,xgb=True):
 
     std_out,std_err = ge.run_GIT_command_and_log('{}/{}'.format(father_dir,project),git_command,None,None,False)
     arry_tag_sorted = str(std_out).split()
-    arry_tag_sorted = [ str(x).replace('-','_').replace('.','_') for x in arry_tag_sorted]
+    arry_tag_sorted = [ str(x).replace('-','_').replace('.','_').replace('/','_') for x in arry_tag_sorted]
     arry_tag_sorted.append('master')
 
     # make a Genric class path
@@ -213,7 +213,7 @@ def prep_df_for_exp(df):
 
 def add_FP_val_helper(row,sorted_tag,fp_df_all,col_name_class='name'):
     tag_cur = row['tag_parent']
-    tag_cur = str(tag_cur).replace('-','_').replace('.','_')
+    tag_cur = str(tag_cur).replace('-','_').replace('.','_').replace('/','_')
     klass = row[col_name_class]
     print "tag_cur={}".format(tag_cur)
     try:
@@ -393,14 +393,14 @@ def xgb_FP_wrapper(info_weka_dir,results_csv,mode='most',out_dir=None):
             print '[Error] MISSING --> {}'.format(proj_minor_name)
     name_d = None
     # tmp section
-    # name_d = {}
-    # for k_i in dico_info.keys():
-    #     csv_path_name_file_i = dico_info[k_i]['name']
-    #     df_tmp = pd.read_csv(csv_path_name_file_i)
-    #     size_len = len(df_tmp)
-    #     if size_len not in name_d:
-    #         name_d[size_len]=[]
-    #     name_d[size_len].append(csv_path_name_file_i)
+    name_d = {}
+    for k_i in dico_info.keys():
+        csv_path_name_file_i = dico_info[k_i]['name']
+        df_tmp = pd.read_csv(csv_path_name_file_i)
+        size_len = len(df_tmp)
+        if size_len not in name_d:
+            name_d[size_len]=[]
+        name_d[size_len].append(csv_path_name_file_i)
 
     # the merge process
     for ky in d_results.keys():
@@ -412,6 +412,7 @@ def merge_xgboost_name_pred(name_file,pred_csv,out=None,debug=False,d_name=None)
     df_name = pd.read_csv(name_file,names=['path'])
     df_pred = pd.read_csv(pred_csv,index_col=0)
     if len(df_name) != len(df_pred):
+
         print 'df_name={} \n df_pred={}'.format(len(df_name),len(df_pred))
         print "ERRRORRRR"
         return
@@ -472,17 +473,17 @@ if __name__ == "__main__":
 
 
     results_csvz = '/home/ise/bug_miner/XGB/csv_res/TEST'
-    weka_info = '/home/ise/bug_miner/commons-imaging/FP/all_imaging'
-    out_dir = '/home/ise/bug_miner/commons-imaging/FP/xgb'
+    weka_info = '/home/ise/bug_miner/commons-compress/FP/all_compress'
+    out_dir = '/home/ise/bug_miner/commons-compress/FP/xgb'
     #rearrange_folder_conf_xgb(out_dir )
 
     #xgb_FP_wrapper(weka_info,results_csvz,out_dir=out_dir)
-    add_FP_val('commons-imaging')
-    add_FP_val('commons-lang')
+    add_FP_val('commons-compress')
+    #add_FP_val('commons-lang')
     ##add_FP_val('commons-math')
-    add_FP_val('opennlp')
-
+    #add_FP_val('opennlp')
     exit()
+
 
 
     repo='/home/ise/bug_miner/commons-math/commons-math'

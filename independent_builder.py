@@ -250,6 +250,9 @@ def scan_results_project(folder_res):
     df_all= pd.concat(df_l)
     father = '/'.join(str(folder_res).split('/')[:-1])
     get_killable_bug_id(df=df_all,dist_path=father)
+    df_all_filter = df_all[df_all['trigger']>0]
+    print df_all_filter['error'].value_counts()
+    print 'ALL: ',len(df_all_filter)
     df_all.to_csv("{}/all_self_junit.csv".format(father))
 
 
@@ -414,8 +417,7 @@ def group_test_by_test_name(path_df,all_error=False):
     print list(df_faulty )
     print 'df_faulty: ',len(df_faulty)
     print 'df_bugs: ',len(df_bugs)
-    print "df_bugs:\t",list(df_bugs)
-    print "df_faulty:\t",list(df_faulty)
+
     df_merge = pd.merge(df_bugs,df_faulty, how='left', on=['bug_id','jira_id','name'] )
     df_merge['is_faulty'].fillna(0, inplace=True)
 
@@ -424,9 +426,9 @@ def group_test_by_test_name(path_df,all_error=False):
 
     to_del = ['test_case', 'test_class']
     df_merge.drop(to_del, axis=1, inplace=True)
-    print len(df_merge)
+
     df_merge.drop_duplicates(inplace=True)
-    print len(df_merge)
+
 
     df_merge['kill'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time','iter','is_faulty'])['trigger'].transform('max')
     df_merge.drop_duplicates(subset=['bug_id', 'jira_id', 'name', 'mode', 'time','iter','is_faulty','kill'],inplace=True)
@@ -436,21 +438,25 @@ def group_test_by_test_name(path_df,all_error=False):
     df_merge['count_rep'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])['name'].transform('count')
 
     df_merge.drop(['iter'], axis=1, inplace=True)
-    print list(df_merge)
+
 
 
 
     # remove duplication
-    print len(df_merge)
+
     df_merge.drop_duplicates(subset=['bug_id', 'jira_id', 'mode', 'name', 'time', 'trigger', 'is_faulty', 'test_case_fail_num', 'sum_rep', 'count_rep'],inplace=True)
-    print len(df_merge)
-    print list(df_merge)
+
     #split
     df_merge_buggy = df_merge[df_merge['mode'] == 'buggy']
     df_merge_fix = df_merge[df_merge['mode'] == 'fixed']
 
     df_merge_buggy.rename(columns={'jira_id': 'bug_name'}, inplace=True)
     #df_merge.to_csv('/home/ise/bug_miner/{}/tmp.csv'.format(p_name))
+
+    df_merge_buggy_filter = df_merge_buggy[df_merge_buggy['sum_rep'] > 0 ]
+    l = df_merge_buggy_filter['bug_id'].unique()
+    print "unique bugs kill:"
+    print len(l)
     df_merge_buggy.to_csv('/home/ise/bug_miner/{}/fin_df_buggy.csv'.format(p_name))
     #df_merge_fix.to_csv('/home/ise/bug_miner/{}/tmp_fixed.csv'.format(p_name))
 
@@ -555,10 +561,10 @@ if __name__ == "__main__":
 
     #get_killable_bug_id('/home/ise/bug_miner/commons-imaging/all_self_junit.csv')
     #exit()
-    proj_name = 'commons-compress'
+    proj_name = 'commons-lang'
     proj_folder = '/home/ise/bug_miner/{}/res'.format(proj_name)
     scan_results_project(proj_folder)
-    map_dir_after_run(proj_folder)
+    #map_dir_after_run(proj_folder)
     group_test_by_test_name('/home/ise/bug_miner/{}/all_self_junit.csv'.format(proj_name))
 #   map_dir_after_run('/home/ise/bug_miner/commons-validator/res')
 

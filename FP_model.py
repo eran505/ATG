@@ -678,7 +678,7 @@ if __name__ == "__main__":
     #eval_xgb_test_dir('/home/ise/bug_miner/commons-math/FP/best_FP/best')
     #eval_xgb_test_dir('/home/ise/bug_miner/commons-net/FP/best_FP/best')
     #exit()
-    p_name = 'imaging'
-    full_name='commons-imaging'
+    p_name = 'compress'
+    full_name='commons-compress'
     helper_get_arrf_fiels(p_path='/home/ise/bug_miner/commons-{0}/FP/all_{0}'.format(p_name))
     print "Done !!"

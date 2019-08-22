@@ -165,7 +165,7 @@ def applyer_bug(row, out_dir, repo,list_index,jarz=True,prefix_str='org',self_co
     # if index_bug > 150:
     #     return
     print "{}".format(component_path)
-    
+
     ######
 
     #list_done = start_where_stop_res(out_dir)
@@ -1123,7 +1123,7 @@ if __name__ == "__main__":
     
     #sys.argv=['','add_loc','opennlp']
 
-    sys.argv = ['','k','commons-compress']
+    sys.argv = ['','add_loc','commons-compress']
     parser()
     exit()
     #FP_dir_clean()

@@ -184,6 +184,24 @@ def log_to_file(dir_log, name_file, txt_to_log):
         file_log.write(txt_to_log)
 
 
+def checkout_version(commit, repo, log_dir, clean=False):
+    '''
+    mange the checkout process
+    '''
+    if clean:
+        command_git = 'git reset --hard'.format(commit)
+        run_GIT_command_and_log(repo, command_git, log_dir, 'git_reset_hard')
+        command_git = 'git clean -f'.format(commit)
+        run_GIT_command_and_log(repo, command_git, log_dir, 'git_clean_f')
+
+    else:
+        command_git = 'git checkout {}'.format(commit)
+        if log_dir is not None:
+            run_GIT_command_and_log(repo, command_git, log_dir, 'checkout')
+    print "[OS] {}".format(command_git)
+
+
+
 def get_date_git(dir_p, commit_id):
     repo = git.Repo(dir_p)
     g = git.Git(dir_p)
@@ -662,6 +680,42 @@ def foo():
 
 
 
+def get_class_dist_over_all_bugs(p_name='opennlp'):
+    df_info = pd.read_csv('{}/{}_bug.csv'.format('/home/ise/eran/repo/ATG/tmp_files',p_name))
+    l_java_classes_size = []
+    df_info['size_class'] = df_info['commit'].apply(lambda x: count_package_number(x,p_name))
+    print df_info['size_class'].mean()
+    print df_info['size_class']
+
+def count_class(commit,p_name):
+    repo_path = '/home/ise/bug_miner/{0}/{0}'.format(p_name)
+    run_GIT_command_and_log(repo_path, 'git checkout {}'.format(commit), None,None,False)
+    list_java = pt.walk_rec(repo_path,[],'.java')
+    print len(list_java)
+    return len(list_java)
+
+
+def count_package_number(commit,p_name,prefix='tools'):
+    repo_path = '/home/ise/bug_miner/{0}/{0}'.format(p_name)
+    run_GIT_command_and_log(repo_path, 'git checkout {}'.format(commit), None,None,False)
+    src_folder = pt.walk_rec(repo_path, [], prefix,False)
+    src_folder = [x for x in src_folder if str(x).__contains__('/resources/') is False]
+    src_folder = [x for x in src_folder if str(x).__contains__('/test/') is False]
+    src_folder = [x for x in src_folder if str(x).__contains__('/ftp2/') is False]
+    src_folder = [x for x in src_folder if str(x).__contains__('/opennlp/tools') is True]
+
+    #src_folder
+
+    print src_folder
+    if len(src_folder)==1:
+        folderz = pt.walk_rec(src_folder[0], [], '',False)
+        num_of_package =  len(folderz)
+        return num_of_package
+    return None
+    #print len(list_java)
+    #return len(list_java)
+
+
 def add_tika_tags_csv(csv_p = '/home/ise/Downloads/tika/data/valid_bugs.csv',p_name='tika'):
     df= pd.read_csv(csv_p)
     father_dir = '/'.join(str(csv_p).split('/')[:-1])
@@ -712,6 +766,8 @@ def map_res_directory_generation_status(res_path='/home/ise/bug_miner/commons-sc
 
 if __name__ == "__main__":
     befor_op()
+    get_class_dist_over_all_bugs()
+    exit()
     map_res_directory_generation_status()
     exit()
 

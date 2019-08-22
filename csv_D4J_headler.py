@@ -1506,7 +1506,36 @@ def helper(df1 = '/home/ise/eran/out_csvs_D4j/rep_exp/df_grouped_Lang.csv',
     exit()
 
 
-def pivoting(p_name='commons-math'):
+
+def plot_bar_chart(p_name='commons-math'):
+    df = pivoting(p_name,var=2)
+    print "---plot_bar_chart---"
+    print list(df)
+    print len(df)
+    import matplotlib.pyplot as plt
+
+    for i in range(1,5,1):
+        df[i] = df[i].astype(int)
+    print df.dtypes
+
+    #df['1_diff'] = df.apply(lambda row: row[1] - row['1_unique'])
+    df['2_diff'] = df[2] - df['2_unique']
+    print df['2_diff']
+    fig = plt.figure(figsize=(20, 10))
+
+    i=2
+    one_bar_list = [plt.bar(np.array(15), df[i], align='edge', width=0.1),
+                   plt.bar(np.array(15), df['{}_diff'.format(i)], align='edge', width=0.1)]
+
+    i += 1
+    #two_bar_list = [plt.bar(np.array(15), df[i], align='edge', width=0.2),
+    #               plt.bar(np.array(15), df['{}_unique'.format(i)], align='edge', width=0.2)]
+
+    #cd_bar_list = [plt.bar([0, 1, 2, 3], df.D, align='edge', width=-0.2),
+    #               plt.bar([0, 1, 2, 3], df.C, align='edge', width=-0.2)]
+    plt.show()
+
+def pivoting(p_name='commons-math',var=2):
     df = pd.read_csv('/home/ise/bug_miner/{}/results_rep_exp.csv'.format(p_name),index_col=0)
     father = '/home/ise/bug_miner/{}'.format(p_name)
     print list(df)
@@ -1523,7 +1552,11 @@ def pivoting(p_name='commons-math'):
             filter_df['binary'] = filter_df['kill_val'].apply(lambda x: 1 if x > 1 else x)
             all_kill = filter_df['kill_val'].sum()
             unique_kill = filter_df['binary'].sum()
-            d[method][item] = "{}     ({})".format(int(all_kill),int(unique_kill))
+            if var != 2:
+                d[method][item] = "{}     ({})".format(int(all_kill),int(unique_kill))
+            else:
+                d[method][item] = "{}".format(int(all_kill))
+                d[method]["{}_unique".format(item)]=int(unique_kill)
     for ky in d:
         d[ky]['method']=ky
         d_l.append(d[ky])
@@ -1532,14 +1565,17 @@ def pivoting(p_name='commons-math'):
     arr=['method']
     for i in range(len(items_values)):
         arr.append(i+1)
+        if var == 2:
+            arr.append("{}_unique".format(i+1))
     print arr
     df_fin = df_fin[arr]
     df_fin.sort_values('method', inplace=True)
     #df_fin.data.set_index('method', inplace=True)
-
-    df_fin.to_csv("{}/pivot.csv".format(father))
-
-
+    if var ==2:
+        df_fin.to_csv("{}/pivot_v2.csv".format(father))
+    else:
+        df_fin.to_csv("{}/pivot_v1.csv".format(father))
+    return df_fin
 
 
 def filtering(method,item,df):
@@ -1556,18 +1592,19 @@ if __name__ == "__main__":
     ###merger()
     # get_bug_d4j_major(p_name='Math')
     #exit()
-    pivoting('commons-lang')
-
-    pivoting('commons-imaging')
-    pivoting('commons-math')
-    pivoting('commons-net')
-    pivoting('opennlp')
+    #pivoting('commons-lang')
+    plot_bar_chart()
+    #pivoting('commons-imaging')
+    #pivoting('commons-math')
+    #pivoting('commons-net')
+    #pivoting('opennlp')
     exit()
-
+    p_name_suffix='commons-compress'
     out='/home/ise/bug_miner/{}'.format(p_name_suffix)
     project_arr=['/home/ise/bug_miner/{}/exp_new_new.csv'.format(p_name_suffix)]
     for x in project_arr:
         rep_exp_new(p_name=x,heuristic_method=False,out=out)
+        pivoting(p_name_suffix,1)
         #get_bug_ID_contains_FP(p_name=x)
     exit()
     util(p_name="Lang")
