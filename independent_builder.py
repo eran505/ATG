@@ -237,6 +237,9 @@ def scan_results_project(folder_res):
     list_df_path=[]
     for item in res:
         print "bug_ID = {}".format(str(item).split('/')[-1].split('_')[-1])
+        df_path="{}/indep_report.csv".format(item)
+        if os.path.isfile(df_path) is False:
+            continue
         df_path = get_pair_fix_bug_folder(item)
         if df_path  is None:
             continue
@@ -249,11 +252,12 @@ def scan_results_project(folder_res):
         return
     df_all= pd.concat(df_l)
     father = '/'.join(str(folder_res).split('/')[:-1])
-    get_killable_bug_id(df=df_all,dist_path=father)
-    df_all_filter = df_all[df_all['trigger']>0]
-    print df_all_filter['error'].value_counts()
-    print 'ALL: ',len(df_all_filter)
-    df_all.to_csv("{}/all_self_junit.csv".format(father))
+    #get_killable_bug_id(df=df_all,dist_path=father)
+    #df_all_filter = df_all[df_all['trigger']>0]
+    #print df_all_filter['error'].value_counts()
+    #print 'ALL: ',len(df_all_filter)
+    #df_all.to_csv("{}/out/counter_testcases.csv".format(father))
+    #df_all.to_csv("{}/all_self_junit_new.csv".format(father))
 
 
 def rearrange_reults(df):
@@ -324,10 +328,10 @@ def get_pair_fix_bug_folder(folder_path):
     if len(d_l) == 0:
         return None
     df = pd.DataFrame(d_l)
-    df.to_csv("{}/indep_report.csv".format(folder_path))
-    return "{}/indep_report.csv".format(folder_path)
+    df.to_csv("{}/indep_report_v1.csv".format(folder_path))
+    return "{}/indep_report_v1.csv".format(folder_path)
 
-def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
+def get_diff_fix_buggy(root_dir_bug,root_dir_fix,if_count_tset_cases=False):
     d_start={}
     d={'bug':{},'fix':{}}
     res_fix = pt.walk_rec(root_dir_fix,[],'.txt')
@@ -349,12 +353,6 @@ def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
     d_l = []
     for key_i in d_both.keys():
         diff_bug, diff_fix = diff_function(d_both[key_i]['bug'],d_both[key_i]['fix'])
-        #if len('Time: 0.226x')<len(diff_bug):
-        #    print 'yy'
-            #print diff_bug
-        #if len('Time: 0.226x') <len( diff_fix):
-        #    print 'xx'
-            #print diff_fix
 
 
 
@@ -370,6 +368,15 @@ def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
         d_fixed['name'] = str(key_i).split('_')[0]
 
         # pars the itration number and time budget
+        if if_count_tset_cases:
+            num_test_bug = tests_regex_count(d_both[key_i]['bug'])
+            num_test_fix = tests_regex_count(d_both[key_i]['fix'])
+            d_fixed['num_of_test_cases']=num_test_fix
+            d_buggy['num_of_test_cases']=num_test_bug
+            d_l.append(d_buggy)
+            d_l.append(d_fixed)
+            continue
+
 
         list_junit_res = get_regex_all(diff_bug,r'(test\d+.+\n\njava.lang.+)',0,False)
         info_list = pars_junit_regex(list_junit_res,d_extand=d_buggy)
@@ -377,7 +384,7 @@ def get_diff_fix_buggy(root_dir_bug,root_dir_fix):
             d_l.extend(info_list)
 
 
-        list_junit_res = get_regex_all(diff_fix,r'(test\d+.+\n\njava.lang.+)',0,False)
+            list_junit_res = get_regex_all(diff_fix,r'(test\d+.+\n\njava.lang.+)',0,False)
         info_list = pars_junit_regex(list_junit_res,d_extand=d_fixed)
         if info_list is not None:
             d_l.extend(info_list)
@@ -424,6 +431,8 @@ def group_test_by_test_name(path_df,all_error=False):
     # group by all test cases and del
     df_merge['test_case_fail_num'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time','iter','is_faulty'])['trigger'].transform('sum')
 
+
+
     to_del = ['test_case', 'test_class']
     df_merge.drop(to_del, axis=1, inplace=True)
 
@@ -436,11 +445,14 @@ def group_test_by_test_name(path_df,all_error=False):
     # sum up results
     df_merge['sum_rep'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])['trigger'].transform('sum')
     df_merge['count_rep'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])['name'].transform('count')
+    df_merge['fail_tets_case_sum'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])['test_case_fail_num'].transform('sum')
+
+    df_merge = df_merge[df_merge['mode'] == 'buggy']
+    df_merge = df_merge[df_merge['mode'] > 0]
+    df_merge.to_csv('/home/ise/bug_miner/commons-imaging/out/case.csv')
+    exit()
 
     df_merge.drop(['iter'], axis=1, inplace=True)
-
-
-
 
     # remove duplication
 
@@ -557,13 +569,102 @@ def get_all_self_report(res_folder):
     print list(df_all)
     #df_list = df_all[['bug_id','status']].to_csv('{}/all_report.csv'.format(father_dir))
 
-if __name__ == "__main__":
 
+
+
+def tests_regex_count(path_txt):
+    with open(path_txt, 'r+') as f:
+        data = f.read()
+
+    res = get_regex_all(data, r'\d+ tests', 0, False)
+    if res is None:
+        res = get_regex_all(data, r'Tests run: \d+', 0, False)
+        if res is not None:
+            res = str(res[0]).split(': ')[-1]
+        else:
+            res = get_regex_all(data, r'\d+ test', 0, False)
+            if res is not None:
+                res = str(res[0]).split(' ')[0]
+                return res
+    else:
+        res = str(res[0]).split(' ')[0]
+
+    return res
+
+
+
+def counter_fail_test_case_sum(path_junit_fail):
+    df_bugs = pd.read_csv(path_junit_fail, index_col=0)
+    p_name = str(path_junit_fail).split('/')[-2]
+    all_error=False
+    print list(df_bugs)
+    if all_error is False:
+        df_bugs = filter_error(df_bugs)
+    # remove error info
+    df_bugs.drop(['full_error', 'error'], axis=1, inplace=True)
+
+    csv_p_info = "{}/tmp_files/{}_bug.csv".format(os.getcwd(), p_name)
+    df_info = pd.read_csv(csv_p_info, index_col=0)
+    df_info['is_faulty'] = 1
+    df_faulty = df_info[['index_bug', 'issue', 'fail_component', 'is_faulty']]
+    df_faulty.rename(columns={'index_bug': 'bug_id',
+                              'issue': 'jira_id',
+                              'fail_component': 'name'}, inplace=True)
+    print list(df_faulty)
+    print 'df_faulty: ', len(df_faulty)
+    print 'df_bugs: ', len(df_bugs)
+
+    df_merge = pd.merge(df_bugs, df_faulty, how='left', on=['bug_id', 'jira_id', 'name'])
+    df_merge['is_faulty'].fillna(0, inplace=True)
+
+    # group by all test cases and del
+    df_merge['test_case_fail_num'] = \
+    df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time', 'iter', 'is_faulty'])['trigger'].transform('sum')
+
+    to_del = ['test_case', 'test_class']
+    df_merge.drop(to_del, axis=1, inplace=True)
+
+    df_merge.drop_duplicates(inplace=True)
+
+    df_merge['kill'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time', 'iter', 'is_faulty'])[
+        'trigger'].transform('max')
+    df_merge.drop_duplicates(subset=['bug_id', 'jira_id', 'name', 'mode', 'time', 'iter', 'is_faulty', 'kill'],
+                             inplace=True)
+
+    # sum up results
+    df_merge['sum_rep'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])['trigger'].transform('sum')
+    df_merge['count_rep'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])['name'].transform('count')
+    df_merge['fail_tets_case_sum'] = df_merge.groupby(['bug_id', 'jira_id', 'name', 'mode', 'time'])[
+        'test_case_fail_num'].transform('sum')
+
+    df_merge = df_merge[df_merge['mode'] == 'buggy']
+    df_merge=df_merge[['bug_id', 'jira_id', 'name', 'mode', 'time','fail_tets_case_sum']]
+    df_merge.drop_duplicates(subset=['bug_id', 'jira_id', 'name', 'mode', 'time','fail_tets_case_sum'],
+                             inplace=True)
+    df_merge.to_csv('/home/ise/bug_miner/{}/out/case.csv'.format(p_name))
+
+
+if __name__ == "__main__":
+    # p='/home/ise/bug_miner/commons-imaging/res/169_45/junit_out_buggy/test_suite_t_180_it_1/junit_output'
+    # pp='/org.apache.commons.imaging.formats.pnm.PnmConstants_ESTest_out_test.txt'
+    # x= tests_regex_count(p+pp)
+    # print(x)
+    # exit()
     #get_killable_bug_id('/home/ise/bug_miner/commons-imaging/all_self_junit.csv')
     #exit()
-    proj_name = 'commons-lang'
+    proj_name = 'opennlp'
+    proj_name='commons-lang'
+    if os.path.isdir('/home/ise/bug_miner/{}/out'.format(proj_name)) is False:
+        system('mkdir /home/ise/bug_miner/{}/out'.format(proj_name))
+    #counter_fail_test_case_sum('/home/ise/bug_miner/{}/all_self_junit.csv'.format(proj_name))
+    # scan for test cases
     proj_folder = '/home/ise/bug_miner/{}/res'.format(proj_name)
     scan_results_project(proj_folder)
+
+    exit()
+    #############################################
+
+
     #map_dir_after_run(proj_folder)
     group_test_by_test_name('/home/ise/bug_miner/{}/all_self_junit.csv'.format(proj_name))
 #   map_dir_after_run('/home/ise/bug_miner/commons-validator/res')
