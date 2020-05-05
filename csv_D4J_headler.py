@@ -990,22 +990,21 @@ def frange(x, y, jump):
         x += jump
 
 
-def rep_exp_new(p_name='Lang', rep=4, item=20, heuristic_method=True, pre_gen=True, out=None, norm_FP=True):
+def rep_exp_new(csv_path, rep=4, item=20, heuristic_method=True, pre_gen=True, out=None, norm_FP=True):
     gamma_arr = []
-    project_name = str(p_name).split('/')[-2]
+    p_name = str(csv_path).split('/')[-2]
     list_d_ranking = []
-    intreval = 0.1
-    for num_val in frange(0, 1, intreval):
-        gamma_arr.append(num_val)
-    # gamma_arr=[1,0]
+    # intreval = 0.1
+    # for num_val in frange(0, 1, intreval):
+    #     gamma_arr.append(num_val)
+    # # gamma_arr=[1,0]
+    gamma_arr.append(0.3)
+    gamma_arr.append(0.7)
     d_list_res = []
     if heuristic_method:
         import heuristic
         d_heuristic_res = heuristic.csv_to_dict(p_name, False)
-    if p_name.endswith('csv'):
-        csv_path = p_name
-    else:
-        csv_path = '/home/ise/tmp_d4j/out/raw_data/{}.csv'.format(p_name)
+
     df = pd.read_csv(csv_path, index_col=0)
 
     # norm FP
@@ -1018,13 +1017,7 @@ def rep_exp_new(p_name='Lang', rep=4, item=20, heuristic_method=True, pre_gen=Tr
     df = df[~df['FP'].isnull()]
     print len(df)
 
-    # to_del = ['test_case_fail_num']
-    # print len(df)
-    # df.drop(to_del, axis=1, inplace=True)
-    # df.drop_duplicates(subset=['LOC', 'bug_ID', 'TEST', 'bug_id', 'mode', 'time', 'faulty_class', 'sum_detected', 'count_detected', 'issue', 'tag_parent', 'G_package', 'FP', 'tag_FP_val', 'LOC_P'],inplace=True)
-    # print len(df)
-    # df.to_csv('/home/ise/bug_miner/{}/no_dup.csv'.format(project_name ))
-    #
+
 
     max_all_rep = df['count_detected'].max()
     print 'max_rep', df['count_detected'].max()
@@ -1033,7 +1026,7 @@ def rep_exp_new(p_name='Lang', rep=4, item=20, heuristic_method=True, pre_gen=Tr
     x = df['count_detected'].value_counts().reset_index().rename(
         columns={'index': 'Rep Index', 'count_detected': 'Value'})
 
-    for x in range(1, max_all_rep + 1):
+    for x in range(max_all_rep, max_all_rep + 1):
         df['{}_rep'.format(x)] = df.apply(make_rep, val=x, count='count_detected', sum='sum_detected', axis=1)
 
 
@@ -1043,8 +1036,6 @@ def rep_exp_new(p_name='Lang', rep=4, item=20, heuristic_method=True, pre_gen=Tr
     id_list_bug = df['bug_ID'].unique()
     for bug_i in id_list_bug:
 
-        #df.to_csv('/home/ise/bug_miner/commons-imaging/out/tmp.csv')
-        #exit()
         print "--- BUG {} ----".format(bug_i)
         df_filter = df.loc[df['bug_ID'] == bug_i]
         df_target = df_filter.loc[df_filter['faulty_class'] == 1]
@@ -1065,13 +1056,12 @@ def rep_exp_new(p_name='Lang', rep=4, item=20, heuristic_method=True, pre_gen=Tr
         df_filter.dropna(subset=['FP'], how='any', inplace=True)
 
         # this section is mapping between the faulty component and the ranlking from LOC and FP
-        l_bug_i = get_ranking_bug(df_filter, bug_i)
-        list_d_ranking.extend(l_bug_i)
+        # l_bug_i = get_ranking_bug(df_filter, bug_i)
+        # list_d_ranking.extend(l_bug_i)
 
         if pre_gen:
             for gamma in gamma_arr:
-                df_filter['MIX({})'.format(gamma)] = df_filter['FP'] * gamma + (1.0 - gamma) * df_filter['LOC_P']
-                # df_filter.to_csv("{}/{}.csv".format('/home/ise/tmp',bug_i))
+                df_filter['FP({})'.format(gamma)] = df_filter['FP'] * gamma + (1.0 - gamma) * df_filter['LOC_P']
         for item_number in range(1, item):
             for rep_i in range(max_all_rep, max_all_rep + 1):
                 d_pre_gen = {}
@@ -1080,33 +1070,37 @@ def rep_exp_new(p_name='Lang', rep=4, item=20, heuristic_method=True, pre_gen=Tr
                 avg_fp = df_filter['FP'].mean()
                 avg_loc = df_filter['LOC_P'].mean()
 
-                val_random = pick_by_prop(df_filter, 'Random', rep=rep_i, item_num=item_number)
-                val_fp = pick_by_prop(df_filter, 'FP', rep=rep_i, item_num=item_number)
-                val_loc = pick_by_prop(df_filter, 'LOC', rep=rep_i, item_num=item_number)
-                val_target = pick_by_prop(df_target, 'faulty_class', rep=rep_i, item_num=item_number)
+                val_random = pick_by_prop_new(df_filter, 'Random', rep=rep_i, item_num=item_number)
+                val_fp = pick_by_prop_new(df_filter, 'FP', rep=rep_i, item_num=item_number)
+                val_loc = pick_by_prop_new(df_filter, 'LOC', rep=rep_i, item_num=item_number)
+                val_target = pick_by_prop_new(df_target, 'faulty_class', rep=rep_i, item_num=item_number)
 
                 if heuristic_method:
                     d_val_heuristic = heuristic_pick(d_heuristic_res, bug_i, df_filter, rep=rep_i, item_num=item_number)
 
                 for gamma in gamma_arr:
-                    val_post_gen = pick_by_prop(df_filter, 'MIX({})'.format(gamma), rep=rep_i, item_num=item_number)
-                    d_pre_gen['MIX({})'.format(gamma)] = val_post_gen
+                    val_post_gen = pick_by_prop_new(df_filter, 'FP({})'.format(gamma), rep=rep_i, item_num=item_number)
+                    d_pre_gen['FP({})'.format(gamma)] = val_post_gen
 
-                d_list_res.append({'bug_ID': bug_i, 'kill_val': val_target, 'method': 'Oracle', 'rep_sampled': rep_i,
-                                   'item': item_number,
+                d_list_res.append({'bug_ID': bug_i, 'method': 'Oracle', 'rep_sampled': rep_i,
+                                   'item': item_number,"Line":val_target['loc'],'Time':val_target['time'],
+                                   'kill_val':val_target['val'],"binary_vall":val_target['b_val'],
                                    'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite,
                                    'avg_FP': avg_fp, 'avg_loc': avg_loc})
 
-                d_list_res.append({'bug_ID': bug_i, 'kill_val': val_random, 'method': 'Random', 'rep_sampled': rep_i,
+                d_list_res.append({'bug_ID': bug_i, "Line":val_random['loc'],'Time':val_random['time'],
+                                   'kill_val':val_random['val'],"binary_vall":val_random['b_val'], 'method': 'Random', 'rep_sampled': rep_i,
                                    'item': item_number,
                                    'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
                 d_list_res.append(
-                    {'bug_ID': bug_i, 'kill_val': val_fp, 'method': 'FP', 'rep_sampled': rep_i, 'item': item_number,
+                    {'bug_ID': bug_i, "Line":val_fp['loc'],'Time':val_fp['time'],
+                                   'kill_val':val_fp['val'],"binary_vall":val_fp['b_val'], 'method': 'FP', 'rep_sampled': rep_i, 'item': item_number,
                      'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
                 d_list_res.append(
-                    {'bug_ID': bug_i, 'kill_val': val_loc, 'method': 'LOC', 'rep_sampled': rep_i, 'item': item_number,
+                    {'bug_ID': bug_i, "Line":val_loc['loc'],'Time':val_loc['time'],
+                                   'kill_val':val_loc['val'],"binary_vall":val_loc['b_val'], 'method': 'LOC', 'rep_sampled': rep_i, 'item': item_number,
                      'size_suite': size_tset_suite, 'size_faulty_classes': size_faulty_suite})
 
                 # d_list_res.append({'bug_ID': bug_i, 'kill_val': val_fp_gen, 'method': 'FP_gen', 'rep_sampled': rep_i,'item':item_number,
@@ -1115,7 +1109,8 @@ def rep_exp_new(p_name='Lang', rep=4, item=20, heuristic_method=True, pre_gen=Tr
                 if pre_gen:
                     for ky in d_pre_gen:
                         d_list_res.append(
-                            {'bug_ID': bug_i, 'kill_val': d_pre_gen[ky], 'method': ky, 'rep_sampled': rep_i,
+                            {'bug_ID': bug_i,  "Line":d_pre_gen[ky]['loc'],'Time':d_pre_gen[ky]['time'],
+                                   'kill_val':d_pre_gen[ky]['val'],"binary_vall":d_pre_gen[ky]['b_val'], 'method': ky, 'rep_sampled': rep_i,
                              'item': item_number, 'size_suite': size_tset_suite,
                              'size_faulty_classes': size_faulty_suite})
 
@@ -1127,16 +1122,8 @@ def rep_exp_new(p_name='Lang', rep=4, item=20, heuristic_method=True, pre_gen=Tr
                              'size_faulty_classes': size_faulty_suite})
 
     df_res = pd.DataFrame(d_list_res)
-    if out is None:
-        df_res.to_csv('{}/{}_tmp.csv'.format('/home/ise/tmp_d4j/out/result/', p_name))
-    else:
-        df_res.to_csv('{}/results_rep_exp.csv'.format(out))
 
-    # flushing out the ranking csv
-
-
-#    df_rank = pd.DataFrame(list_d_ranking)
-#    df_rank.to_csv('{}/{}_RANK.csv'.format('/home/ise/tmp', p_name))
+    df_res.to_csv('{}/results_rep_exp.csv'.format(out))
 
 
 def clean_missing_value_row(df, col):
@@ -1285,30 +1272,36 @@ def pick_by_prop(df_filter, prop='FP', rep=3, item_num=1):
     df_cut = df_filter.nlargest(item_num, columns=[prop])
     print "{} : {}".format(prop, df_cut['TEST'])
     if len(df_cut) > item_num:
-        print 'in'
         df_elements = df_cut.sample(n=item_num)
         val = df_elements['{}_rep'.format(rep)].sum()
     else:
         val = df_cut['{}_rep'.format(rep)].sum()
+    if val>1:
+        val=1
     return val
 
 
-def pick_by_prop_new(df_filter,prop,rep,item_number):
+
+
+def pick_by_prop_new(df_filter,prop,rep,item_num):
     df_filter = df_filter.dropna(subset=[prop])
     if len(df_filter) == 0:
         return None
-    if len(df_filter) < item_number:
+    if len(df_filter) < item_num:
         item_num = len(df_filter)
     df_filter[prop] = df_filter[prop].astype(float)
     df_cut = df_filter.nlargest(item_num, columns=[prop])
     print "{} : {}".format(prop, df_cut['TEST'])
     if len(df_cut) > item_num:
-        print 'in'
         df_elements = df_cut.sample(n=item_num)
-        df=df_elements
+        df_cut=df_elements
     val = df_cut['{}_rep'.format(rep)].sum()
+    time_classes = df_cut['time_mean'].sum()
     size_classes = df_cut['LOC'].sum()
-    return val,size_classes
+    binary_val=val
+    if val>1:
+        binary_val=1
+    return {"val":val,"time":time_classes,'loc':size_classes,"b_val":binary_val}
 
 
 def pick_choose_rep_exp(d, df, num_of_rep=4):
@@ -1661,40 +1654,22 @@ def normalize_FP_rows(df):
     return df
 
 
-def filtering(method, item, df):
-    pass
+def add_F4_F2(p_path):
+    df=pd.read_csv(p_path,index_col=0)
+    df['F4']=df['sum_detected'].apply(lambda sum_kill: 1 if sum_kill > 0 else 0)
+
 
 
 if __name__ == "__main__":
-    # make_FP_pred('/home/ise/tmp_d4j/out_pred/out/Math/Math_3')
-    # exit()
-    # rep_exp_new('Mockito')
-    # helper()
-    # p='lang'
-    # res = pt.walk_rec('/home/ise/bug_miner/commons-{0}/commons-{0}/src/main/java/org'.format(p),[],'.java')
-    # print len(res)
-    ###merger()
-    # get_bug_d4j_major(p_name='Math')
-    # exit()
-    # pivoting('commons-lang')
-    # plot_bar_chart()
-    # pivoting('commons-imaging')
-    # pivoting('commons-math')
-    # pivoting('commons-net')
-    # pivoting('opennlp')
-
 
 
     items = ['commons-lang', 'commons-math', 'commons-imaging', 'commons-net', 'commons-compress', 'opennlp']
-    items = ['commons-imaging']
+    items = ['commons-lang']
     for p_name_suffix in items:
-        out = '/home/ise/bug_miner/{}/out'.format(p_name_suffix)
-        project_arr = ['/home/ise/bug_miner/{}/exp_new_new.csv'.format(p_name_suffix)]
+        out = '/home/eranhe/eran/bug_miner/{}/out/res'.format(p_name_suffix)
+        project_arr = ['/home/eranhe/eran/bug_miner/{}/out/exp5.csv'.format(p_name_suffix)]
         for x in project_arr:
-            rep_exp_new(p_name=x, heuristic_method=False, out=out)
-            pivoting(p_name_suffix, 2)
-            pivoting(p_name_suffix, 3)
-            pivoting(p_name_suffix, 1)
+            rep_exp_new(x, heuristic_method=False, out=out)
             # get_bug_ID_contains_FP(p_name=x)
     exit()
 

@@ -1119,8 +1119,7 @@ def parser():
 
 if __name__ == "__main__":
     #TODO: Max 2 fault component the next one it the big test change
-    
-    
+
     #sys.argv=['','add_loc','opennlp']
 
     sys.argv = ['','add_loc','commons-compress']

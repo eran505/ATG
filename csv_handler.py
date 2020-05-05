@@ -5,7 +5,10 @@ import  pit_render_test
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from bisect import bisect_left, bisect_right
+
 import xml_mutation as xm
+from csv_D4J_headler import frange
 from csv_PIT import arr_sign
 
 
@@ -476,6 +479,7 @@ def clac_AUC(path_csv_df):
     d=[]
     df = pd.read_csv(path_csv_df,index_col=0)
     df = df[np.isfinite(df['LOC'])]
+    df = df[np.isfinite(df['FP'])]
     print list(df)
     df['F1']=df['ALL_sum_test_case_fail']/df['SUM_test_case_number']
     df['F1'].fillna(0,inplace=True)
@@ -488,37 +492,37 @@ def clac_AUC(path_csv_df):
     #exit()
     for value_id in value_id_list:
         print "process -> bug_ID =", value_id
-        for score_metric in ['F1','F2','F3','F4','F5','F6']:
+        for score_metric in ['F2','F4','F5','F6']:
             df_min = df.loc[df['bug_ID']==value_id]
             size_df = len(df_min)
-            #size_df = 33
+            size_df=69
             for i in range(1,size_df+1,1):
                 loc_total_nmber = df_min['LOC'].sum()
-                loc_size,score_sum,auc=min_func_per_method_auc('FP',df_min,score=score_metric,size=i)
+                loc_size,score_sum,auc,time=min_func_per_method_auc('FP',df_min,score=score_metric,size=i)
                 d.append(
-                    {'mode_score': score_metric, 'score_sum': score_sum,'method':'FP','loc_size':loc_size, 'total_line_code': loc_total_nmber, 'bug_ID': value_id,'item':i,"AUC":auc})
-                loc_size, score_sum,auc= min_func_per_method_auc('LOC_P', df_min,score=score_metric,size=i)
+                    {"Time_Acc":time,'mode_score': score_metric, 'score_sum': score_sum,'method':'FP','loc_size':loc_size, 'total_line_code': loc_total_nmber, 'bug_ID': value_id,'item':i,"AUC":auc})
+                loc_size, score_sum,auc,time= min_func_per_method_auc('LOC_P', df_min,score=score_metric,size=i)
                 d.append(
-                    {'mode_score': score_metric,'method':'LOC','loc_size':loc_size, 'score_sum': score_sum, 'total_line_code': loc_total_nmber, 'bug_ID': value_id,'item':i,"AUC":auc})
-                loc_size, score_sum,auc = min_func_per_method_auc('Random', df_min,score=score_metric,size=i)
-                d.append({'method':'Random','mode_score':score_metric,'loc_size':loc_size,'score_sum':score_sum,'total_line_code':loc_total_nmber,'bug_ID':value_id,'item':i,"AUC":auc})
+                    {"Time_Acc":time,'mode_score': score_metric,'method':'LOC','loc_size':loc_size, 'score_sum': score_sum, 'total_line_code': loc_total_nmber, 'bug_ID': value_id,'item':i,"AUC":auc})
+                loc_size, score_sum,auc,time = min_func_per_method_auc('Random', df_min,score=score_metric,size=i)
+                d.append({"Time_Acc":time,'method':'Random','mode_score':score_metric,'loc_size':loc_size,'score_sum':score_sum,'total_line_code':loc_total_nmber,'bug_ID':value_id,'item':i,"AUC":auc})
     df_res = pd.DataFrame(d)
-    df_res.to_csv('{}/EACH_auc_bug_clean.csv'.format(father_dir))
+    df_res.to_csv('{}/res/EACH_auc_bug_clean.csv'.format(father_dir))
 
 
 
 def csv_graph_scatter(path_to_csv='/home/ise/bug_miner/commons-lang/out/EACH_auc_bug.csv'):
     df = pd.read_csv(path_to_csv,index_col=0)
     df=df[df['mode_score']=='F2']
-    df = df[df['item'] < 5 ]
+    df = df[df['item'] < 3 ]
 
-    scatter_x = df['loc_size']
+    scatter_x = df['Time_Acc']
     scatter_y =  df['score_sum']
 
     dow = {
         'FP': 1,
         'LOC': 5,
-        'Random': 10
+        #'Random': 10
     }
     df["method_int"] = df['method'].map(dow)
     df["item_int"] = df['item'].map({1:1,2:20,3:40,4:60})
@@ -530,16 +534,16 @@ def csv_graph_scatter(path_to_csv='/home/ise/bug_miner/commons-lang/out/EACH_auc
 def csv_graph_line(path_to_csv='/home/ise/bug_miner/commons-lang/out/EACH_auc_bug.csv'):
     df = pd.read_csv(path_to_csv,index_col=0)
     print(df['bug_ID'].unique())
-    df=df[df['mode_score']=='F2']
+    df=df[df['mode_score']=='F4']
     df=df[df['bug_ID']==1370]
     #df = df[df['item'] == 2 ]
     df_dp = df[df['method'] == 'FP']
     df_rand = df[df['method'] == 'Random']
     df_loc = df[df['method'] == 'LOC']
 
-    plt.plot(df_loc['loc_size'],df_loc['score_sum'], '--c')
-    plt.plot(df_dp['loc_size'], df_dp['score_sum'], '-.k')
-    plt.plot(df_rand['loc_size'], df_rand['score_sum'], ':r')
+    plt.plot(df_loc['Time_Acc'],df_loc['score_sum'], '--c')
+    plt.plot(df_dp['Time_Acc'], df_dp['score_sum'], '-.k')
+    plt.plot(df_rand['Time_Acc'], df_rand['score_sum'], ':r')
 
     plt.show()
 
@@ -570,6 +574,13 @@ def min_func_per_method_auc(method,df_min,score,size):
         df_min['acc_LOC'] = df_min['LOC'].cumsum()
         auc = np.trapz(df_min['acc_score'], df_min['acc_LOC'])
         df_min.drop(['cumsum_count_detected','cumsum_sum_detected','F6'], axis=1, inplace=True)
+    elif score == 'F4':
+        score_sum = df_min[score].sum()
+        if score_sum>1:
+            score_sum=1
+        df_min['acc_score'] = df_min[score].cumsum()
+        df_min['acc_LOC'] = df_min['LOC'].cumsum()
+        auc = np.trapz(df_min['acc_score'], df_min['acc_LOC'])
     else:
         score_sum = df_min[score].sum()
         df_min['acc_score'] = df_min[score].cumsum()
@@ -577,11 +588,11 @@ def min_func_per_method_auc(method,df_min,score,size):
         auc = np.trapz(df_min['acc_score'], df_min['acc_LOC'])
 
     x = df_min['LOC'].sum()
-
+    time = df_min['time_mean'].sum()
 
     df_min.drop(['acc_LOC','acc_score'],axis=1,inplace=True)
 
-    return x,score_sum,auc
+    return x,score_sum,auc,time
 
 def clac_AUC_all_project(path_csv_df):
     father_dir='/'.join(str(path_csv_df).split('/')[:-1])
@@ -612,19 +623,79 @@ def clac_AUC_all_project(path_csv_df):
     df_res = pd.DataFrame(d)
     df_res.to_csv('{}/AUC_all_project.csv'.format(father_dir))
 
-
+def new_time_out(p_path,score="F4",parm="loc_size"):
+    father = "/".join(str(p_path).split('/')[:-1])
+    d={}
+    d_l=[]
+    df = pd.read_csv(p_path,index_col=0)
+    df = df[df["mode_score"]==score]
+    method_list = ["FP","LOC"]
+    for method_i in method_list:
+        d[method_i]={}
+    print  (list(df))
+    for bugID in  df['bug_ID'].unique():
+        df_cut = df[df["bug_ID"] == bugID]
+        df_max_item = df['item'].max()
+        for method in ["FP","LOC"]:
+            df_cut_method_i = df_cut[df_cut["method"]==method]
+            #df_cut_method_i.sort_values(by=["Time_Acc"], inplace=True, ascending=False)
+            max_time = df_cut_method_i[df_cut_method_i['item']==df_max_item][parm].mean()
+            d[method][bugID]=max_time
+    print d
+    d_max={}
+    for ky in d:
+        for bugID in d[ky]:
+            if bugID in d_max:
+                if d_max[bugID]<d[ky][bugID]:
+                    d_max[bugID]=d[ky][bugID]
+            else:
+                d_max[bugID]=d[ky][bugID]
+    print d_max
+    for bugID in d_max:
+        intreval = 0.1
+        for num_val in frange(intreval, 1+intreval, intreval):
+            uperbound = num_val*d_max[bugID]
+            df_cut = df[df["bug_ID"] == bugID]
+            for method in method_list:
+                df_cut_method_i = df_cut[df_cut["method"] == method]
+                df_cut_method_i.sort_values(by=[parm], inplace=True, ascending=True)
+                idx=get_closests(df_cut_method_i,parm,uperbound)
+                ans=None
+                if idx>=0:
+                    ans = df_cut_method_i.iloc[idx]["score_sum"]
+                print idx,"\t",ans
+                d_l.append({'method':method,'score':ans,"percentage":num_val,"bugID":bugID,'Toatl':d_max[bugID]})
+    df = pd.DataFrame(d_l)
+    df.to_csv("{}/data_p.csv".format(father))
+def get_closests(df, col, val):
+    list_val = df[col].values
+    indx=-1
+    for item in list_val:
+        if item>val:
+            indx = indx - 1
+            break
+        elif item == val:
+            break
+        indx+=1
+    return indx
 
 
 if __name__ == "__main__":
-    #csv_graph_scatter('/home/ise/bug_miner/commons-math/out/EACH_auc_bug_clean.csv')
-    #exit()
+    #csv_graph_scatter('/home/eranhe/eran/bug_miner/commons-lang/out/res/EACH_auc_bug_clean.csv')
+    #new_time_out('/home/eranhe/eran/bug_miner/commons-math/out/res/EACH_auc_bug_clean.csv')
+    #new_time_out('/home/eranhe/eran/bug_miner/opennlp/out/res/EACH_auc_bug_clean.csv')
+    #new_time_out('/home/eranhe/eran/bug_miner/commons-imaging/out/res/EACH_auc_bug_clean.csv')
+    # new_time_out('/home/eranhe/eran/bug_miner/commons-compress/out/res/EACH_auc_bug_clean.csv')
+    # exit()
 
-    arr_p_project=['opennlp','commons-lang','commons-math','commons-imaging','commons-compress']
+    arr_p_project=['commons-compress','commons-imaging','commons-lang','opennlp','commons-math']
+    arr_p_project=['commons-math']
     for p_project in arr_p_project:
-        if p_project != 'commons-math':
-            continue
-        path='/home/ise/bug_miner/{}/out/exp2.csv'.format(p_project)
-        clac_AUC(path)
+        # if p_project != 'commons-lang':
+        #     continue
+        path='/home/eranhe/eran/bug_miner/{}/out/exp5.csv'.format(p_project)
+        #clac_AUC(path)
+        new_time_out('/home/eranhe/eran/bug_miner/{}/out/res/EACH_auc_bug_clean.csv'.format(p_project))
         # clac_AUC_all_project(path)
         #make_data_again(path)
 
